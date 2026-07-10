@@ -1,0 +1,23 @@
+{
+    "Departments": [{
+        "DepartmentName": "Colorful-UI",
+        "Sections": [
+            {
+                "SectionName": "UX/UI Designer",
+                "SectionLines": ["DayZ n' Chill"]
+            },
+            {
+                "SectionName": "Dedicate to my Children",
+                "SectionLines": ["Derak & Stephan"]
+            },
+            {
+                "SectionName": "Audio, Testing, and QA",
+                "SectionLines": ["Cookup & BigDeano"]
+            },
+            {
+                "SectionName": "Special Thanks",
+                "SectionLines": ["ZookeMike"]
+            }
+        ]
+    }]
+}

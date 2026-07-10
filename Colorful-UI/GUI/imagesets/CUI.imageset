@@ -1,0 +1,409 @@
+ImageSetClass {
+ Name "cui"
+ RefSize 925 925
+ Textures {
+  ImageSetTextureClass {
+   mpix 1
+   path "{7CD806F5385DC838}Colorful-UI/GUI/imagesets/CUI-Imageset.edds"
+  }
+ }
+ Images {
+  ImageSetDefClass Logo {
+   Name "Logo"
+   Pos 11 15
+   Size 438 261
+   Flags 0
+  }
+ }
+ Groups {
+  ImageSetGroupClass Icons {
+   Name "Icons"
+   Images {
+    ImageSetDefClass Clock {
+     Name "Clock"
+     Pos 13 332
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Runner {
+     Name "Runner"
+     Pos 60 332
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Bulb {
+     Name "Bulb"
+     Pos 105 332
+     Size 30 24
+     Flags 0
+    }
+    ImageSetDefClass Cog {
+     Name "Cog"
+     Pos 158 330
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass EyeOpen {
+     Name "EyeOpen"
+     Pos 206 331
+     Size 27 24
+     Flags 0
+    }
+    ImageSetDefClass Exit {
+     Name "Exit"
+     Pos 257 329
+     Size 27 24
+     Flags 0
+    }
+    ImageSetDefClass Elipsis {
+     Name "Elipsis"
+     Pos 11 420
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Times {
+     Name "Times"
+     Pos 49 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Plus {
+     Name "Plus"
+     Pos 86 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Minus {
+     Name "Minus"
+     Pos 124 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Image {
+     Name "Image"
+     Pos 163 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass User {
+     Name "User"
+     Pos 202 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Search {
+     Name "Search"
+     Pos 242 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Ghost {
+     Name "Ghost"
+     Pos 281 419
+     Size 22 24
+     Flags 0
+    }
+    ImageSetDefClass Book {
+     Name "Book"
+     Pos 318 419
+     Size 21 24
+     Flags 0
+    }
+    ImageSetDefClass EyeClosed {
+     Name "EyeClosed"
+     Pos 354 419
+     Size 31 24
+     Flags 0
+    }
+    ImageSetDefClass ThumbsUp {
+     Name "ThumbsUp"
+     Pos 402 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass ThumbsDown {
+     Name "ThumbsDown"
+     Pos 443 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass SettingSliders {
+     Name "SettingSliders"
+     Pos 484 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass CheckBadge {
+     Name "CheckBadge"
+     Pos 525 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Home {
+     Name "Home"
+     Pos 566 419
+     Size 30 24
+     Flags 0
+    }
+    ImageSetDefClass UserAvatar {
+     Name "UserAvatar"
+     Pos 612 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Bars {
+     Name "Bars"
+     Pos 651 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Copyright {
+     Name "Copyright"
+     Pos 690 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass CodeBranch {
+     Name "CodeBranch"
+     Pos 727 419
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Leave {
+     Name "Leave"
+     Pos 307 328
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass EditUser {
+     Name "EditUser"
+     Pos 345 329
+     Size 30 25
+     Flags 0
+    }
+   }
+  }
+  ImageSetGroupClass Global {
+   Name "Global"
+   Images {
+    ImageSetDefClass MenuDivider {
+     Name "MenuDivider"
+     Pos 11 298
+     Size 221 2
+     Flags 0
+    }
+    ImageSetDefClass TipLine {
+     Name "TipLine"
+     Pos 11 305
+     Size 379 2
+     Flags 0
+    }
+   }
+  }
+  ImageSetGroupClass Social {
+   Name "Social"
+   Images {
+    ImageSetDefClass Discord {
+     Name "Discord"
+     Pos 13 376
+     Size 28 24
+     Flags 0
+    }
+    ImageSetDefClass Twitter {
+     Name "Twitter"
+     Pos 55 376
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Reddit {
+     Name "Reddit"
+     Pos 92 376
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Youtube {
+     Name "Youtube"
+     Pos 130 376
+     Size 27 24
+     Flags 0
+    }
+    ImageSetDefClass Meta {
+     Name "Meta"
+     Pos 170 376
+     Size 30 24
+     Flags 0
+    }
+    ImageSetDefClass PayPal {
+     Name "PayPal"
+     Pos 211 376
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass TikTok {
+     Name "TikTok"
+     Pos 243 376
+     Size 23 24
+     Flags 0
+    }
+    ImageSetDefClass Facebook {
+     Name "Facebook"
+     Pos 279 376
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass Instagram {
+     Name "Instagram"
+     Pos 316 376
+     Size 23 24
+     Flags 0
+    }
+   }
+  }
+  ImageSetGroupClass Chevrons {
+   Name "Chevrons"
+   Images {
+    ImageSetDefClass ChevronUp {
+     Name "ChevronUp"
+     Pos 88 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass ChevronDown {
+     Name "ChevronDown"
+     Pos 132 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass ChevronLeft {
+     Name "ChevronLeft"
+     Pos 173 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass ChevronRight {
+     Name "ChevronRight"
+     Pos 206 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass ChevronBoxUp {
+     Name "ChevronBoxUp"
+     Pos 249 461
+     Size 23 24
+     Flags 0
+    }
+    ImageSetDefClass ChevronBoxLeft {
+     Name "ChevronBoxLeft"
+     Pos 294 461
+     Size 23 24
+     Flags 0
+    }
+    ImageSetDefClass ChevronBoxRight {
+     Name "ChevronBoxRight"
+     Pos 339 461
+     Size 23 24
+     Flags 0
+    }
+    ImageSetDefClass ChevronBoxDown {
+     Name "ChevronBoxDown"
+     Pos 385 461
+     Size 23 24
+     Flags 0
+    }
+   }
+  }
+  ImageSetGroupClass Questions {
+   Name "Questions"
+   Images {
+    ImageSetDefClass QuestionMark {
+     Name "QuestionMark"
+     Pos 425 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass QuestionMario {
+     Name "QuestionMario"
+     Pos 468 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass QuestionStar {
+     Name "QuestionStar"
+     Pos 514 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass QuestionChat {
+     Name "QuestionChat"
+     Pos 561 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass QuestionBubble {
+     Name "QuestionBubble"
+     Pos 610 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass QuestionStarOutline {
+     Name "QuestionStarOutline"
+     Pos 657 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass QuestionChatOutline {
+     Name "QuestionChatOutline"
+     Pos 705 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass QuestionBubbleOutline {
+     Name "QuestionBubbleOutline"
+     Pos 753 461
+     Size 24 24
+     Flags 0
+    }
+   }
+  }
+  ImageSetGroupClass Radios {
+   Name "Radios"
+   Images {
+    ImageSetDefClass RadioOff {
+     Name "RadioOff"
+     Pos 8 461
+     Size 24 24
+     Flags 0
+    }
+    ImageSetDefClass RadioOn {
+     Name "RadioOn"
+     Pos 46 461
+     Size 24 24
+     Flags 0
+    }
+   }
+  }
+  ImageSetGroupClass Boxes {
+   Name "Boxes"
+   Images {
+    ImageSetDefClass SurvivorBox {
+     Name "SurvivorBox"
+     Pos 13 503
+     Size 450 93
+     Flags 0
+    }
+    ImageSetDefClass StatsBox {
+     Name "StatsBox"
+     Pos 13 601
+     Size 450 308
+     Flags 0
+    }
+    ImageSetDefClass NewsBox {
+     Name "NewsBox"
+     Pos 468 503
+     Size 450 250
+     Flags 0
+    }
+   }
+  }
+ }
+}

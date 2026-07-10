@@ -1,0 +1,12 @@
+# Local Workspace Settings
+**/Workbench/*.bin
+
+# Text Editor Workspace Configuration
+.vscode/
+.idea/
+
+# Agentic Settings
+.* 
+
+# Files not to be included in the repo
+*.tga
