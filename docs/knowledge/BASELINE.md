@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.22  
+**Current baseline:** KB-v1.23  
 **Date:** 2026-09-28
 
 ## Canonical responsibilities
@@ -31,3 +31,7 @@ Different native revision numbers are expected.
 ## Founding/business formation link
 
 WerkZ has a separate serious founding-package workstream. Its current cross-validated successor state is indexed in `docs/knowledge/FOUNDING_PACKAGE.md`. Business/funding documents remain separate from public marketing content and from source code. The founding package is used as evidence of preparation and professional capability, while private Jobcenter-specific content stays out of public marketing pages.
+
+## Business graph / operational twin direction
+
+WerkZ now distinguishes the existing System Graph from a new Business Operating Graph. The latter models goals, customers, projects, processes, roles, people/resources, finance, rules, quality, automation, dependencies and evidence as typed nodes and relationships. See `docs/architecture/BUSINESS_GRAPH.md`. This is an architecture direction, not a claim that a graph database is already deployed.
