@@ -1,117 +1,34 @@
-# Colorful UI Pro
+# WerkZ
 
-![Colorful UI Pro](CUI_Pro.png)
+This repository is the **new canonical private-target repository structure for WerkZ**. The GitHub repository is still technically named `UI-Pro` because the connected GitHub actions cannot rename repositories. Rename target: **WerkZ**.
 
-## Features
-- Fully Responsive Design (UHD & Ultrawide Supported)
-- Loading Screen with Synced BG Images & Tips
-- Main Menu with Static BG Image and Custom Music
-- Modified layout on all Default Layouts
-- Easily Editable Layout Files with Prefab Elements
-- Simple Configuration
-- Customize EVERY ELEMENT INDIVIDUALLY
-- Death Screen
-- NO MOD DEPENDENCIES
+**Semantic baseline:** KB-v1.20  
+**Rebuilt:** 2026-09-28  
+**Legacy UI-Pro state:** `archive/legacy-ui-pro-before-werkz-2026-09-28`
 
-# Installation Guide
+## Purpose
 
-## Step 1 — Install required tools
+WerkZ is the product/project layer for reusable business automation, integrations, technical architecture, documentation and controlled customer-specific implementations.
 
-- [Git](https://git-scm.com/)
-- [Git LFS](https://git-lfs.github.com/)
-- DayZ (Steam)
-- DayZ Tools (Steam, free)
-- DayZ Server (Steam, free)
+## Repository layout
 
-## Step 2 — Use this template
+- `src/` — WerkZ-owned application/integration source
+- `packages/` — reusable WerkZ modules
+- `integrations/` — adapters/contracts for external systems
+- `docs/architecture/` — technical architecture and decisions
+- `docs/knowledge/` — GitHub-side knowledge baseline and cross-system links
+- `docs/security/` — security and rights lifecycle
+- `docs/testing/` — test strategy and evidence contracts
+- `templates/` — sanitized templates
+- `tools/` — validation/build/deployment helpers
+- `.github/` — GitHub workflows and contribution controls
 
-- Go to https://github.com/DayZ-n-Chill/Colorful-UI-Pro
-- Click the green **`Use this template`** → **`Create a new repository`**
-- Name your new repo, click **`Create repository from template`**
+## Knowledge roles
 
-## Step 3 — Clone YOUR new repo
+GitHub is canonical for source, commits, branches, pull requests and repository-local technical documentation. WebsitePublisher/WerkZ is canonical for structured reflection and architecture history. Google Drive holds the human-readable cross-system register. Chat/project context is the working layer, not the sole durable truth.
 
-Clone to a project drive, NOT your `P:\` drive:
+## Security
 
-```sh
-git clone https://github.com/<your-username>/<your-repo>.git
-```
+No passwords, tokens, webhooks, private keys, production secrets, unredacted customer credentials or unnecessary personal data belong in this repository.
 
-## Step 4 — Mount the P drive
-
-Open DayZ Tools once to mount `P:\`, or run:
-
-```powershell
-subst P: "C:\Program Files (x86)\Steam\steamapps\common\DayZ Tools\Bin\Work"
-```
-
-## Step 5 — Create the project junction
-
-Replace `<repo-path>` with the path you cloned to in Step 3:
-
-```powershell
-New-Item -ItemType Junction -Path "P:\Colorful-UI" -Target "<repo-path>\Colorful-UI"
-```
-
-## Step 6 — Edit your UI
-
-Open `Colorful-UI\Scripts\3_Game\Config\Settings.c` and edit:
-
-- `class Branding` — your logo path
-- `class CustomURL` — your website / priority queue / custom link
-- `class SocialURL` — Discord / Facebook / Twitter / Reddit / Youtube (set to `"#"` to hide a button)
-- `SERVER_IP` / `SERVER_PORT`
-- Feature flags: `StartMainMenu`, `NoHints`, `UseImagesets`, `LoadVideo`, `EnableMenuVideo`, `EnableOptionsVideo`, `VideoDeathScreens`
-
-Other edit points:
-
-- `Colorful-UI\Scripts\Data\hints.json` — loading-screen hints
-- `Colorful-UI\GUI\sounds\MainMenu\` — drop your `.ogg` files here, update `CfgSoundShaders` in `Colorful-UI\Scripts\config.cpp`
-- `Colorful-UI\GUI\textures\Shared\` — your logo `.edds`
-
-To edit in Workbench: open `Colorful-UI\Workbench\dayz.gproj`.
-
-## Step 7 — Build the PBOs
-
-```powershell
-$ab  = 'C:\Program Files (x86)\Steam\steamapps\common\DayZ Tools\Bin\AddonBuilder\AddonBuilder.exe'
-$inc = "$env:USERPROFILE\.claude\skills\dayz-build-pbo\include.lst"
-$out = 'P:\Mods\@Colorful-UI\Addons'
-
-Remove-Item -Recurse -Force 'P:\temp\Colorful-UI' -ErrorAction SilentlyContinue
-
-& $ab 'P:\Colorful-UI\GUI'     $out '-prefix=Colorful-UI\GUI'     '-temp=P:\temp\Colorful-UI\GUI'     "-include=$inc" -clear
-& $ab 'P:\Colorful-UI\Scripts' $out '-prefix=Colorful-UI\Scripts' '-temp=P:\temp\Colorful-UI\Scripts' "-include=$inc"
-```
-
-Output:
-
-```
-P:\Mods\@Colorful-UI\Addons\GUI.pbo
-P:\Mods\@Colorful-UI\Addons\Scripts.pbo
-```
-
-## Step 8 — Test on a local server
-
-Server:
-
-```powershell
-& 'C:\Program Files (x86)\Steam\steamapps\common\DayZ Server\DayZDiag_x64.exe' -server -mod=@Colorful-UI -config=serverDZ.cfg
-```
-
-Client:
-
-```powershell
-& 'C:\Program Files (x86)\Steam\steamapps\common\DayZ\DayZDiag_x64.exe' -mod=@Colorful-UI -connect=127.0.0.1 -port=2302
-```
-
-## Step 9 — Deploy to a live server
-
-1. Copy `P:\Mods\@Colorful-UI\` to your server root.
-2. Copy `@Colorful-UI\Keys\*.bikey` to the server's `keys\` folder.
-3. Add `-mod=@Colorful-UI` to your server startup line.
-4. Players must have the same `@Colorful-UI` client-side.
-
-# License
-
-[CC BY-NC 4.0](LICENSE.md) — Attribution-NonCommercial.
+The old UI-Pro content is historical only and is preserved on its archive branch.
