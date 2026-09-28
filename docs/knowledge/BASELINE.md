@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.20  
+**Current baseline:** KB-v1.21  
 **Date:** 2026-09-28
 
 ## Canonical responsibilities
@@ -27,3 +27,7 @@ Reopen on substantive new evidence, correction, regression, integration/dependen
 - Google Drive revision — local Drive revision
 
 Different native revision numbers are expected.
+
+## Founding/business formation link
+
+WerkZ has a separate serious founding-package workstream. Its latest recoverable state is indexed in `docs/knowledge/FOUNDING_PACKAGE.md`. Business/funding documents remain separate from public marketing content and from source code.
