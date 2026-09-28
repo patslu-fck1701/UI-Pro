@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.21  
+**Current baseline:** KB-v1.22  
 **Date:** 2026-09-28
 
 ## Canonical responsibilities
@@ -30,4 +30,4 @@ Different native revision numbers are expected.
 
 ## Founding/business formation link
 
-WerkZ has a separate serious founding-package workstream. Its latest recoverable state is indexed in `docs/knowledge/FOUNDING_PACKAGE.md`. Business/funding documents remain separate from public marketing content and from source code.
+WerkZ has a separate serious founding-package workstream. Its current cross-validated successor state is indexed in `docs/knowledge/FOUNDING_PACKAGE.md`. Business/funding documents remain separate from public marketing content and from source code. The founding package is used as evidence of preparation and professional capability, while private Jobcenter-specific content stays out of public marketing pages.
