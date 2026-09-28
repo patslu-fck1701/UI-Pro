@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.23  
+**Current baseline:** KB-v1.25  
 **Date:** 2026-09-28
 
 ## Canonical responsibilities
@@ -35,3 +35,7 @@ WerkZ has a separate serious founding-package workstream. Its current cross-vali
 ## Business graph / operational twin direction
 
 WerkZ now distinguishes the existing System Graph from a new Business Operating Graph. The latter models goals, customers, projects, processes, roles, people/resources, finance, rules, quality, automation, dependencies and evidence as typed nodes and relationships. See `docs/architecture/BUSINESS_GRAPH.md`. This is an architecture direction, not a claim that a graph database is already deployed.
+
+## Integration and access lifecycle
+
+Business-graph relationships now drive an explicit integration/access matrix: system role, authoritative data, interface, auth type, scopes, access owner, environment, sensitivity, failure path, approval, rotation/revocation, test evidence and handover state. See `docs/architecture/INTEGRATION_ACCESS_MATRIX.md`. Discovery records no plaintext secrets.
