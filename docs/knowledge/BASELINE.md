@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.25  
+**Current baseline:** KB-v1.26  
 **Date:** 2026-09-28
 
 ## Canonical responsibilities
@@ -39,3 +39,7 @@ WerkZ now distinguishes the existing System Graph from a new Business Operating 
 ## Integration and access lifecycle
 
 Business-graph relationships now drive an explicit integration/access matrix: system role, authoritative data, interface, auth type, scopes, access owner, environment, sensitivity, failure path, approval, rotation/revocation, test evidence and handover state. See `docs/architecture/INTEGRATION_ACCESS_MATRIX.md`. Discovery records no plaintext secrets.
+
+## Enterprise relationship model
+
+KB-v1.26 extends the Business Operating Graph with master data, API/integration/ETL, IAM/token metadata, monitoring/logging, backup/recovery, reporting, knowledge, compliance, asset/service management and authoritative-source rules. Canonical trace: goal → process → role → data → source system → interface → credential type → scopes → environment → automation → evidence → KPI/impact → history. See `docs/architecture/ENTERPRISE_RELATIONSHIP_MODEL.md`.
