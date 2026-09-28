@@ -1,6 +1,6 @@
 # Cross-system links
 
-**Baseline:** KB-v1.20
+**Baseline:** KB-v1.21
 
 ## GitHub
 Current physical repository: `patslu-fck1701/UI-Pro`  
@@ -20,3 +20,6 @@ Document ID: `1dgKbYO6t4Wy2gy0Jx7B7FP5rCahM609kNsS4lUS0uSc`
 - `patslu-fck1701/DeutschZ-ModZ` — owned DeutschZ mod source.
 
 Do not mirror all content between systems. Store information where it belongs and mirror only the references/status required to reconnect and validate it.
+
+## Founding-package workstream
+Latest recoverable separate-chat state: `docs/knowledge/FOUNDING_PACKAGE.md`. Treat newer artifacts from that chat as candidates for cross-validation, not silent replacement.
