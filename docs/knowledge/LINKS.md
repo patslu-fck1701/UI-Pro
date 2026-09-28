@@ -1,30 +1,27 @@
 # Cross-system links
 
-**Baseline:** KB-v1.26
+**Baseline:** KB-v1.28
 
 ## GitHub
 Current physical repository: `patslu-fck1701/UI-Pro`  
-Intended repository name: `WerkZ`  
-Legacy content: `archive/legacy-ui-pro-before-werkz-2026-09-28`
+Logical product name: **WerkZ**  
+Legacy content remains on its archived branch.
 
 ## WebsitePublisher
-Project: WerkZ / project 23947  
-Role: structured reflections, architecture history, internal canonical rules.
+Role: structured WerkZ reflections, architecture history, operational models and live public website content.
 
 ## Google Drive
-Document: `WerkZ – Wissensregister`  
-Document ID: `1dgKbYO6t4Wy2gy0Jx7B7FP5rCahM609kNsS4lUS0uSc`
+Role: private human-readable WerkZ knowledge register and selected persistent reference material. Exact document identifiers are intentionally not duplicated in this public repository.
 
-## Related GitHub repositories
-- `patslu-fck1701/DayZServer` — DeutschZ server/configuration and Vanilla→DeutschZ evolution.
+## Related repositories
+- `patslu-fck1701/DayZServer` — DeutschZ server/configuration evolution.
 - `patslu-fck1701/DeutschZ-ModZ` — owned DeutschZ mod source.
 
-Do not mirror all content between systems. Store information where it belongs and mirror only the references/status required to reconnect and validate it.
-
 ## Founding-package workstream
-Current cross-validated successor state: `docs/knowledge/FOUNDING_PACKAGE.md` → `WerkZ_KB-v1.22_FINAL_2026-09-28.zip`. Predecessor: `WerkZ_FINAL_PROFESSIONELL_2026-09-27.zip` / KB-v1.21 / R-41. Treat later artifacts as successors to compare and link, never as silent replacements.
+Current semantic handoff: `docs/knowledge/FOUNDING_PACKAGE.md` at KB-v1.28. The actual formation/funding package remains private and is not committed to this public repository.
 
 ## Visual architecture artifacts
-- Library path: `/WerkZ/Referenzartefakte/KB-v1.26_WerkZ-Systemuebersicht_Betriebliche-Vernetzung.jpeg`
-- Role: derived visual view of the WerkZ system/enterprise relationship model; not the sole source of truth.
-- Reuse rule: load and evolve this artifact/model rather than regenerating architecture from scratch.
+Visual diagrams are derived views, not a sole source of truth. Reuse stored reference artifacts only after checking their labels against the current semantic baseline.
+
+## Synchronization rule
+Do not mirror all content between systems. Persist each fact in its responsible layer, keep only the cross-links/status needed to reconnect it, read back after changes, and stop when no new semantic delta remains.
