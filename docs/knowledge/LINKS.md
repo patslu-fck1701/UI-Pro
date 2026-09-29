@@ -18,7 +18,8 @@ Role: private human-readable WerkZ knowledge register and selected persistent re
 - `patslu-fck1701/DeutschZ-ModZ` — owned DeutschZ mod source.
 
 ## Founding-package workstream
-Current semantic handoff: `docs/knowledge/FOUNDING_PACKAGE.md` at KB-v1.28. The actual formation/funding package remains private and is not committed to this public repository.
+Current private artifact revision: KB-v1.29 (2026-09-29), indexed in `docs/knowledge/FOUNDING_PACKAGE.md`. It is linked into the current shared WerkZ baseline KB-v1.31 without downgrading the overall knowledge baseline. The actual formation/funding package remains private and is not committed to this public repository.
+
 
 ## Visual architecture artifacts
 Visual diagrams are derived views, not a sole source of truth. Reuse stored reference artifacts only after checking their labels against the current semantic baseline.
