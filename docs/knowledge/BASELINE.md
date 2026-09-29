@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.32  
+**Current baseline:** KB-v1.33  
 **Date:** 2026-09-29
 
 ## Canonical responsibilities
@@ -51,21 +51,21 @@ KB-v1.29 adds a reusable WerkZ time-tracking reference module derived from the G
 The current internal WebsitePublisher prototype is deliberately local/offline-first and admin-gated. Employee/customer production rollout requires Tenant Auth plus explicit tenant/row policies and server-side records; it is not claimed complete until real member-session cross-tenant tests pass.
 
 
-## Product/module boundary — KB-v1.31
+## Product/module boundary — KB-v1.33
 
 WerkZ Time is a reusable module, not the full WerkZ Solo product. Solo connects intake, customer/order, mobile work evidence, supplier/order confirmations, material/service, invoice preparation, communication and archive/history into one end-to-end workflow. Team/Business extends the same objects across multiple roles/departments with explicit rights and handoffs. See `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`.
 
 Commercial cost assumptions and customer-specific financial models remain private and are not committed to this public repository.
 
 
-## Public pricing/scope alignment — KB-v1.31
+## Public pricing/scope alignment — KB-v1.33
 
 The public starting prices remain €490 / €1,490 / €2,490 for Solo / Team / Business. They are scoped starting configurations assembled from reusable modules, not unlimited bespoke development. Additional integrations, migrations, roles/processes, third-party services and ongoing operations are separately scoped. See `docs/operations/PRICING_SCOPE_PUBLIC.md`.
 
 Detailed cost rates, private margins and internal pricing calculations remain outside this public repository.
 
 
-## Deployment/product split — KB-v1.32
+## Deployment/product split — KB-v1.33
 
 The WebsitePublisher deployment model is now explicitly separated by product:
 
@@ -75,6 +75,13 @@ The WebsitePublisher deployment model is now explicitly separated by product:
 
 The current mixed project is an interim state only. Existing WerkZ pages in project 23947 are not deleted until the separate WerkZ project has been built, tested and accepted. See `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`.
 
-## Codex / WebsitePublisher merge rule — KB-v1.32
+## Codex / WebsitePublisher merge rule — KB-v1.33
 
 The current Codex package and WebsitePublisher live state are complementary sources rather than mutually exclusive versions. Codex is stronger for internal engineering, governance, business templates, testing and operational rules; WebsitePublisher is stronger for the current public site structure and presentation. The next separate WerkZ website must merge both deliberately. See `docs/knowledge/CODEX_WEBSITEPUBLISHER_MERGE.md`.
+
+
+## Deployment consolidation — KB-v1.33
+
+The canonical live topology is now one core WebsitePublisher project: 23947. WerkZ is the main brand; DeutschZ is an integrated technical reference/lab; WerkZ Time is a reusable module. Project 29212 is historical test material and should be archived before owner-side deletion. Planned main domain: `werkz-digital.eu`, currently unconnected and pending exact registrar confirmation.
+
+See `docs/architecture/DEPLOYMENT_TOPOLOGY.md`, `docs/operations/DOMAIN_AND_RUNTIME_PLAN.md`, and `docs/operations/CODEX_CONSOLIDATION_ORDER.md`.
