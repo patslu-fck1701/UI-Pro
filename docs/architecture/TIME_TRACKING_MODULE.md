@@ -1,6 +1,6 @@
 # WerkZ Time Tracking Module
 
-**Baseline:** KB-v1.29  
+**Baseline:** KB-v1.30  
 **Status:** reusable internal reference module; customer/employee production rollout not yet declared.
 
 ## Purpose
@@ -74,3 +74,18 @@ The worker view remains intentionally short:
 5. review the resulting day.
 
 Office/management receives a richer view from the same underlying data.
+
+
+## Product boundary — time tracking is a module, not WerkZ Solo
+
+The time-tracking reference is deliberately a reusable component. It must not be presented as equivalent to a complete WerkZ Solo implementation.
+
+A full **WerkZ Solo** workflow can connect:
+
+`inquiry (phone/email/form) -> customer -> order/job -> mobile execution/time/evidence -> supplier/order/confirmation -> material/service -> invoice preparation -> approval -> customer communication -> print/archive/history`
+
+The time-tracking module contributes the mobile execution/time/evidence portion of that chain.
+
+**WerkZ Team / Business** extends the same operating model across multiple roles and departments such as office, management, HR, accounting, production/workshop, purchasing and field installation. Each role receives an appropriate view and rights while events remain linked to the same business objects.
+
+The reusable rule is: build small modules with stable contracts, then connect them into an end-to-end business workflow. Do not market one isolated module as the whole product.
