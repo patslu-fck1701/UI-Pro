@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.29  
+**Current baseline:** KB-v1.30  
 **Date:** 2026-09-29
 
 ## Canonical responsibilities
@@ -49,3 +49,10 @@ KB-v1.26 extends the Business Operating Graph with master data, API/integration/
 KB-v1.29 adds a reusable WerkZ time-tracking reference module derived from the Gabriel mobile pilot. The module separates shift time from individual jobsite/work-unit completion and combines GPS/address, speech/text, optional photo evidence, daily summary, local backup/restore and an error journal. Canonical source and test/backup rules live under `packages/time-tracking/`, `docs/architecture/TIME_TRACKING_MODULE.md`, `docs/testing/TIME_TRACKING_TEST_PLAN.md` and `docs/operations/TIME_TRACKING_BACKUP_ERRORS.md`.
 
 The current internal WebsitePublisher prototype is deliberately local/offline-first and admin-gated. Employee/customer production rollout requires Tenant Auth plus explicit tenant/row policies and server-side records; it is not claimed complete until real member-session cross-tenant tests pass.
+
+
+## Product/module boundary — KB-v1.30
+
+WerkZ Time is a reusable module, not the full WerkZ Solo product. Solo connects intake, customer/order, mobile work evidence, supplier/order confirmations, material/service, invoice preparation, communication and archive/history into one end-to-end workflow. Team/Business extends the same objects across multiple roles/departments with explicit rights and handoffs. See `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`.
+
+Commercial cost assumptions and customer-specific financial models remain private and are not committed to this public repository.
