@@ -1,6 +1,6 @@
 # Cross-system links
 
-**Baseline:** KB-v1.30
+**Baseline:** KB-v1.31
 
 ## GitHub
 Current physical repository: `patslu-fck1701/UI-Pro`  
@@ -36,3 +36,7 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 - Gabriel reference extraction: `docs/knowledge/GABRIEL_TIME_REFERENCE.md`
 
 - Product/module boundary: `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`
+
+- Public pricing/scope rules: `docs/operations/PRICING_SCOPE_PUBLIC.md`
+- Public WerkZ pricing page: https://project23947.websitepublisher.ai/werkz.html
+- Public pre-check: https://project23947.websitepublisher.ai/werkz-fragebogen.html
