@@ -1,6 +1,6 @@
 # Cross-system links
 
-**Baseline:** KB-v1.32
+**Baseline:** KB-v1.33
 
 ## GitHub
 Current physical repository: `patslu-fck1701/UI-Pro`  
@@ -18,7 +18,7 @@ Role: private human-readable WerkZ knowledge register and selected persistent re
 - `patslu-fck1701/DeutschZ-ModZ` — owned DeutschZ mod source.
 
 ## Founding-package workstream
-Current private artifact revision: KB-v1.29 (2026-09-29), indexed in `docs/knowledge/FOUNDING_PACKAGE.md`. It is linked into the current shared WerkZ baseline KB-v1.32 without downgrading the overall knowledge baseline. The actual formation/funding package remains private and is not committed to this public repository.
+Current private artifact revision: KB-v1.29 (2026-09-29), indexed in `docs/knowledge/FOUNDING_PACKAGE.md`. It is linked into the current shared WerkZ baseline KB-v1.33 without downgrading the overall knowledge baseline. The actual formation/funding package remains private and is not committed to this public repository.
 
 
 ## Visual architecture artifacts
@@ -47,4 +47,9 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 
 - Product/deployment split: `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`
 - Codex + WebsitePublisher merge rule: `docs/knowledge/CODEX_WEBSITEPUBLISHER_MERGE.md`
-- Current private founding-package artifact remains revision KB-v1.29 and is linked into shared baseline KB-v1.32; a deployment-baseline change alone does not silently rewrite the funding package.
+- Current private founding-package artifact remains revision KB-v1.29 and is linked into shared baseline KB-v1.33; a deployment-baseline change alone does not silently rewrite the funding package.
+
+- Deployment topology: `docs/architecture/DEPLOYMENT_TOPOLOGY.md`
+- Domain/runtime plan: `docs/operations/DOMAIN_AND_RUNTIME_PLAN.md`
+- Codex consolidation order: `docs/operations/CODEX_CONSOLIDATION_ORDER.md`
+- Current technical fallback: https://project23947.websitepublisher.ai/
