@@ -9,7 +9,7 @@ WerkZ Time Tracking is not designed as an isolated stopwatch. The module capture
 
 `login -> employer/assignment -> shift start -> one or more jobsite completions -> shift finish -> daily summary -> office/billing handoff`
 
-The first practical UX reference is the Gabriel mobile time-tracking pilot. The WerkZ module extracts the reusable workflow and separates it from Gabriel-specific credentials and test data.
+The first practical UX reference is the Gabriel mobile time-tracking test. The WerkZ module extracts the reusable workflow and separates it from Gabriel-specific credentials and test data.
 
 ## Core objects
 
