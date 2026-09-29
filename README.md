@@ -2,7 +2,7 @@
 
 This repository is the **new canonical private-target repository structure for WerkZ**. The GitHub repository is still technically named `UI-Pro` because the connected GitHub actions cannot rename repositories. Rename target: **WerkZ**.
 
-**Semantic baseline:** KB-v1.31  
+**Semantic baseline:** KB-v1.32  
 **Rebuilt:** 2026-09-28  
 **Legacy UI-Pro state:** `archive/legacy-ui-pro-before-werkz-2026-09-28`
 
