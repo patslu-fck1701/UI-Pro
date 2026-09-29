@@ -57,4 +57,4 @@ Avoid:
 
 `one customer -> one bespoke disconnected app -> rebuild from zero for the next customer`
 
-The Gabriel pilot is therefore treated as the first practical reference for a reusable time/evidence module, while the broader WerkZ product remains an end-to-end business operating model.
+The Gabriel test build is therefore treated as the first practical reference for a reusable time/evidence module, while the broader WerkZ product remains an end-to-end business operating model.
