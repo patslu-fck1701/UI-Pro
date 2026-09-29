@@ -46,7 +46,7 @@ KB-v1.26 extends the Business Operating Graph with master data, API/integration/
 
 ## Time tracking module
 
-KB-v1.29 adds a reusable WerkZ time-tracking reference module derived from the Gabriel mobile pilot. The module separates shift time from individual jobsite/work-unit completion and combines GPS/address, speech/text, optional photo evidence, daily summary, local backup/restore and an error journal. Canonical source and test/backup rules live under `packages/time-tracking/`, `docs/architecture/TIME_TRACKING_MODULE.md`, `docs/testing/TIME_TRACKING_TEST_PLAN.md` and `docs/operations/TIME_TRACKING_BACKUP_ERRORS.md`.
+KB-v1.29 adds a reusable WerkZ time-tracking reference module derived from the Gabriel mobile test. The module separates shift time from individual jobsite/work-unit completion and combines GPS/address, speech/text, optional photo evidence, daily summary, local backup/restore and an error journal. Canonical source and test/backup rules live under `packages/time-tracking/`, `docs/architecture/TIME_TRACKING_MODULE.md`, `docs/testing/TIME_TRACKING_TEST_PLAN.md` and `docs/operations/TIME_TRACKING_BACKUP_ERRORS.md`.
 
 The current internal WebsitePublisher prototype is deliberately local/offline-first and admin-gated. Employee/customer production rollout requires Tenant Auth plus explicit tenant/row policies and server-side records; it is not claimed complete until real member-session cross-tenant tests pass.
 
