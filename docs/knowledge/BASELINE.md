@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.31  
+**Current baseline:** KB-v1.32  
 **Date:** 2026-09-29
 
 ## Canonical responsibilities
@@ -63,3 +63,18 @@ Commercial cost assumptions and customer-specific financial models remain privat
 The public starting prices remain €490 / €1,490 / €2,490 for Solo / Team / Business. They are scoped starting configurations assembled from reusable modules, not unlimited bespoke development. Additional integrations, migrations, roles/processes, third-party services and ongoing operations are separately scoped. See `docs/operations/PRICING_SCOPE_PUBLIC.md`.
 
 Detailed cost rates, private margins and internal pricing calculations remain outside this public repository.
+
+
+## Deployment/product split — KB-v1.32
+
+The WebsitePublisher deployment model is now explicitly separated by product:
+
+- project 23947 remains the DeutschZ deployment target after migration is complete;
+- WerkZ receives its own separate WebsitePublisher project;
+- project 29212 remains the separate time-tracking product.
+
+The current mixed project is an interim state only. Existing WerkZ pages in project 23947 are not deleted until the separate WerkZ project has been built, tested and accepted. See `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`.
+
+## Codex / WebsitePublisher merge rule — KB-v1.32
+
+The current Codex package and WebsitePublisher live state are complementary sources rather than mutually exclusive versions. Codex is stronger for internal engineering, governance, business templates, testing and operational rules; WebsitePublisher is stronger for the current public site structure and presentation. The next separate WerkZ website must merge both deliberately. See `docs/knowledge/CODEX_WEBSITEPUBLISHER_MERGE.md`.
