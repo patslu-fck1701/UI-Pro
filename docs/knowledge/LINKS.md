@@ -1,6 +1,6 @@
 # Cross-system links
 
-**Baseline:** KB-v1.31
+**Baseline:** KB-v1.32
 
 ## GitHub
 Current physical repository: `patslu-fck1701/UI-Pro`  
@@ -41,3 +41,10 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 - Public pricing/scope rules: `docs/operations/PRICING_SCOPE_PUBLIC.md`
 - Public WerkZ pricing page: https://project23947.websitepublisher.ai/werkz.html
 - Public pre-check: https://project23947.websitepublisher.ai/werkz-fragebogen.html
+
+
+## Deployment split / Codex merge
+
+- Product/deployment split: `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`
+- Codex + WebsitePublisher merge rule: `docs/knowledge/CODEX_WEBSITEPUBLISHER_MERGE.md`
+- Current private founding-package artifact remains revision KB-v1.29 and is linked into shared baseline KB-v1.32; a deployment-baseline change alone does not silently rewrite the funding package.
