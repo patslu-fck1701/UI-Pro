@@ -1,7 +1,7 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.28  
-**Date:** 2026-09-28
+**Current baseline:** KB-v1.29  
+**Date:** 2026-09-29
 
 ## Canonical responsibilities
 
@@ -43,3 +43,9 @@ Business-graph relationships now drive an explicit integration/access matrix: sy
 ## Enterprise relationship model
 
 KB-v1.26 extends the Business Operating Graph with master data, API/integration/ETL, IAM/token metadata, monitoring/logging, backup/recovery, reporting, knowledge, compliance, asset/service management and authoritative-source rules. Canonical trace: goal → process → role → data → source system → interface → credential type → scopes → environment → automation → evidence → KPI/impact → history. See `docs/architecture/ENTERPRISE_RELATIONSHIP_MODEL.md`.
+
+## Time tracking module
+
+KB-v1.29 adds a reusable WerkZ time-tracking reference module derived from the Gabriel mobile pilot. The module separates shift time from individual jobsite/work-unit completion and combines GPS/address, speech/text, optional photo evidence, daily summary, local backup/restore and an error journal. Canonical source and test/backup rules live under `packages/time-tracking/`, `docs/architecture/TIME_TRACKING_MODULE.md`, `docs/testing/TIME_TRACKING_TEST_PLAN.md` and `docs/operations/TIME_TRACKING_BACKUP_ERRORS.md`.
+
+The current internal WebsitePublisher prototype is deliberately local/offline-first and admin-gated. Employee/customer production rollout requires Tenant Auth plus explicit tenant/row policies and server-side records; it is not claimed complete until real member-session cross-tenant tests pass.
