@@ -1,6 +1,6 @@
 # WerkZ Founding Package Index
 
-**Shared semantic baseline:** KB-v1.31  
+**Shared semantic baseline:** KB-v1.32  
 **Current founding-package artifact revision:** KB-v1.29  
 **Status:** private artifact, cross-system linked
 
@@ -19,4 +19,4 @@ The private WerkZ business-formation package was updated on 2026-09-29. Public G
 
 Private biographical data, unverified hour estimates, authority-specific identifiers, personal hardware details and the actual funding documents are not copied into this public repository.
 
-Later founding-package revisions must be compared with KB-v1.29 and linked as successors rather than silently replacing history.
+Later founding-package revisions must be compared with KB-v1.29 and linked as successors rather than silently replacing history. KB-v1.32 adds deployment/project-separation and Codex/WebsitePublisher merge knowledge at the shared WerkZ level; the private founding-package artifact itself remains KB-v1.29 until a substantive funding-document change is approved.
