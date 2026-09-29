@@ -39,6 +39,8 @@ Shared source:
 
 The current internal prototype persists locally in the browser. This is deliberate for the reference stage. The UI and domain model are separated so the persistence adapter can later move to tenant-scoped server entities without rebuilding the workflow.
 
+Private server-side schema foundations already exist in WebsitePublisher: `werkztimeshift`, `werkztimejob`, `werkztimeevent` and `werkztimeerror` (`public_read: false`). They are intentionally not wired to browser writes yet. Tenant/member policies and real member-session authorization tests must exist before they become the production persistence path.
+
 ## Production target
 
 For customer/employee use, the same workflow should use:
