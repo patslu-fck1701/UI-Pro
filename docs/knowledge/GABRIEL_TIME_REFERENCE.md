@@ -5,7 +5,7 @@
 
 ## Reference workflow
 
-The Gabriel pilot established a simple worker-facing pattern:
+The Gabriel test build established a simple worker-facing pattern:
 
 1. login with a personal user;
 2. choose employer/assignment;
