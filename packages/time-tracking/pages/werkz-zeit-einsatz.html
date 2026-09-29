@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#020403">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<!-- Optimizer - Canonical --><!-- Optimizer - Custom Meta --><!-- Optimizer - Open Graph --><!-- Optimizer - Header Javascripts -->
+<title>WerkZ Zeit · Einsatz abschließen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.websitepublisher.ai/custom/wid23947/css/werkz-time.css">
+</head>
+<body>
+<div class="wzt-wrap">
+<header class="wzt-top"><button id="backBtn" class="wzt-btn wzt-small" type="button">‹ Zurück</button><div style="text-align:right"><div id="employer" class="wzt-muted"></div><div id="clock" class="wzt-clock" style="font-size:32px">00:00:00</div></div></header>
+<section class="wzt-card">
+<div class="wzt-kicker">EINSATZ / BAUSTELLE ABSCHLIESSEN</div><h1 id="headline">Einsatz dokumentieren</h1>
+<p class="wzt-muted">Die gesamte Arbeitszeit läuft im Hintergrund weiter. Hier wird nur der einzelne Einsatz abgeschlossen.</p>
+<div class="wzt-gps"><b id="address">Standort wird ermittelt …</b><div id="coords" class="wzt-muted">GPS wird angefragt.</div></div>
+<div class="wzt-tools"><button id="gpsBtn" class="wzt-btn" type="button">⌖ GPS / Adresse neu</button><button id="speechBtn" class="wzt-btn" type="button">🎙 Alles sagen</button></div>
+<div class="wzt-field"><label for="speechText">Gesprochenes / Schnellnotiz</label><textarea id="speechText" placeholder="z. B. Kunde Müller, Fenster gewechselt, Müll mitgenommen."></textarea></div>
+<div class="wzt-field"><label for="customer">Kunde / Name</label><input id="customer" placeholder="z. B. Carsten Müller"></div>
+<div class="wzt-field"><label for="place">Ort / Baustelle (optional)</label><input id="place" placeholder="z. B. Baustelle / Friedhof / Objekt"></div>
+<div class="wzt-field"><label for="note">Was wurde gemacht?</label><textarea id="note" placeholder="Kurz und verständlich beschreiben."></textarea></div>
+<div class="wzt-field"><label for="photo">Foto (optional)</label><input id="photo" type="file" accept="image/*" capture="environment"></div>
+<div id="msg" class="wzt-muted" style="margin:10px 0"></div>
+<button id="saveBtn" class="wzt-btn primary" type="button">Speichern & weiterarbeiten</button>
+</section>
+</div>
+<script src="https://cdn.websitepublisher.ai/custom/wid23947/js/werkz-time-core.js"></script>
+<script>
+(function(){
+ const tok=sessionStorage.getItem('admin_token')||localStorage.getItem('admin_token');if(!tok){location.replace('/login.html?next='+encodeURIComponent('/werkz-zeit-einsatz.html'));return}
+ const q=id=>document.getElementById(id),a=WZTime.active();if(!a){location.replace('/werkz-zeit.html');return}
+ let gps=null,address='',recognition=null,listening=false,speechFinal='';
+ const fmt=ms=>{let s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;return[h,m,ss].map(x=>String(x).padStart(2,'0')).join(':')};
+ q('employer').textContent=a.employer;q('headline').textContent='Einsatz bei '+a.employer+' abschließen';
+ function tick(){q('clock').textContent=fmt(Date.now()-Number(a.start))}tick();setInterval(tick,1000);
+ function back(){location.replace('/werkz-zeit.html')}
+ q('backBtn').onclick=back;
+ async function locate(){
+   q('address').textContent='Standort wird ermittelt …';q('coords').textContent='GPS wird angefragt.';
+   if(!navigator.geolocation){q('address').textContent='GPS nicht verfügbar';return}
+   navigator.geolocation.getCurrentPosition(async p=>{
+     gps={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:Math.round(p.coords.accuracy||0)};
+     q('coords').textContent='GPS '+gps.lat.toFixed(5)+', '+gps.lng.toFixed(5)+' · ±'+gps.accuracy+' m';
+     try{
+       const u='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(gps.lat)+'&lon='+encodeURIComponent(gps.lng)+'&zoom=18&addressdetails=1';
+       const r=await fetch(u,{headers:{'Accept':'application/json'}});const d=await r.json();address=d.display_name||'';
+       q('address').textContent=address||'Adresse nicht gefunden';
+     }catch(e){WZTime.logError('gps.reverse',e,{gps});q('address').textContent='GPS vorhanden · Adresse konnte nicht geladen werden'}
+   },e=>{WZTime.logError('gps.position',e);q('address').textContent='Standort nicht freigegeben';q('coords').textContent='Du kannst den Eintrag trotzdem speichern.'},{enableHighAccuracy:true,timeout:12000,maximumAge:15000})
+ }
+ q('gpsBtn').onclick=locate;locate();
+ function applySpeech(text){const s=String(text||'').trim();if(!s)return;q('speechText').value=s;if(!q('note').value.trim())q('note').value=s}
+ function stopSpeech(){listening=false;if(recognition){try{recognition.stop()}catch(e){}}q('speechBtn').textContent='🎙 Alles sagen'}
+ q('speechBtn').onclick=()=>{
+   if(listening){stopSpeech();return}
+   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){q('msg').textContent='Direkte Spracherkennung wird in diesem Browser nicht unterstützt. Bitte das Tastatur-Mikrofon verwenden.';q('speechText').focus();return}
+   speechFinal='';recognition=new SR();recognition.lang='de-DE';recognition.continuous=true;recognition.interimResults=true;listening=true;q('speechBtn').textContent='■ Aufnahme beenden';q('msg').textContent='Mikrofon wird gestartet …';
+   recognition.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)speechFinal+=t+' ';else interim+=t}applySpeech((speechFinal+interim).trim());q('msg').textContent='Sprache wird erkannt …'};
+   recognition.onerror=e=>{WZTime.logError('speech',e);q('msg').textContent='Spracherkennung konnte nicht fortgesetzt werden. Tippen ist weiterhin möglich.';stopSpeech()};
+   recognition.onend=()=>{if(listening){try{recognition.start()}catch(e){stopSpeech()}}else q('msg').textContent='Aufnahme beendet.'};
+   try{recognition.start()}catch(e){WZTime.logError('speech.start',e);stopSpeech()}
+ };
+ q('speechText').addEventListener('input',()=>{if(!q('note').value.trim())q('note').value=q('speechText').value});
+ q('saveBtn').onclick=async()=>{
+   q('saveBtn').disabled=true;q('msg').textContent='Einsatz wird gespeichert …';
+   try{
+     const fast=q('speechText').value.trim(),customer=q('customer').value.trim(),place=q('place').value.trim(),note=q('note').value.trim()||fast;
+     if(!customer&&!place&&!note)throw new Error('Bitte mindestens Kunde, Ort oder Tätigkeit eintragen.');
+     let photo=null,file=q('photo').files&&q('photo').files[0];if(file)photo=await WZTime.photoFromFile(file);
+     WZTime.addJobsite({customer,place,note,address,gps,photo});
+     q('msg').textContent='Gespeichert. Arbeitszeit läuft weiter …';setTimeout(back,450)
+   }catch(e){WZTime.logError('ui.jobsite.save',e);q('msg').textContent=e.message||'Speichern fehlgeschlagen.';q('saveBtn').disabled=false}
+ };
+})();
+</script>
+<!-- Optimizer - Footer Javascripts -->
+</body></html>
