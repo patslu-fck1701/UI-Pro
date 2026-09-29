@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#020403"><meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<!-- Optimizer - Canonical --><!-- Optimizer - Custom Meta --><!-- Optimizer - Open Graph --><!-- Optimizer - Header Javascripts -->
+<title>WerkZ Zeit · Tagesübersicht</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.websitepublisher.ai/custom/wid23947/css/werkz-time.css">
+</head>
+<body>
+<div class="wzt-wrap">
+<header class="wzt-top"><div class="wzt-brand"><div class="wzt-mark">W</div><div>WerkZ · Tagesübersicht</div></div><a class="wzt-btn wzt-small" href="/werkz-zeit.html" style="text-decoration:none;display:grid;place-items:center">Zur Zeit</a></header>
+<section class="wzt-card">
+<div class="wzt-kicker">FEIERABEND GESPEICHERT</div><h1>Arbeitstag abgeschlossen</h1><p class="wzt-muted" id="dateLabel"></p>
+<div class="wzt-metrics"><div class="wzt-metric"><span>Gesamtzeit</span><b id="total">0:00</b></div><div class="wzt-metric"><span>Arbeitgeber</span><b id="employer">–</b></div><div class="wzt-metric"><span>Arbeitsbeginn</span><b id="start">–</b></div><div class="wzt-metric"><span>Feierabend</span><b id="end">–</b></div><div class="wzt-metric"><span>Einsätze</span><b id="count">0</b></div><div class="wzt-metric"><span>Fehlerjournal</span><b id="errorCount">0</b></div></div>
+</section>
+<section class="wzt-card" style="margin-top:14px"><div class="wzt-kicker">EINSÄTZE DES TAGES</div><div id="jobs" class="wzt-list"></div></section>
+<section class="wzt-card" style="margin-top:14px"><div class="wzt-kicker">CHRONOLOGISCHER ABLAUF</div><div id="timeline" class="wzt-list"></div></section>
+<section class="wzt-card" style="margin-top:14px"><div class="wzt-kicker">SICHERUNG & ÜBERGABE</div><p class="wzt-muted">Der lokale Zustand wird vor jedem Schreibvorgang gesichert. Fehler werden separat protokolliert. Für den späteren Kundeneinsatz wird derselbe Kern an eine tenant- und rollenbasierte Serverablage angeschlossen.</p><div class="wzt-foot"><button id="backupBtn" class="wzt-btn wzt-small" type="button">Backup JSON laden</button><button id="csvBtn" class="wzt-btn wzt-small" type="button">Tages-CSV laden</button><a class="wzt-btn wzt-small" href="/werkz-zeiterfassung.html" style="text-decoration:none;display:grid;place-items:center">Architektur / Referenz</a></div></section>
+</div>
+<script src="https://cdn.websitepublisher.ai/custom/wid23947/js/werkz-time-core.js"></script>
+<script>
+(function(){
+ const tok=sessionStorage.getItem('admin_token')||localStorage.getItem('admin_token');if(!tok){location.replace('/login.html?next='+encodeURIComponent(location.pathname+location.search));return}
+ const q=id=>document.getElementById(id),p=new URLSearchParams(location.search),qs=Number(p.get('start')||0),qe=Number(p.get('end')||0),qemp=p.get('employer')||'';
+ const tm=ts=>ts?new Date(Number(ts)).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'–',dt=ts=>new Date(Number(ts)||Date.now()).toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}),dur=ms=>{let m=Math.round(Math.max(0,Number(ms)||0)/60000);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')},esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ let s=WZTime.summary(qe||Date.now());
+ if((!s.start||!s.end)&&qs&&qe){s.start=qs;s.end=qe;s.total=qe-qs;s.employers=qemp?[qemp]:s.employers}
+ q('dateLabel').textContent=dt(s.end||s.start||Date.now());q('total').textContent=dur(s.total);q('employer').textContent=(s.employers&&s.employers.join(', '))||qemp||'–';q('start').textContent=tm(s.start);q('end').textContent=tm(s.end);q('count').textContent=String(s.jobs.length);q('errorCount').textContent=String(WZTime.errors().length);
+ q('jobs').innerHTML=s.jobs.length?s.jobs.map(j=>'<div class="wzt-item"><div class="wzt-item-head"><b>'+esc(j.customer||j.place||'Einsatz')+'</b><span>'+tm(j.time)+'</span></div>'+(j.place?'<p>'+esc(j.place)+'</p>':'')+(j.address?'<p>GPS-Adresse: '+esc(j.address)+'</p>':'')+(j.note?'<p>'+esc(j.note)+'</p>':'')+(j.photo?'<p>📷 Foto lokal gespeichert</p>':'')+'</div>').join(''):'<div class="wzt-item"><b>Keine einzelnen Einsätze gespeichert.</b><p>Die Arbeitszeit des Tages ist trotzdem vorhanden.</p></div>';
+ let flow=[];if(s.start)flow.push({time:s.start,title:'Arbeitsbeginn',text:(s.employers||[]).join(', ')||qemp});s.jobs.forEach(j=>flow.push({time:j.time,title:'Einsatz abgeschlossen',text:[j.customer,j.place,j.note].filter(Boolean).join(' · ')}));if(s.end)flow.push({time:s.end,title:'Feierabend',text:(s.employers||[]).join(', ')||qemp});flow.sort((a,b)=>a.time-b.time);
+ q('timeline').innerHTML=flow.length?flow.map(e=>'<div class="wzt-item"><div class="wzt-item-head"><b>'+esc(e.title)+'</b><span>'+tm(e.time)+'</span></div><p>'+esc(e.text||'')+'</p></div>').join(''):'<div class="wzt-item"><b>Keine Tagesereignisse vorhanden.</b></div>';
+ q('backupBtn').onclick=()=>WZTime.downloadSnapshot();
+ q('csvBtn').onclick=()=>{const rows=[['Zeit','Arbeitgeber','Kunde','Ort','GPS-Adresse','Tätigkeit']].concat(s.jobs.map(j=>[tm(j.time),j.employer||qemp,j.customer||'',j.place||'',j.address||'',j.note||'']));const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),blob=new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='WerkZ_Zeit_'+s.day+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+})();
+</script>
+<!-- Optimizer - Footer Javascripts -->
+</body></html>
