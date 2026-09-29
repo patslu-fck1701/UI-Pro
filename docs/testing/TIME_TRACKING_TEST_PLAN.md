@@ -38,7 +38,7 @@ A test is only positive for the concrete path observed. A working timer does not
 - Refresh main/jobsite/summary pages -> active state/daily state remains coherent.
 - Stale admin session -> no private server data is exposed by the current local prototype.
 
-## Regression tests derived from Gabriel pilot
+## Regression tests derived from Gabriel test build
 
 - Never put a complete day JSON payload into the URL.
 - Never rely on two competing finish click handlers.
