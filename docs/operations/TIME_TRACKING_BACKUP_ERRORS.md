@@ -47,11 +47,11 @@ Before a material time-module change:
 7. synchronize only the semantic delta to Drive/WebsitePublisher/GitHub;
 8. stop once the systems agree semantically.
 
-## Known pilot failures retained as lessons
+## Known test failures retained as lessons
 
 ### Empty daily summary after finish
 
-Cause classes observed during the Gabriel pilot included duplicate finish handling, fragile source/destination state transfer and published-script parsing problems.
+Cause classes observed during the Gabriel test build included duplicate finish handling, fragile source/destination state transfer and published-script parsing problems.
 
 Guardrail: one finish path, synchronous durable state first, small URL fallback second, independent destination reconstruction third.
 
