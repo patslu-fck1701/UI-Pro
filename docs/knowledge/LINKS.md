@@ -53,3 +53,5 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 - Domain/runtime plan: `docs/operations/DOMAIN_AND_RUNTIME_PLAN.md`
 - Codex consolidation order: `docs/operations/CODEX_CONSOLIDATION_ORDER.md`
 - Current technical fallback: https://project23947.websitepublisher.ai/
+
+- Local Codex snapshot manifest: `docs/operations/CODEX_LOCAL_SNAPSHOT.md`
