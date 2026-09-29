@@ -55,3 +55,5 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 - Current technical fallback: https://project23947.websitepublisher.ai/
 
 - Local Codex snapshot manifest: `docs/operations/CODEX_LOCAL_SNAPSHOT.md`
+
+- WebsitePublisher 23947 manifest: `docs/operations/WEBSITEPUBLISHER_23947_MANIFEST.md`
