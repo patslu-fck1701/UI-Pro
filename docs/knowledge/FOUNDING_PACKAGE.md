@@ -1,21 +1,22 @@
 # WerkZ Founding Package Index
 
-**Semantic baseline:** KB-v1.28  
-**Status:** cross-system aligned, private artifact
+**Shared semantic baseline:** KB-v1.31  
+**Current founding-package artifact revision:** KB-v1.29  
+**Status:** private artifact, cross-system linked
 
-A separate private business-formation package exists for WerkZ. This public repository intentionally stores only the semantic handoff, not the package files and not personal, funding-case or authority-specific identifiers.
+The private WerkZ business-formation package was updated on 2026-09-29. Public GitHub stores only the semantic handoff; personal case data, authority identifiers, hardware serial/details beyond what is needed for architecture, and the actual application documents remain outside this public repository.
 
-## Public-safe delta represented in KB-v1.28
+## Public-safe delta in founding package KB-v1.29
 
-- business operating map / relationship model
-- integration and access planning
-- data ownership and control-layer principles
-- project-phase security and credential handling
-- scope/state/dependency-aware testing and evidence
-- structured error, correction and retest learning
-- knowledge/version history with explicit predecessor handling
-- early market learning kept separate from customer/order/revenue claims
+- founder competence development is now documented as a practical progression from server administration and configuration into systematic diagnostics, own simple content/override modifications, build/signing, release/deployment and controlled testing;
+- AI is described as a guided development/analysis tool whose outputs must be validated in the real environment;
+- tool orchestration is treated as an explicit capability: editors, validators, converters, build/signing, deployment and diagnostic tools are combined according to the problem;
+- WerkZ positioning is clarified: understand the real operating process first, reuse existing systems where sensible, connect them through appropriate interfaces, automate only useful steps, and sell the resulting operational benefit rather than the mere technical connection;
+- the equipment argument was refined: existing equipment already enabled learning and development; requested equipment removes the next bottleneck for reliable, parallel, reproducible and economically usable client work;
+- a separate private annex for professional suitability / competence development now complements the technical work-sample annex.
 
 ## Boundary
 
-Public marketing, public repository documentation and private formation/funding documents are separate information layers. A later package must be compared with KB-v1.28 and linked as a successor rather than silently replacing history.
+Private biographical data, unverified hour estimates, authority-specific identifiers, personal hardware details and the actual funding documents are not copied into this public repository.
+
+Later founding-package revisions must be compared with KB-v1.29 and linked as successors rather than silently replacing history.
