@@ -1,6 +1,6 @@
 # Cross-system links
 
-**Baseline:** KB-v1.29
+**Baseline:** KB-v1.30
 
 ## GitHub
 Current physical repository: `patslu-fck1701/UI-Pro`  
@@ -34,3 +34,5 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 - Test contract: `docs/testing/TIME_TRACKING_TEST_PLAN.md`
 - Backup/error model: `docs/operations/TIME_TRACKING_BACKUP_ERRORS.md`
 - Gabriel reference extraction: `docs/knowledge/GABRIEL_TIME_REFERENCE.md`
+
+- Product/module boundary: `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`
