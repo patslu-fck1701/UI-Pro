@@ -2,7 +2,7 @@
 
 This repository is the **new canonical private-target repository structure for WerkZ**. The GitHub repository is still technically named `UI-Pro` because the connected GitHub actions cannot rename repositories. Rename target: **WerkZ**.
 
-**Semantic baseline:** KB-v1.29  
+**Semantic baseline:** KB-v1.30  
 **Rebuilt:** 2026-09-28  
 **Legacy UI-Pro state:** `archive/legacy-ui-pro-before-werkz-2026-09-28`
 
@@ -36,3 +36,8 @@ The old UI-Pro content is historical only and is preserved on its archive branch
 ## Current reusable reference module
 
 `packages/time-tracking/` contains the WerkZ mobile time-tracking reference implementation: shift start/finish, multiple jobsite completions, GPS/address, speech/text, optional photo, daily summary, backup/restore and error logging. See `docs/architecture/TIME_TRACKING_MODULE.md`.
+
+
+## Product boundary
+
+WerkZ Time is one reusable module. It is not the complete WerkZ Solo offering. The broader Solo/Team/Business boundaries are documented in `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`.
