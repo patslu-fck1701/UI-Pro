@@ -2,7 +2,7 @@
 
 This repository is the **new canonical private-target repository structure for WerkZ**. The GitHub repository is still technically named `UI-Pro` because the connected GitHub actions cannot rename repositories. Rename target: **WerkZ**.
 
-**Semantic baseline:** KB-v1.32  
+**Semantic baseline:** KB-v1.33  
 **Rebuilt:** 2026-09-28  
 **Legacy UI-Pro state:** `archive/legacy-ui-pro-before-werkz-2026-09-28`
 
@@ -46,3 +46,10 @@ WerkZ Time is one reusable module. It is not the complete WerkZ Solo offering. T
 ## Pricing scope
 
 Public starting prices stay at WerkZ Solo €490, Team €1,490 and Business €2,490. The reusable-module and scope rules are documented in `docs/operations/PRICING_SCOPE_PUBLIC.md`.
+
+
+## Deployment topology
+
+WerkZ uses **WebsitePublisher project 23947** as the canonical live runtime. DeutschZ remains an integrated technical reference/lab area, and WerkZ Time is a reusable module rather than a separate product project. The intended custom domain is **werkz-digital.eu** (reported purchased, not connected yet).
+
+See `docs/architecture/DEPLOYMENT_TOPOLOGY.md` and `docs/operations/DOMAIN_AND_RUNTIME_PLAN.md`.
