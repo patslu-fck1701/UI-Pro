@@ -57,3 +57,5 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 - Local Codex snapshot manifest: `docs/operations/CODEX_LOCAL_SNAPSHOT.md`
 
 - WebsitePublisher 23947 manifest: `docs/operations/WEBSITEPUBLISHER_23947_MANIFEST.md`
+
+- WerkZ Time consolidation/source precedence: `docs/architecture/TIME_TRACKING_CONSOLIDATION.md`
