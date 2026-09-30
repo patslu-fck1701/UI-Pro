@@ -13,9 +13,9 @@ They belong to one core web property:
 - **DeutschZ** remains the technical origin, lab and reference area.
 - **WerkZ Time** is a reusable WerkZ module, not a separate core brand.
 - **WebsitePublisher project 23947** is the canonical live runtime.
-- **WebsitePublisher project 29212** is a historical Gabriel-specific test build and is not a second source of product truth.
+- **WebsitePublisher project 29212** is the most advanced practical Gabriel-specific time-tracking implementation. It is a source for feature/UX harvesting, but not the long-term canonical deployment target.
 
-The goal is one active core project so two WebsitePublisher Starter project slots remain available for future real customer or isolated product deployments after 29212 is safely archived and removed by the owner.
+The goal is one active core project so two WebsitePublisher Starter project slots remain available for future real customer or isolated product deployments after project 29212 has been fully harvested, privately archived and only then removed by the owner.
 
 ## Planned public domain
 
@@ -52,12 +52,12 @@ A reusable module by itself is not a reason for a new project.
 
 ## Time-tracking consolidation
 
-Three historical time-tracking lines exist:
-1. Gabriel-specific WebsitePublisher project 29212;
-2. audited single-file/private time app from project 23947;
-3. generic WerkZ Time core/module in project 23947.
+Three time-tracking lines exist:
+1. **Project 29212** — latest and most advanced practical implementation; primary source for proven UX/features and the real mobile workflow.
+2. **Audited single-file/private app in project 23947** — technical/audit reference with additional local-vault/reporting ideas.
+3. **Generic WerkZ Time core/module in project 23947** — the abstraction target and reusable product architecture.
 
-The target is one generic WerkZ Time module in project 23947. Personal test-specific names and employer data must not become part of the generic public product source.
+Merge precedence is deliberate: harvest the mature practical behavior from 29212, keep the stronger generic state/backup/error contracts from the WerkZ core, and use the audited single-file build as an evidence/reference source. The target is one generic WerkZ Time module in project 23947. Personal test-specific names and employer data stay in private fixtures only.
 
 ## Safety
 
