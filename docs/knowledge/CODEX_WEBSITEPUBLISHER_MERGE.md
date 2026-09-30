@@ -1,6 +1,6 @@
 # Codex / WebsitePublisher Merge Rule
 
-**Baseline:** KB-v1.32  
+**Baseline:** KB-v1.33  
 **Date:** 2026-09-29
 
 ## Finding
@@ -26,7 +26,7 @@ The current Codex package and WebsitePublisher live state are not competing whol
 
 ## Canonical rule
 
-The separate WerkZ WebsitePublisher project must merge both sources. Do not blindly replace the live public structure with the Codex website, and do not discard the stronger Codex governance/engineering model.
+Project 23947 remains the canonical WebsitePublisher runtime. Merge both sources into that common WerkZ/DeutschZ/WerkZ-Time system. Do not blindly replace the live public structure with the Codex website, and do not discard the stronger Codex governance/engineering model.
 
 ## Exclusions
 
@@ -41,7 +41,7 @@ Do not migrate:
 
 ## Time tracking
 
-Three related time-tracking lines currently exist and must not be treated as one identical codebase until deliberately consolidated: a Codex-audited single-file asset, the Gabriel-specific project 29212, and the reusable WerkZ time module.
+Three related time-tracking lines currently exist and must not be treated as one identical codebase until deliberately consolidated. Project 29212 is the latest and most advanced practical implementation and therefore leads on proven UX/behavior; the reusable WerkZ Time core leads on generic product architecture/state contracts; the Codex-audited single-file asset remains an additional technical/evidence source.
 
 ## Founding-package boundary
 
