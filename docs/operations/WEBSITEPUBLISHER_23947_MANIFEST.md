@@ -52,7 +52,7 @@ Historical time prototype: `private/arbeitszeit.html` is not the canonical publi
 
 ## Historical project 29212
 
-Project 29212 is a Gabriel-specific historical test build. It should receive no new canonical product development. Archive privately before owner-side deletion. After removal, two Starter project slots remain available for real isolated customer/product deployments.
+Project 29212 is the **latest and most advanced practical Gabriel time-tracking implementation**. It should not become a separate permanent product, but it is the primary source for harvesting the proven mobile workflow, UI and feature behavior into the generic WerkZ Time module. It must be privately archived and feature-parity checked before any owner-side deletion. After successful consolidation/removal, two Starter project slots remain available for real isolated customer/product deployments.
 
 ## Domain switch
 
