@@ -11,7 +11,7 @@ Produce one canonical WerkZ code/documentation base aligned with the live Websit
 - project 23947 = WerkZ live runtime;
 - DeutschZ = integrated technical reference/lab;
 - WerkZ Time = reusable module;
-- project 29212 = historical Gabriel test build only.
+- project 29212 = latest practical Gabriel implementation and temporary source branch for feature harvesting; not the final deployment target.
 
 ## Required work
 
@@ -32,15 +32,17 @@ Produce one canonical WerkZ code/documentation base aligned with the live Websit
    - do not copy private pricing/margin data into public GitHub.
 
 4. **Consolidate WerkZ Time**
-   - compare the Gabriel-specific build, the audited private/single-file app and the generic WerkZ Time core;
-   - extract generic state/data contracts and reusable UI/logic;
+   - treat project 29212 as the latest/most advanced practical source for the mobile workflow and feature behavior;
+   - compare it against the audited private/single-file app and the generic WerkZ Time core;
+   - extract generic state/data contracts and reusable UI/logic, preserving every useful capability from 29212 unless there is a documented reason not to;
    - keep personal Gabriel/employer names only in private test fixtures;
    - document which production gaps remain (server persistence, member auth, multi-device, private files, backup/recovery).
 
-5. **Prepare project 29212 retirement**
-   - inventory pages/assets;
-   - define a private archive/export plan;
-   - mark the project removable only after backup verification.
+5. **Prepare project 29212 retirement only after merge**
+   - inventory pages/assets and feature behavior;
+   - create a private source snapshot/export;
+   - maintain a feature-parity checklist against the new generic WerkZ Time module;
+   - mark 29212 removable only after backup verification and parity sign-off.
 
 6. **Align business/public docs**
    - remove the obsolete public NOT_SET price statement;
