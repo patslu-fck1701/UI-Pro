@@ -45,7 +45,7 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 
 ## Deployment split / Codex merge
 
-- Product/deployment split: `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`
+- Superseded three-project split (historical decision): `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`
 - Codex + WebsitePublisher merge rule: `docs/knowledge/CODEX_WEBSITEPUBLISHER_MERGE.md`
 - Current private founding-package artifact remains revision KB-v1.29 and is linked into shared baseline KB-v1.33; a deployment-baseline change alone does not silently rewrite the funding package.
 
