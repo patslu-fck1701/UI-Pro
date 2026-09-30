@@ -85,3 +85,8 @@ Project 29212 may be removed only when:
 - personal test data is excluded from public/generic source;
 - tests pass;
 - rollback/source references are documented.
+
+
+## Feature-parity checklist
+
+The live source comparison is maintained in `docs/testing/TIME_TRACKING_FEATURE_PARITY.md`. Treat it as a merge gate: a capability present in project 29212 must either exist in the generic result or have an explicit documented decision explaining why it was intentionally not carried forward.
