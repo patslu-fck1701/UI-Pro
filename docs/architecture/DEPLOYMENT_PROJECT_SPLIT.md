@@ -1,32 +1,16 @@
-# WerkZ Deployment / Product Split
+# WerkZ Deployment / Product Split — superseded
 
-**Baseline:** KB-v1.32  
-**Date:** 2026-09-29
+**Baseline:** KB-v1.33  
+**Original decision:** KB-v1.32 / 2026-09-29  
+**Status:** SUPERSEDED by `docs/architecture/DEPLOYMENT_TOPOLOGY.md`
 
-## Target
+The earlier three-project split was a temporary planning assumption. After reviewing the actual WebsitePublisher limits, the Codex package and the practical time-tracking implementations, the current architecture is:
 
-Product boundaries and WebsitePublisher deployment boundaries should match.
+1. **Project 23947** — canonical WerkZ live runtime.
+2. **DeutschZ** — integrated technical origin/reference/lab inside that runtime.
+3. **WerkZ Time** — reusable module inside WerkZ.
+4. **Project 29212** — latest practical Gabriel time-app implementation; temporary source for feature harvesting and private archival, not a permanent separate product.
 
-1. **DeutschZ** — project 23947 remains the existing DeutschZ deployment target after the migration is complete.
-2. **WerkZ** — receives a separate WebsitePublisher project.
-3. **Time tracking** — project 29212 remains a separate product/project.
+Once 29212 has been fully harvested, backed up and parity-checked, it may be removed by the owner, leaving two Starter project slots free for actual isolated customer/product deployments.
 
-## Interim state
-
-Project 23947 is currently mixed and still contains WerkZ and DeutschZ material. This is an interim migration state, not the intended final topology.
-
-## Migration guardrail
-
-Do not delete current WerkZ pages from project 23947 and do not repurpose the existing DeutschZ address until the separate WerkZ project has been built, tested and accepted.
-
-## Order
-
-1. compare Codex and WebsitePublisher content;
-2. mark canonical sections;
-3. define the separate WerkZ project structure;
-4. build and test the separate WerkZ project;
-5. validate links, forms, assets, legal pages, languages and rollback path;
-6. only then remove/archive WerkZ material from project 23947;
-7. separately consolidate the time-tracking product in project 29212.
-
-Domains are assigned after the product/project split is stable.
+Do not use the old three-separate-project target for new work.
