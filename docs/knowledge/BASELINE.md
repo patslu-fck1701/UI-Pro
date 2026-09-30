@@ -65,23 +65,23 @@ The public starting prices remain €490 / €1,490 / €2,490 for Solo / Team /
 Detailed cost rates, private margins and internal pricing calculations remain outside this public repository.
 
 
-## Deployment/product split — KB-v1.33
+## Deployment/product consolidation — KB-v1.33
 
-The WebsitePublisher deployment model is now explicitly separated by product:
+The earlier three-separate-project plan is superseded.
 
-- project 23947 remains the DeutschZ deployment target after migration is complete;
-- WerkZ receives its own separate WebsitePublisher project;
-- project 29212 remains the separate time-tracking product.
+- project 23947 is the canonical WerkZ live runtime;
+- DeutschZ remains inside it as the technical origin/reference/lab;
+- WerkZ Time is a reusable module inside WerkZ;
+- project 29212 is the latest and most advanced practical Gabriel time-tracking implementation and temporarily remains a source for feature/UX harvesting, not a permanent separate product.
 
-The current mixed project is an interim state only. Existing WerkZ pages in project 23947 are not deleted until the separate WerkZ project has been built, tested and accepted. See `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`.
+Project 29212 must be privately archived and feature-parity checked before any owner-side deletion. After successful consolidation, two Starter project slots can remain free for actual isolated customer/product deployments. See `docs/architecture/DEPLOYMENT_TOPOLOGY.md` and the superseded-plan note in `docs/architecture/DEPLOYMENT_PROJECT_SPLIT.md`.
 
 ## Codex / WebsitePublisher merge rule — KB-v1.33
 
-The current Codex package and WebsitePublisher live state are complementary sources rather than mutually exclusive versions. Codex is stronger for internal engineering, governance, business templates, testing and operational rules; WebsitePublisher is stronger for the current public site structure and presentation. The next separate WerkZ website must merge both deliberately. See `docs/knowledge/CODEX_WEBSITEPUBLISHER_MERGE.md`.
-
+The current Codex package and WebsitePublisher live state are complementary sources rather than competing versions. Codex is stronger for engineering, governance, business templates, testing and operational rules; WebsitePublisher is stronger for the current public site and practical implementation. They are merged into project 23947 deliberately. For time tracking, project 29212 leads on proven practical UX/behavior, the generic WerkZ Time core leads on abstraction/state contracts, and the audited single-file build remains an additional evidence source. See `docs/knowledge/CODEX_WEBSITEPUBLISHER_MERGE.md`.
 
 ## Deployment consolidation — KB-v1.33
 
-The canonical live topology is now one core WebsitePublisher project: 23947. WerkZ is the main brand; DeutschZ is an integrated technical reference/lab; WerkZ Time is a reusable module. Project 29212 is historical test material and should be archived before owner-side deletion. Planned main domain: `werkz-digital.eu`, currently unconnected and pending exact registrar confirmation.
+The canonical live topology is one core WebsitePublisher project: 23947. WerkZ is the main brand; DeutschZ is an integrated technical reference/lab; WerkZ Time is a reusable module. Planned main domain: `werkz-digital.eu`, currently unconnected and pending exact registrar confirmation.
 
-See `docs/architecture/DEPLOYMENT_TOPOLOGY.md`, `docs/operations/DOMAIN_AND_RUNTIME_PLAN.md`, and `docs/operations/CODEX_CONSOLIDATION_ORDER.md`.
+See `docs/architecture/DEPLOYMENT_TOPOLOGY.md`, `docs/operations/DOMAIN_AND_RUNTIME_PLAN.md`, `docs/operations/WEBSITEPUBLISHER_23947_MANIFEST.md`, and `docs/operations/CODEX_CONSOLIDATION_ORDER.md`.
