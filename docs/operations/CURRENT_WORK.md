@@ -626,3 +626,13 @@ Implemented on PR #8:
 Combined branch CI checkpoint `36940537603`: 72/72 tests, syntax/lint/typecheck/SBOM check passed, npm audit 0. Provider-neutral OAuth account lifecycle, bounded retry/dead-letter worker and Time data/private-evidence backup→mutation→restore drill are implemented.
 
 Open external/human gates: persistent test HTTPS host and iPhone run (#3); repository visibility decision, signing infrastructure, production device persistence (#5); operating security process/restore drill/legal classification (#6); contributor rights, brand clearance, font packaging and insurance (#7).
+
+
+## Public-safe security continuation — durable enrollment and signed release workflow
+
+Verified implementation commit: `00241d9907c2e13fc7b41abe2986a6d4eecac1a9`  
+CI run: `36940860355` — success; 74/74 tests, lint 42 JavaScript files, runtime contract/typecheck 17 modules, SPDX gate passed, npm audit 0 known vulnerabilities.
+
+Issue #5 now also has atomic file-backed enrollment state: one-time token use, device identity and revocation survive process restart. A release-manifest CLI signs hashes of actual artifacts using an external Ed25519 private-key file and verifies signature, integrity and expiry; the repository contains no key. Automated tests cover restart/replay/revocation and manifest tampering.
+
+PR #8 remains Draft and stacked on PR #4. Production key custody, CI signing, repository visibility and actual customer enrollment remain external/governance gates; neither PR is a production-readiness claim.
