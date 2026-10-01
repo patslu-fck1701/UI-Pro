@@ -44,7 +44,7 @@ class ModuleRegistry {
   }
   get(id) { const m=this.byId.get(id); if(!m) throw new Error('Unknown module: '+id); return structuredClone(m); }
   forSku(sku) { const m=this.bySku.get(sku); if(!m) throw new Error('Unknown module SKU: '+sku); return structuredClone(m); }
-  list() { return [...this.byId.values()].map(structuredClone); }
+  list() { return [...this.byId.values()].map(value => structuredClone(value)); }
 }
 
 class EntitlementDeniedError extends Error {
