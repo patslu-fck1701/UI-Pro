@@ -179,10 +179,13 @@
   "branch_sync": {
     "active_branch": "codex/issue-3-commercial",
     "audit_snapshot": {
-      "main_commit": "a9747f71957e5bcc980a5c7b7f55889332440f81",
+      "main_commit": "6276c056d36d00ebddc10dab50ff9d02c0c72435",
+      "branch_head": "d81e9068e8ecabe74a6fde1d7a80fbe2eb302428",
+      "last_ci_verified_implementation": "82b465626d3e87dc4405acbde032ad675262d360",
       "ahead_by": 12,
-      "behind_by": 35,
-      "status": "diverged"
+      "behind_by": 41,
+      "status": "diverged",
+      "pr_mergeable": false
     },
     "rule": "Freshly compare current main vs active branch at resume time, then safely synchronize before new implementation. Main control-plane decisions win; preserve verified Issue #3 code."
   },
