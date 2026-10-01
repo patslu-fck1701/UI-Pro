@@ -123,7 +123,9 @@
     "runtime-only test session token and temporary login code",
     "connect project 29212 apiBase after endpoint verification",
     "physical iPhone camera/install/offline/reconnect acceptance",
-    "final PR #4 ready/merge decision after external acceptance"
+    "final PR #4 ready/merge decision after external acceptance",
+    "owner-controlled persistent HTTPS host provisioning from Render Blueprint and paid-disk review",
+    "Safari cross-site session cookie behavior on physical iPhone"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -570,5 +572,21 @@
       "security operations and restore drill",
       "contributor rights/brand/insurance human decisions"
     ]
+  },
+  "time_test_deployment": {
+    "status": "deployable_external_host_pending",
+    "target": "Render Docker web service with persistent disk and HTTPS",
+    "manifest": "deploy/time-test/render.yaml",
+    "guide": "deploy/time-test/README.md",
+    "verified_commit": "ec7c9284d5cf2034f96fe5c64b65ff853a45e854",
+    "verified_ci_run": 36941514632,
+    "external_actions": [
+      "owner-controlled Render account and paid persistent-disk plan",
+      "runtime secret entry",
+      "deployed HTTPS URL verification",
+      "physical iPhone acceptance"
+    ],
+    "api_base": null,
+    "safari_cross_site_cookie": "requires physical verification; use verified same-origin multipart proxy or same-site hosting if blocked"
   }
 }
