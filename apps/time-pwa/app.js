@@ -46,14 +46,36 @@
       setConnection(session?'Offline – Änderungen werden vorgemerkt':'Nicht angemeldet','error');
     }
   }
+  async function parseResponse(response){
+    const result=await response.json().catch(()=>({ok:false,error:{code:'HTTP_ERROR',message:'Serverantwort nicht lesbar'}}));
+    if(!response.ok||result.ok===false){
+      const error=new Error(result.error?.message||'Server rejected command');
+      error.code=result.error?.code||'HTTP_ERROR';error.details=result.error?.details;throw error;
+    }
+    return result.data;
+  }
+  async function sendEvidence(entry){
+    const form=new FormData(),payload=entry.payload;
+    form.append('timeRecordId',payload.timeRecordId);
+    form.append('idempotencyKey',entry.idempotencyKey);
+    form.append('mime',payload.mime);
+    form.append('size',String(payload.size));
+    form.append('hash',payload.hash);
+    form.append('file',payload.blob,payload.fileName);
+    const response=await fetch(apiBase+'/time/evidence',{method:'POST',credentials:'include',headers:{accept:'application/json'},body:form});
+    return parseResponse(response);
+  }
   async function send(entry){
+    if(entry.type==='time.evidence.add')return sendEvidence(entry);
     const response=await fetch(apiBase+'/time/commands',{
       method:'POST',credentials:'include',headers:{'content-type':'application/json',accept:'application/json'},
       body:JSON.stringify({operation:entry.type,input:{...entry.payload,idempotencyKey:entry.idempotencyKey,expectedRevision:entry.expectedRevision}})
     });
-    const result=await response.json().catch(()=>({ok:false,error:{code:'HTTP_ERROR',message:'Serverantwort nicht lesbar'}}));
-    if(!response.ok||result.ok===false){const error=new Error(result.error?.message||'Server rejected command');error.code=result.error?.code||'HTTP_ERROR';error.details=result.error?.details;throw error;}
-    return result.data;
+    return parseResponse(response);
+  }
+  async function sha256(blob){
+    const digest=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer());
+    return 'sha256:'+Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
   }
   async function enqueue(type,payload,expectedRevision){
     if(!session)throw new Error('Bitte zuerst anmelden.');
@@ -68,7 +90,13 @@
     if(!navigator.onLine){setConnection(entries.length+' offline vorgemerkt');await renderConflicts();return}
     for(const entry of entries){
       entry.status='syncing';entry.attempts++;await putCommand(entry);
-      try{entry.result=await send(entry);entry.status='synced';entry.lastError=null;}
+      try{
+        entry.result=await send(entry);entry.status='synced';entry.lastError=null;
+        if(entry.type==='time.evidence.add'){
+          const {timeRecordId,mime,size,hash,fileName}=entry.payload;
+          entry.payload={timeRecordId,mime,size,hash,fileName};
+        }
+      }
       catch(error){
         entry.status=error.code==='REVISION_CONFLICT'?'conflict':'failed';
         entry.lastError={code:error.code||'ERROR',message:publicError(error),details:error.details||null};
@@ -165,8 +193,18 @@
     },running.revision));
   });
   $('photo').addEventListener('change',async event=>{
-    const file=event.target.files[0];if(!file||!running)return;
-    alert('Foto gewählt. Der binäre Offline-Upload wird erst nach Verbindung mit dem Evidence-Transport aktiviert; es wurde kein Scheinerfolg gespeichert.');
+    const file=event.target.files[0];event.target.value='';
+    if(!file)return;
+    if(!running)return alert('Bitte zuerst Arbeitszeit starten.');
+    if(!file.type.startsWith('image/'))return alert('Bitte eine Bilddatei wählen.');
+    if(file.size>20*1024*1024)return alert('Das Foto darf höchstens 20 MB groß sein.');
+    try{
+      const hash=await sha256(file);
+      await enqueue('time.evidence.add',{
+        timeRecordId:running.id,mime:file.type,size:file.size,hash,fileName:file.name||'foto.jpg',blob:file
+      });
+      alert(navigator.onLine?'Foto sicher übertragen.':'Foto offline vorgemerkt. Es wird bei Verbindung übertragen.');
+    }catch(error){alert(publicError(error));}
   });
   $('dialog-save').addEventListener('click',async event=>{
     event.preventDefault();
