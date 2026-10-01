@@ -27,8 +27,10 @@ class FileTimeRepository extends TimeRepositoryPort {
   create(record,idempotencyKey){
     const ik=this.key(record.organisationId,idempotencyKey);
     if(this.state.idempotency[ik])return clone(this.state.idempotency[ik]);
+    const recordKey=this.key(record.organisationId,record.id);
+    if(this.state.records[recordKey]){const error=new Error('Time record id already exists');error.code='ID_CONFLICT';throw error;}
     const value={...clone(record),revision:1,corrections:[]};
-    this.state.records[this.key(value.organisationId,value.id)]=value;
+    this.state.records[recordKey]=value;
     this.state.idempotency[ik]=value;this.persist();return clone(value);
   }
   get(org,id){const value=this.state.records[this.key(org,id)];return value?clone(value):null}
