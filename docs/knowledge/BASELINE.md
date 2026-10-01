@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.40  
+**Current baseline:** KB-v1.41  
 **Date:** 2026-10-01
 
 ## Canonical responsibilities
@@ -151,3 +151,24 @@ They establish from the start:
 - separation of WebsitePublisher marketing/reference surfaces from customer runtime and production data.
 
 These are engineering constraints, not a signal that all production infrastructure is already implemented.
+
+
+## KB-v1.41 — consolidated commercial/security/customer-operation master
+
+The non-code operating model is now consolidated across pricing, go-to-market, contracts/privacy, security, deployment, integrations, onboarding and the 2026 customer-readiness roadmap.
+
+Canonical repository anchor:
+- `docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md`
+
+Private Drive master:
+- `WerkZ – Masterplan Geschäftsmodell, Preise, Sicherheit, Vertrieb & Kundenbetrieb`
+
+Key decisions:
+- no permanent Free/Basic production tier;
+- Solo/Team/Business are sales presets of one core;
+- modules remain technical entitlements rather than a public low-price module menu;
+- pricing is setup/project + deployment/infrastructure + integrations/migration + optional hardware + managed operation/support;
+- cloud-first/agent-optional remains the standard;
+- existing customer hardware is assessed before procurement of a WerkZ Box;
+- legal/privacy/security claims must match implemented controls and actual statutory scope;
+- the first regular production customer remains gated by production persistence/auth/storage, tenant-isolation testing, backup/restore, incident/recovery processes and the contract/privacy package.
