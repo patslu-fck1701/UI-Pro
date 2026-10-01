@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-01",
+  "updated_at": "2026-10-02",
   "baseline": "KB-v1.41",
   "state": "IN_PROGRESS",
   "repository": "patslu-fck1701/UI-Pro",
@@ -444,7 +444,8 @@
     "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md",
     "docs/legal/IP_OSS_BRAND_FOUNDATION.md",
     "docs/legal/IP_PROVENANCE_REGISTER.md",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "docs/governance/RISK_CONCERNS_REGISTER.md"
   ],
   "queued_product_security_issue": {
     "number": 6,
@@ -488,5 +489,14 @@
     "third_party_notices": "required",
     "trademark_clearance": "required_before_filing_or_major_brand_spend",
     "insurance_decision": "required_before_normal_paid_production"
+  },
+  "risk_concerns_register": {
+    "path": "docs/governance/RISK_CONCERNS_REGISTER.md",
+    "status": "canonical",
+    "rule": "Material recommendations must preserve downside, uncertainty, stop-gates and mitigations.",
+    "ip_supporting_gates": [
+      "docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md",
+      "docs/legal/DATA_RIGHTS_WORDING_GUIDE.md"
+    ]
   }
 }
