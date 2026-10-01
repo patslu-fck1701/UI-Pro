@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#17324d">
+  <meta name="werkz-api-base" content="/api">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <title>WerkZ Zeit</title>
+</head>
+<body>
+  <header>
+    <div><span class="eyebrow">WerkZ Zeit</span><h1>Mein Arbeitstag</h1></div>
+    <output id="sync-status" class="status" aria-live="polite">Verbindung wird geprüft</output>
+  </header>
+  <main>
+    <section class="card timer" aria-labelledby="timer-title">
+      <p id="timer-title">Aktuelle Arbeitszeit</p>
+      <strong id="elapsed">00:00:00</strong>
+      <label>Kunde oder Einsatz<input id="customer" autocomplete="organization" placeholder="Optional"></label>
+      <label>Auftrag<input id="order" autocomplete="off" placeholder="Optional"></label>
+      <label>Startkilometer<input id="mileage-start" inputmode="decimal" type="number" min="0" placeholder="Optional"></label>
+      <button id="start" class="primary">Arbeitszeit starten</button>
+      <button id="stop" class="danger" hidden>Arbeitszeit beenden</button>
+    </section>
+
+    <section class="quick-grid" aria-label="Schnellerfassung">
+      <button id="note">Notiz</button>
+      <label class="button" for="photo">Foto</label>
+      <input id="photo" type="file" accept="image/*" capture="environment" hidden>
+      <button id="mileage">Kilometer</button>
+      <button id="correction">Korrektur</button>
+    </section>
+
+    <section class="card">
+      <div class="section-title"><h2>Heute</h2><button id="refresh" class="quiet">Aktualisieren</button></div>
+      <ul id="history"><li class="empty">Noch keine Einträge geladen.</li></ul>
+    </section>
+
+    <section id="conflicts-card" class="card warning" hidden>
+      <h2>Konflikte prüfen</h2>
+      <p>Eine Änderung wurde auf einem anderen Gerät vorgenommen. Es wurde nichts überschrieben.</p>
+      <ul id="conflicts"></ul>
+    </section>
+  </main>
+
+  <dialog id="entry-dialog">
+    <form method="dialog">
+      <h2 id="dialog-title">Eintrag</h2>
+      <label id="entry-label">Text<textarea id="entry-value" rows="5"></textarea></label>
+      <div class="dialog-actions"><button value="cancel">Abbrechen</button><button id="dialog-save" value="default" class="primary">Speichern</button></div>
+    </form>
+  </dialog>
+  <noscript>WerkZ Zeit benötigt JavaScript.</noscript>
+  <script src="./app.js" defer></script>
+</body>
+</html>
