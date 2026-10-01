@@ -28,7 +28,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "When Codex usage is available again and owner says 'weiter', resume active Issue #3 from the last verified branch commit and current continuation.",
+  "next_trigger": "When Codex usage is available again and owner says 'weiter', read RUNBOOK + CURRENT_WORK + the mandatory foundation docs, then resume active Issue #3 from the last verified branch commit and current continuation.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
@@ -42,6 +42,26 @@
       "path": "/WerkZ/Research/Werk_Z_Integrationsbericht_Oktober_2026.txt",
       "library_file_id": "libfile_c5e86a5960208191874decec75d09404",
       "purpose": "connector/API architecture and provider preparation research"
+    },
+    {
+      "path": "conversation/Files Library: Werk_Z_Recht_Schutzbericht_NEU_2026-10-01.txt",
+      "library_file_id": "libfile_5d136d2dad948191868284839d1e7cf5",
+      "purpose": "security/privacy/legal-readiness engineering baseline"
+    },
+    {
+      "path": "conversation/Files Library: Werk Z – Deployment-, Installations- und Onboarding-Strategie für Kundenumgebungen",
+      "library_file_id": "libfile_8c6fd3baef60819185d165fd09a2e051",
+      "purpose": "cloud/agent deployment, enrollment, packaging, signing and onboarding baseline"
+    },
+    {
+      "path": "conversation/Files Library: Zusammenfassung (Executive Summary)",
+      "library_file_id": "libfile_cbe8eb41c5e48191a9662acd5eb6e995",
+      "purpose": "cross-check of security/deployment/legal requirements"
+    },
+    {
+      "path": "conversation/Files Library: Werk_Z_Integrationsbericht_Oktober_2026.md",
+      "library_file_id": "libfile_4af2653afd24819199bc0de988d38300",
+      "purpose": "current integration/API research copy"
     }
   ],
   "current_continuation": "Issue #3 Block 3A/3B: durable Time repository + private object storage + HTTP-neutral application boundary + concurrent-device tests, then IndexedDB/PWA mobile Time surface. Provider-neutral integration contracts only.",
@@ -85,5 +105,24 @@
     "system": "Codex",
     "temporary": true,
     "note": "Current Codex usage limit reached. Resume Issue #3 when usage is available again; no product/technical redesign required."
-  }
+  },
+  "foundation_sync": {
+    "status": "linked",
+    "commit": "0462de80760b61164050d0f382e7c7576d4584b3",
+    "mandatory_docs": [
+      "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
+      "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md",
+      "docs/integrations/INTEGRATION_STRATEGY.md"
+    ]
+  },
+  "implementation_guards": [
+    "WebsitePublisher remains marketing/reference only; no production customer database/runtime dependency",
+    "cloud-first and agent-optional; smartphone-only Solo remains supported",
+    "local agent is least-privilege, outbound-preferred, no generic remote shell, signed-update only",
+    "secrets are referenced via replaceable secret storage; no plaintext customer secrets in business tables or logs",
+    "tenant isolation and cross-tenant negative tests are release gates",
+    "critical actions remain audited and approvals are core state, not messenger state",
+    "provider APIs stay behind provider-neutral connector/OAuth/webhook/queue/mapping contracts",
+    "production release requires backup/restore, retention/exit, incident-response and provider/subprocessor data-flow readiness"
+  ]
 }
