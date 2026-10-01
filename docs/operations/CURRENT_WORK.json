@@ -38,7 +38,7 @@
   "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "c94ff071c2cf18fb760f3cf2f868889f85b9f02e",
+  "last_verified_issue_branch_commit": "6c7cba206720c44b266fe94359c6df760039fb17",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
@@ -71,23 +71,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3: transport-neutral application boundary, complete audit events, concurrent-device integration through application layer, then OfflineQueuePort/IndexedDB and generic PWA Time surface.",
+  "current_continuation": "Issue #3: add OfflineQueuePort with IndexedDB driver boundary and generic mobile/PWA Time surface, then provider-neutral integration contracts.",
   "last_verified_ci": {
-    "run_id": 36912967631,
+    "run_id": 36914579975,
     "conclusion": "success",
     "tests": {
-      "total": 32,
-      "passed": 32,
+      "total": 35,
+      "passed": 35,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 15
+      "files": 17
     },
     "typecheck": {
       "status": "passed",
-      "modules": 8
+      "modules": 9
     },
     "npm_vulnerabilities": 0
   },
@@ -95,15 +95,16 @@
     "Time Auth/repository/storage ports",
     "tenant isolation and optimistic revisions",
     "correction history and mileage",
-    "private photo metadata and gallery",
-    "offline idempotency and visible conflict state"
+    "private photo bytes, metadata and gallery",
+    "durable restart/idempotency adapters",
+    "transport-neutral Time application boundary",
+    "complete Time success/conflict audit events",
+    "application-level concurrent-device, cross-tenant and restart tests"
   ],
   "remaining": [
-    "Library ZIP reconciliation",
-    "transport-neutral Time application boundary",
-    "complete Time audit events",
-    "application-level concurrent-device tests",
-    "PWA IndexedDB/mobile surfaces",
+    "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
+    "OfflineQueuePort and IndexedDB driver boundary",
+    "generic PWA/mobile Time surface",
     "provider-neutral integration contracts",
     "review and merge PR #4"
   ],
@@ -196,17 +197,16 @@
     "optional mileage",
     "private photo metadata and tenant gallery",
     "offline command idempotency/retry/conflict state",
-    "WebsitePublisher runtime-token decoupling test"
+    "WebsitePublisher runtime-token decoupling test",
+    "atomic file-backed Time repository and private evidence bytes",
+    "transport-neutral Time application DTO/error boundary",
+    "complete start/stop/correction/evidence/conflict audit events without object bytes",
+    "durable concurrent-device/cross-tenant/restart integration tests"
   ],
   "known_code_gaps": [
-    "Time repository is still in-memory",
-    "Evidence storage is still in-memory metadata only; no durable object bytes",
     "Offline queue is still in-memory; no IndexedDB adapter",
-    "no transport-neutral application/use-case layer yet",
-    "audit coverage incomplete for stop/correction/evidence/conflict",
     "no generic PWA/mobile production-oriented Time surface yet",
-    "no durable restart tests",
-    "no HTTP/network transport tests",
+    "no HTTP/network transport tests (application boundary is transport-neutral)",
     "no live provider integrations"
   ],
   "commercial_migration_gate": {
@@ -249,5 +249,36 @@
       "cross-tenant denial",
       "idempotent upload retry"
     ]
+  },
+  "application_boundary": {
+    "status": "implemented_and_verified",
+    "operations": [
+      "time.start",
+      "time.stop",
+      "time.correct",
+      "time.get",
+      "time.list",
+      "time.evidence.add",
+      "time.gallery",
+      "offline command dispatch"
+    ],
+    "stable_errors": [
+      "UNAUTHENTICATED",
+      "FORBIDDEN",
+      "ENTITLEMENT_DENIED",
+      "NOT_FOUND",
+      "REVISION_CONFLICT",
+      "VALIDATION_ERROR",
+      "HASH_MISMATCH",
+      "INTEGRITY_ERROR"
+    ],
+    "audit_events": [
+      "time.started",
+      "time.stopped",
+      "time.corrected",
+      "time.evidence.added",
+      "time.conflict"
+    ],
+    "ci_run_id": 36914579975
   }
 }
