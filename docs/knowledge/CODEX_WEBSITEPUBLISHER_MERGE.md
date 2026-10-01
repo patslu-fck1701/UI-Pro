@@ -1,6 +1,6 @@
 # Codex / WebsitePublisher Relationship
 
-**Baseline:** KB-v1.34  
+**Baseline:** KB-v1.39  
 **Corrected:** 2026-10-01
 
 ## Correction
