@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const {OAuthAuthorizationFlow}=require('../src');
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {OAuthAuthorizationFlow,FileOAuthFlowState}=require('../src');
 const config={id:'example',authorizationEndpoint:'https://auth.example.test/authorize',redirectUri:'https://api.werkz.test/oauth/callback',clientId:'public-client'};
 const alice={organisationId:'org-a',actorId:'alice'},bob={organisationId:'org-b',actorId:'bob'};
 test('OAuth state and PKCE are tenant-bound, one-time and keep verifier server-side',()=>{
@@ -28,4 +29,18 @@ test('OAuth callback rejects wrong tenant, actor and expired state',()=>{
   now=new Date('2026-10-01T00:01:00Z');
   assert.throws(()=>flow.consume({session:alice,provider:'example',state:new URL(next.authorizationUrl).searchParams.get('state'),code:'code'}),error=>error.code==='OAUTH_STATE_DENIED');
   assert.throws(()=>flow.begin({session:alice,providerConfig:{...config,authorizationEndpoint:'http://insecure.test/authorize'},connectionKey:'primary'}),error=>error.code==='VALIDATION_ERROR');
+});
+
+test('OAuth authorization survives restart and consumed state stays consumed',()=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'werkz-oauth-'));
+  try{
+    const file=path.join(root,'pending.json'),stateStore=new FileOAuthFlowState(file);
+    const first=new OAuthAuthorizationFlow({stateStore});
+    const started=first.begin({session:alice,providerConfig:config,connectionKey:'primary'});
+    const state=new URL(started.authorizationUrl).searchParams.get('state');
+    assert.equal(fs.readFileSync(file,'utf8').includes(state),false);
+    const second=new OAuthAuthorizationFlow({stateStore});
+    assert.equal(second.consume({session:alice,provider:'example',state,code:'code'}).connectionKey,'primary');
+    assert.throws(()=>new OAuthAuthorizationFlow({stateStore}).consume({session:alice,provider:'example',state,code:'replay'}),error=>error.code==='OAUTH_STATE_DENIED');
+  }finally{fs.rmSync(root,{recursive:true,force:true})}
 });
