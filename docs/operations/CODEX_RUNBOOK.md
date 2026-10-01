@@ -198,3 +198,15 @@ See:
 - `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
 - `docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md`
 - `docs/operations/CODEX_RESUME_NOW.md`
+
+## Mandatory licensing/IP protection foundation
+
+For any work touching commercial entitlements, authentication/tenant authority, connector installation, local Agent identity, packaging, updates, On-Prem/offline deployment or production rollout, also read:
+
+- `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
+- Issue #5: https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+Do not treat minification/obfuscation as access control. Do not embed reusable licence/signing secrets. A copied frontend or Agent directory must not become a valid customer deployment without server-side entitlement or device-enrollment authority.
+
+The public/private repository policy is a release-governance decision: never commit real customer/provider/signing secrets even if repository visibility changes later.
+
