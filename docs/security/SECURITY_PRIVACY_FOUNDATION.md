@@ -116,6 +116,28 @@ At the 2026-10-01 audit, `patslu-fck1701/UI-Pro` is public. Before proprietary p
 
 Before distributing local software, WerkZ must support signed release artifacts, checksums, versioned release manifests, SBOM/third-party notices, dependency/vulnerability scanning, controlled update/rollback channels and separation of build, signing and release credentials.
 
+## Product security lifecycle, CRA and AI transparency
+
+WerkZ maintains a separate product-security lifecycle foundation for vulnerability handling, support/EOL metadata, CRA readiness, AI Act transparency, release channels, enterprise identity direction, controlled support access and tenant-aware recovery.
+
+Canonical detail:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Implementation tracking:
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+Current cross-cutting rules include:
+- vulnerability intake/triage/remediation and regulatory-reporting assessment;
+- support/EOL metadata for distributed product lines;
+- CRA reporting decision path and coordinated vulnerability disclosure readiness;
+- AI interaction/output transparency metadata where applicable;
+- OIDC/SAML/SCIM-ready enterprise identity boundaries;
+- standards-based device authorisation for headless connectors where suitable;
+- canary/pilot/stable/LTS release-channel model;
+- temporary/scoped/audited support access;
+- tenant-aware restore testing;
+- no blanket compliance marketing claims without evidence.
+
 ## Commercial/legal readiness gate
 
 Before the first regular paying production customer, the business process must have a reviewed set of at least:
@@ -151,3 +173,4 @@ This foundation must be read together with:
 - docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md
 - docs/architecture/DEPLOYMENT_TOPOLOGY.md
 - docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md
+- docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md
