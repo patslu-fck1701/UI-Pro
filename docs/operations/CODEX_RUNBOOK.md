@@ -150,3 +150,15 @@ Because the owner often works from the phone:
 - no instruction may depend on remembering a local PC path;
 - every result must be persisted in GitHub/Files/Drive as appropriate;
 - chat is coordination, not the only record.
+
+## Cross-cutting foundations — always apply
+
+These are not optional issue-specific notes. Every implementation package must preserve them:
+
+- `docs/security/SECURITY_PRIVACY_FOUNDATION.md` — identity, tenant isolation, secrets, audit, backup/retention, incident response, connector security and commercial-readiness gates.
+- `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md` — cloud-first/agent-optional deployment, enrollment, packaging/signing, release/update and onboarding model.
+- `docs/integrations/INTEGRATION_STRATEGY.md` — provider-neutral connector, OAuth/secret/webhook/queue/mapping model.
+
+Before introducing a new runtime dependency, provider, customer-side agent, credential store, installer, background worker or production data path, check the change against all three foundations.
+
+Do not weaken these baselines merely to make a demo work. If a work package cannot yet satisfy a production gate, keep the implementation explicitly non-production and record the gap.
