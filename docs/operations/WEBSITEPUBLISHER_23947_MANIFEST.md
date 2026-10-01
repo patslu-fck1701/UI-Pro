@@ -1,6 +1,6 @@
 # WebsitePublisher Project 23947 Manifest
 
-**Baseline:** KB-v1.39  
+**Baseline:** KB-v1.40  
 **Date:** 2026-10-01
 
 ## Role
@@ -63,7 +63,7 @@ Navigation now labels DeutschZ as live server/development, not only a technical 
 After the 2026-10-01 correction:
 - pages: **26 / 30** (4 free)
 - assets: **51 / 300** (249 free)
-- entities: **24 / 25** (1 free)
+- entities: **17 / 25** (8 free)
 - internal page-link audit: **0 broken internal page links detected**
 
 Do not create a new page/entity merely because a new product feature exists. Product features belong in the WerkZ codebase. Public explanations can usually live inside the existing marketing/technical information architecture.
@@ -71,3 +71,16 @@ Do not create a new page/entity merely because a new product feature exists. Pro
 ## Deferred visual cleanup
 
 Some images/variants have undesirable white backgrounds or inconsistent presentation. This is a separate visual cleanup task. Do not mass-delete assets; first scan actual references and preserve necessary originals.
+
+## DeutschZ reporting / removed test database — KB-v1.40
+
+Removed as obsolete test infrastructure:
+- `dzlogreport`, `dzconfigsnapshot`, `dzconfigchunk`, `dzconfigchange`, `dzconfigvalidation`, `dzfeedbackstate`, `dzserverpackage`.
+
+Removed specialized test/report forms:
+- `deutschz_testmeldung`, `deutschz_lootmeldung`, `deutschz_discord_alert`.
+
+Retained player-facing error path:
+- `bug_report` -> WebsitePublisher lead capture + internal server-side notification.
+
+No webhook secret or other credential is documented in GitHub.
