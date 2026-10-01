@@ -161,9 +161,12 @@
   ui.start.addEventListener('click',async()=>{
     ui.start.disabled=true;
     try{
-      await enqueue('time.start',{
-        customerLabel:ui.customer.value.trim()||null,orderId:ui.order.value.trim()||null,
-        mileageStart:ui.mileageStart.value===''?null:Number(ui.mileageStart.value),startedAt:now()
+      const startedAt=now(),id='time_'+uuid(),customerLabel=ui.customer.value.trim()||null,orderId=ui.order.value.trim()||null;
+      const mileageStart=ui.mileageStart.value===''?null:Number(ui.mileageStart.value);
+      await enqueue('time.start',{id,customerLabel,orderId,mileageStart,startedAt});
+      setRunning({
+        id,organisationId:session.organisationId,actorId:session.actorId,customerLabel,orderId,
+        mileageStart,startedAt,endedAt:null,note:'',status:'running',revision:1
       });
     }catch(error){alert(publicError(error));}
     finally{ui.start.disabled=false}
@@ -171,8 +174,10 @@
   ui.stop.addEventListener('click',async()=>{
     if(!running)return;
     const value=prompt('Endkilometer (optional)','');
-    try{await enqueue('time.stop',{id:running.id,endedAt:now(),mileageEnd:value===''||value===null?null:Number(value)},running.revision);}
-    catch(error){alert(publicError(error));}
+    try{
+      await enqueue('time.stop',{id:running.id,endedAt:now(),mileageEnd:value===''||value===null?null:Number(value)},running.revision);
+      setRunning(null);
+    }catch(error){alert(publicError(error));}
   });
   $('note').addEventListener('click',()=>{
     if(!running)return alert('Bitte zuerst Arbeitszeit starten.');
