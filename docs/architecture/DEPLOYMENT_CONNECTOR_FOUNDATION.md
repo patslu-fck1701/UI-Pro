@@ -81,6 +81,22 @@ Enrollment tokens are one-time/short-lived, are not long-term credentials, may b
 
 Device credentials are distinct from human sessions and customer-provider credentials.
 
+## Licensing and copied-install protection
+
+Enrollment and commercial entitlement are related but distinct:
+
+- organisation entitlements decide which modules/capabilities a customer may use;
+- device enrollment decides which local Agent/device may represent that organisation;
+- signed release metadata proves the origin/integrity of distributed software;
+- a signed offline licence/entitlement document is used for On-Prem/offline deployments when continuous cloud verification is inappropriate.
+
+A copied browser frontend must not grant tenant/data/module authority. A copied Agent directory must not create a second enrolled device. Do not embed reusable master licence secrets in installers or local binaries.
+
+Obfuscation may be used later for compiled components, but never replaces authentication, tenant isolation, entitlement enforcement, enrollment or signature verification.
+
+Canonical detail: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`  
+Implementation issue: https://github.com/patslu-fck1701/UI-Pro/issues/5
+
 ## Secret placement
 
 The installer is never a secret store.
@@ -164,3 +180,4 @@ Read together with:
 - docs/security/SECURITY_PRIVACY_FOUNDATION.md
 - docs/integrations/INTEGRATION_STRATEGY.md
 - docs/architecture/DEPLOYMENT_TOPOLOGY.md
+- docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md
