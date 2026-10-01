@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.39  
+**Current baseline:** KB-v1.40  
 **Date:** 2026-10-01
 
 ## Canonical responsibilities
@@ -97,7 +97,7 @@ See `docs/knowledge/CORRECTION_2026-10-01.md`.
 As of the correction:
 - pages: 26 / 30;
 - assets: 51 / 300;
-- entities: 24 / 25;
+- entities: 17 / 25;
 - internal link audit: no broken internal page links detected.
 
 Visual asset cleanup (white/uneven backgrounds and duplicate variants) is deferred as a separate non-destructive task.
@@ -107,3 +107,25 @@ Visual asset cleanup (white/uneven backgrounds and duplicate variants) is deferr
 `semantic delta -> affected layers -> compare -> resolve -> persist -> cross-link -> readback -> STABLE/STOP`
 
 Reopen on substantive new evidence, correction, regression, integration/dependency change, rights/phase change, or a deliberate audit.
+
+## DeutschZ data cleanup — KB-v1.40
+
+The former WebsitePublisher DeutschZ log/config/package verification database was a temporary test structure and has been removed.
+
+Deleted entities:
+- `dzlogreport`
+- `dzconfigsnapshot`
+- `dzconfigchunk`
+- `dzconfigchange`
+- `dzconfigvalidation`
+- `dzfeedbackstate`
+- `dzserverpackage`
+
+Deleted specialized forms:
+- `deutschz_testmeldung`
+- `deutschz_lootmeldung`
+- `deutschz_discord_alert`
+
+Operational player reporting now stays intentionally simple: the existing `bug_report` form stores the report as a WebsitePublisher lead and sends an internal server-side notification. Deep log/config analysis is performed on demand from the actual files/logs instead of being mirrored into permanent WebsitePublisher entities.
+
+`mediaasset` and `werkzreflection` explicitly remain.
