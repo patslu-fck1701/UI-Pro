@@ -1,15 +1,27 @@
 'use strict';
 
-const http=require('node:http'),path=require('node:path'),fs=require('node:fs');
+const http=require('node:http'),path=require('node:path'),fs=require('node:fs'),crypto=require('node:crypto');
 const {ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,TimeProductionService,TimeApplication,createTimeHttpHandler}=require('../src');
 
-function required(name){const value=process.env[name];if(!value)throw new Error(name+' is required');return value}
+function runtimeSecret(name,bytes,{logValue=false}={}){
+  const configured=process.env[name];
+  if(configured)return configured;
+  if(process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS!=='1')throw new Error(name+' is required');
+  const value=crypto.randomBytes(bytes).toString('base64url');
+  process.stdout.write(JSON.stringify({
+    kind:'ephemeral-test-secret',
+    name,
+    value:logValue?value:undefined,
+    note:'Non-production only; regenerated on process restart'
+  })+'\n');
+  return value;
+}
 const dataDir=path.resolve(process.env.WERKZ_TIME_DATA_DIR||'./var/time-test');
 const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'user-device-test';
-const sessionToken=required('WERKZ_TEST_SESSION_TOKEN');
-const loginCode=required('WERKZ_TEST_LOGIN_CODE');
+const sessionToken=runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
+const loginCode=runtimeSecret('WERKZ_TEST_LOGIN_CODE',12,{logValue:true});
 const allowedOrigin=process.env.WERKZ_TEST_ALLOWED_ORIGIN||'https://project29212.websitepublisher.ai';
 const externalFrontendUrl=process.env.WERKZ_TEST_EXTERNAL_FRONTEND_URL||'';
 const capabilities=['time.start','time.stop','time.correct','document.upload'];
@@ -70,4 +82,4 @@ const server=http.createServer(async(request,response)=>{
 });
 
 const port=Number(process.env.PORT||8080);
-server.listen(port,'0.0.0.0',()=>process.stdout.write(JSON.stringify({kind:'ready',port,allowedOrigin,sameOriginPwa:true})+'\n'));
+server.listen(port,'0.0.0.0',()=>process.stdout.write(JSON.stringify({kind:'ready',port,allowedOrigin,sameOriginPwa:true,ephemeralSecrets:process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1'})+'\n'));
