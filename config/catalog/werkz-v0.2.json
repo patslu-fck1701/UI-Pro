@@ -1,0 +1,156 @@
+{
+  "version": "2026-10-01.v0.2",
+  "currency": "EUR",
+  "model": "scope_plus_operations_plus_deployment",
+  "note": "Supersedes v0.1 small per-module monthly price seed as the commercial source of truth. Modules remain technical entitlements.",
+  "implementation": [
+    {
+      "sku": "WZ-SETUP-SOLO",
+      "name": "WerkZ Solo Einrichtung ab",
+      "billing": "one_time_from",
+      "amountCents": 49000,
+      "typicalRangeCents": [
+        79000,
+        149000
+      ]
+    },
+    {
+      "sku": "WZ-SETUP-TEAM",
+      "name": "WerkZ Team Einrichtung ab",
+      "billing": "one_time_from",
+      "amountCents": 149000,
+      "typicalRangeCents": [
+        199000,
+        399000
+      ]
+    },
+    {
+      "sku": "WZ-SETUP-BUSINESS",
+      "name": "WerkZ Business Einrichtung ab",
+      "billing": "one_time_from",
+      "amountCents": 249000,
+      "typicalRangeCents": [
+        349000,
+        750000
+      ]
+    },
+    {
+      "sku": "WZ-SETUP-ENTERPRISE",
+      "name": "WerkZ Enterprise",
+      "billing": "custom",
+      "amountCents": null
+    }
+  ],
+  "managedOperation": [
+    {
+      "sku": "WZ-OPS-SOLO",
+      "name": "WerkZ Managed Solo",
+      "billing": "monthly_from",
+      "amountCents": 7900
+    },
+    {
+      "sku": "WZ-OPS-TEAM",
+      "name": "WerkZ Managed Team",
+      "billing": "monthly_from",
+      "amountCents": 17900
+    },
+    {
+      "sku": "WZ-OPS-BUSINESS",
+      "name": "WerkZ Managed Business",
+      "billing": "monthly_from",
+      "amountCents": 34900
+    },
+    {
+      "sku": "WZ-OPS-ENTERPRISE",
+      "name": "WerkZ Managed Enterprise / SLA",
+      "billing": "custom",
+      "amountCents": null
+    }
+  ],
+  "deployment": [
+    {
+      "sku": "WZ-DEPLOY-CLOUD",
+      "name": "Managed Cloud shared",
+      "billing": "included_in_managed",
+      "amountCents": 0
+    },
+    {
+      "sku": "WZ-DEPLOY-DEDICATED-SETUP",
+      "name": "Dedicated Cloud setup ab",
+      "billing": "one_time_from",
+      "amountCents": 49000
+    },
+    {
+      "sku": "WZ-DEPLOY-DEDICATED-OPS",
+      "name": "Dedicated Cloud infrastructure management ab",
+      "billing": "monthly_from_plus_provider",
+      "amountCents": 9900
+    },
+    {
+      "sku": "WZ-CONNECTOR-SETUP",
+      "name": "Hybrid Connector setup ab",
+      "billing": "one_time_from",
+      "amountCents": 69000
+    },
+    {
+      "sku": "WZ-CONNECTOR-OPS",
+      "name": "Connector monitoring/management ab",
+      "billing": "monthly_from",
+      "amountCents": 4900
+    },
+    {
+      "sku": "WZ-BOX-PROVISION",
+      "name": "WerkZ Box provisioning ab",
+      "billing": "one_time_from_plus_hardware",
+      "amountCents": 99000
+    },
+    {
+      "sku": "WZ-BOX-OPS",
+      "name": "WerkZ Box infrastructure management ab",
+      "billing": "monthly_from",
+      "amountCents": 9900
+    },
+    {
+      "sku": "WZ-ONPREM-SETUP",
+      "name": "On-Premise setup ab",
+      "billing": "one_time_from",
+      "amountCents": 249000
+    },
+    {
+      "sku": "WZ-ONPREM-OPS",
+      "name": "On-Premise maintenance/management ab",
+      "billing": "monthly_from",
+      "amountCents": 24900
+    }
+  ],
+  "hardwareProcurement": {
+    "publicPricing": "quote_at_current_cost",
+    "internalHandlingRule": {
+      "percent": 15,
+      "minimumCents": 14900
+    },
+    "principles": [
+      "assess existing customer hardware first",
+      "procure only after order",
+      "hardware separate from provisioning",
+      "preserve manufacturer identity and warranty path"
+    ]
+  },
+  "modulePricing": {
+    "policy": "included_or_scoped",
+    "skus": [
+      "WZ-TIME",
+      "WZ-CUSTOMERS",
+      "WZ-ORDERS",
+      "WZ-MATERIAL",
+      "WZ-DOCS",
+      "WZ-BILLINGPREP",
+      "WZ-ANALYTICS",
+      "WZ-SIM",
+      "WZ-MANAGEMENT",
+      "WZ-APPROVALS",
+      "WZ-WHATSAPP"
+    ],
+    "note": "Technical entitlements remain independent. No canonical public 9/19/29 EUR monthly line pricing in v0.2."
+  }
+}
