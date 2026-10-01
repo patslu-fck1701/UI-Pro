@@ -1,6 +1,6 @@
 'use strict';
 
-const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const lockPath=path.join(root,'package-lock.json');
 const review=/^(GPL|LGPL|AGPL|MPL|SSPL)|source.available|proprietary|commercial/i;
