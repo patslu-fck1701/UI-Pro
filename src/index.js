@@ -9,6 +9,7 @@ module.exports = {
   ...require('./integrations/foundation'),
   ...require('./integrations/lifecycle'),
   ...require('./integrations/durable'),
+  ...require('./integrations/oauth-flow'),
   ...require('./time/production'),
   ...require('./time/durable'),
   ...require('./time/recovery'),
