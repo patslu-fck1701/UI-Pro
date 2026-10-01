@@ -35,7 +35,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Owner says 'weiter': read latest main control plane and Issue #3. First fix PWA-SW-CACHE-BOUNDARY and PWA-OFFLINE-ORDER-REVISION from validation_audit, add tests, run full verification, then perform/record real HTTPS browser/device PWA test and final PR #4 review.",
+  "next_trigger": "Owner says 'weiter': read latest main control plane, validation_audit and docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md. First fix service-worker cache boundary and deterministic offline revision/order behavior, then expose verified HTTPS test API, connect WebsitePublisher project 29212 test config, run CI, and perform/record physical iPhone/browser acceptance.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "953a625e312bd3e6b60653c2a065eac857cb57c4",
@@ -122,7 +122,10 @@
     "final PR #4 review and merge decision",
     "fix service-worker static-shell-only cache boundary",
     "make real PWA offline command ordering and revision chaining deterministic",
-    "automated complete offline start/edit/photo/stop reconnect tests"
+    "automated complete offline start/edit/photo/stop reconnect tests",
+    "finish WebsitePublisher test-host API connection after PWA correctness fixes",
+    "provide HTTPS non-production Time API and connect project 29212 test config",
+    "physical iPhone/browser acceptance run"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -392,5 +395,33 @@
         "required_fix": "Persist explicit sequence/causation order and deterministic revision propagation/conflict handling; add complete offline-chain tests."
       }
     ]
+  },
+  "websitepublisher_time_test": {
+    "status": "live_frontend_local_device_test",
+    "project_id": 29212,
+    "url": "https://project29212.websitepublisher.ai/werkz-time-test.html",
+    "config_url": "https://cdn.websitepublisher.ai/custom/wid29212/config/werkz-time-test.json",
+    "api_base": null,
+    "purpose": "HTTPS/iPhone/browser test host only; not production runtime",
+    "implemented": [
+      "IndexedDB",
+      "stable local Time IDs",
+      "start/stop",
+      "notes/correction",
+      "mileage",
+      "binary photo Blob",
+      "SHA-256",
+      "20 MB cap",
+      "monotonic command sequence",
+      "causation chain",
+      "local history"
+    ],
+    "backend_required": [
+      "server-derived session identity",
+      "POST /time/commands",
+      "POST /time/evidence multipart",
+      "HTTPS reachability"
+    ],
+    "documentation": "docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md"
   }
 }
