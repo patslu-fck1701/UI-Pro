@@ -38,7 +38,7 @@
   "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "08c5aea346b9a7ac04a8670248f9711508d8a016",
+  "last_verified_issue_branch_commit": "953a625e312bd3e6b60653c2a065eac857cb57c4",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
@@ -71,19 +71,19 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 completion gates: implement PWA binary evidence transport/queue without Base64, add browser/manual test instructions, verify PR #2 versus PR #4, then final review.",
+  "current_continuation": "Issue #3 final review gate: perform/record real browser PWA verification when an HTTPS test runtime is available, review PR #4, then set the appropriate completion state.",
   "last_verified_ci": {
-    "run_id": 36920123116,
+    "run_id": 36920881329,
     "conclusion": "success",
     "tests": {
-      "total": 48,
-      "passed": 48,
+      "total": 52,
+      "passed": 52,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 24
+      "files": 25
     },
     "typecheck": {
       "status": "passed",
@@ -108,14 +108,18 @@
     "static-only service worker cache with no API/business response caching",
     "provider-neutral SecretStore and Connector ports",
     "tenant-resolved verified/deduplicated WebhookGateway",
-    "IntegrationAccount, IntegrationEvent, SyncJob and versioned MappingProfile contracts"
+    "IntegrationAccount, IntegrationEvent, SyncJob and versioned MappingProfile contracts",
+    "binary PWA evidence Blob queue with SHA-256 and multipart transfer",
+    "multipart-neutral server evidence upload boundary",
+    "stable client-generated Time IDs for complete offline command chains",
+    "server-side client ID collision protection",
+    "Windows PWA start and smartphone test guide",
+    "PR #2 confirmed fully contained in PR #4 and closed as superseded"
   ],
   "remaining": [
     "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
-    "PWA binary evidence upload/offline Blob queue",
-    "real browser/manual PWA verification",
-    "PR #2 versus PR #4 supersession review",
-    "review and merge PR #4"
+    "real browser/manual PWA verification with HTTPS test API",
+    "final PR #4 review and merge decision"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -213,9 +217,8 @@
     "durable concurrent-device/cross-tenant/restart integration tests"
   ],
   "known_code_gaps": [
-    "PWA photo capture is an honest hook only; binary evidence transport is not wired yet",
-    "IndexedDB browser code and service worker are syntax/static tested but not yet exercised in a real browser",
-    "no HTTP/network integration test server",
+    "IndexedDB, service worker, camera and install behavior are not yet exercised in a real browser/device",
+    "no deployed HTTPS HTTP adapter/test environment is available in this tool session",
     "provider contracts exist but no live provider adapters (intentionally out of scope)"
   ],
   "commercial_migration_gate": {
@@ -313,7 +316,7 @@
     "ci_run_id": 36914906481
   },
   "time_pwa": {
-    "status": "reference_surface_implemented_static_verified",
+    "status": "implemented_automated_verified_manual_browser_pending",
     "path": "apps/time-pwa",
     "features": [
       "installable manifest",
@@ -324,15 +327,21 @@
       "note/correction",
       "history",
       "offline queue status",
-      "visible conflicts"
+      "visible conflicts",
+      "binary offline photo Blob queue",
+      "SHA-256 multipart evidence upload",
+      "stable offline Time entity IDs"
     ],
     "guards": [
       "no embedded credentials",
       "no WebsitePublisher runtime",
       "no API response caching",
-      "no fake photo upload success"
+      "no fake photo upload success",
+      "20 MB evidence limit",
+      "server-side size/hash validation",
+      "Blob removed from completed queue entry"
     ],
-    "ci_run_id": 36919892234
+    "ci_run_id": 36920881329
   },
   "integration_foundation": {
     "status": "contracts_implemented_and_verified",
@@ -346,5 +355,21 @@
     ],
     "live_provider_adapters": false,
     "ci_run_id": 36920123116
+  },
+  "pull_request_review": {
+    "pr2": {
+      "state": "closed",
+      "reason": "fully superseded by PR #4",
+      "head": "39c5ae225078a90180814ae395b516499c2b311c"
+    },
+    "pr4": {
+      "state": "open_draft",
+      "head": "953a625e312bd3e6b60653c2a065eac857cb57c4"
+    },
+    "comparison": {
+      "ahead_by": 87,
+      "behind_by": 0,
+      "merge_base_is_pr2_head": true
+    }
   }
 }
