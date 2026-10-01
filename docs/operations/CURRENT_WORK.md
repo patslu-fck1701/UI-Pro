@@ -644,3 +644,9 @@ Verified implementation/deployment commit: `ec7c9284d5cf2034f96fe5c64b65ff853a45
 CI run: `36941514632` — success; existing 59-test verification retained.
 
 `deploy/time-test/render.yaml` now defines an owner-controlled Render Docker service with TLS, a persistent `/data` disk, health check and secret runtime environment variables. `deploy/time-test/README.md` contains the exact deployment, health/API, project-29212 binding and iPhone acceptance steps. The Render paid plan/account and secret entry cannot be provisioned through the connected tools. No HTTPS URL exists yet; project 29212 `apiBase` remains null. Cross-site Safari cookie behavior needs the physical device check; a verified multipart-capable same-origin proxy or same-site host may be needed. PR #4 remains Draft and Issue #3 IN_PROGRESS.
+
+
+## Stacked branch synchronized after HTTPS deployment preparation
+
+Verified merge commit: `3d450c8e4817bd2c8a15878d2aec08519c797484`  
+CI run: `36941665275` — success; 74/74 tests, lint 42 JavaScript files, runtime contract/typecheck 17 modules, SPDX gate passed, npm audit 0 known vulnerabilities. PR #8 is 0 behind PR #4 and remains Draft. The Render Blueprint is deployment preparation only; no external HTTPS service or iPhone acceptance is claimed.
