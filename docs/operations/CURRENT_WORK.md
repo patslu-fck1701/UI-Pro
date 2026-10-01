@@ -1,6 +1,6 @@
 # WerkZ Current Work
 
-**State:** IN_PROGRESS  
+**State:** BLOCKED  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.40
 **Last verified Issue #3 branch commit:** `82b465626d3e87dc4405acbde032ad675262d360`  
@@ -146,3 +146,12 @@ Codex should continue Issue #3 from branch commit `82b465626d3e87dc4405acbde032a
 - provider-neutral connector/SecretStore/webhook/sync contracts only.
 
 Do not start real provider APIs until Issue #3 is complete.
+
+## Temporary blocker — Codex usage limit
+
+Development is temporarily paused because the current Codex usage limit has been reached. This is **not** a technical/product blocker and does not change the implementation plan.
+
+Resume rule:
+- when Codex usage becomes available again and the owner says `weiter`, read RUNBOOK + CURRENT_WORK and continue Issue #3 from the last verified branch commit;
+- do not create a new issue merely because of this temporary quota pause;
+- do not mark Issue #3 done.
