@@ -77,6 +77,20 @@ class TimeApplication {
     if(request.expectedRevision!==undefined)input.expectedRevision=request.expectedRevision;
     return this.execute(token,{operation:request.type,input});
   }
+  uploadEvidence(token,upload){
+    try{
+      const request=object(upload,'upload'),fields=object(request.fields,'fields'),file=object(request.file,'file');
+      required(fields.timeRecordId,'timeRecordId');required(fields.idempotencyKey,'idempotencyKey');
+      const mime=required(file.mime||fields.mime,'mime'),bytes=file.bytes;
+      if(!Buffer.isBuffer(bytes)&&!(bytes instanceof Uint8Array))validation('file bytes are required','file');
+      const size=Number(fields.size??file.size??bytes.length);
+      if(!Number.isSafeInteger(size)||size<1||size!==bytes.length)validation('file size mismatch','size');
+      return this.execute(token,{operation:'time.evidence.add',input:{
+        timeRecordId:fields.timeRecordId,idempotencyKey:fields.idempotencyKey,mime,size,
+        hash:required(fields.hash,'hash'),bytes:Buffer.from(bytes)
+      }});
+    }catch(error){return errorResult(error);}
+  }
 }
 
 module.exports={TimeApplication,errorResult};
