@@ -1,0 +1,178 @@
+{
+  "version": "2026-10-01.v0.1",
+  "currency": "EUR",
+  "items": [
+    {
+      "sku": "WZ-CORE",
+      "name": "WerkZ Core / Betrieb",
+      "billing": "monthly",
+      "amountCents": 2900
+    },
+    {
+      "sku": "WZ-TIME",
+      "name": "WerkZ Zeit",
+      "billing": "monthly",
+      "amountCents": 1900
+    },
+    {
+      "sku": "WZ-CUSTOMERS",
+      "name": "WerkZ Kunden",
+      "billing": "monthly",
+      "amountCents": 900
+    },
+    {
+      "sku": "WZ-ORDERS",
+      "name": "WerkZ Auftrag",
+      "billing": "monthly",
+      "amountCents": 1900
+    },
+    {
+      "sku": "WZ-MATERIAL",
+      "name": "WerkZ Material",
+      "billing": "monthly",
+      "amountCents": 1200
+    },
+    {
+      "sku": "WZ-DOCS",
+      "name": "WerkZ Dokumente & Fotos",
+      "billing": "monthly",
+      "amountCents": 900
+    },
+    {
+      "sku": "WZ-BILLINGPREP",
+      "name": "WerkZ Abrechnungsvorbereitung",
+      "billing": "monthly",
+      "amountCents": 1400
+    },
+    {
+      "sku": "WZ-ANALYTICS",
+      "name": "WerkZ Analyse",
+      "billing": "monthly",
+      "amountCents": 1900
+    },
+    {
+      "sku": "WZ-SIM",
+      "name": "WerkZ Simulation",
+      "billing": "monthly",
+      "amountCents": 2900
+    },
+    {
+      "sku": "WZ-MANAGEMENT",
+      "name": "WerkZ Chefmodus",
+      "billing": "monthly",
+      "amountCents": 1900
+    },
+    {
+      "sku": "WZ-APPROVALS",
+      "name": "WerkZ Freigaben",
+      "billing": "monthly",
+      "amountCents": 1200
+    },
+    {
+      "sku": "WZ-WHATSAPP",
+      "name": "WhatsApp-Freigabekanal",
+      "billing": "monthly_plus_provider",
+      "amountCents": 2900
+    },
+    {
+      "sku": "WZ-TEAM-5",
+      "name": "Team-Pack bis 5 aktive Nutzer",
+      "billing": "monthly",
+      "amountCents": 3900
+    },
+    {
+      "sku": "WZ-USER",
+      "name": "Weiterer aktiver Nutzer",
+      "billing": "monthly_per_seat",
+      "amountCents": 700
+    },
+    {
+      "sku": "WZ-SETUP-SOLO",
+      "name": "Einrichtung Solo ab",
+      "billing": "one_time_from",
+      "amountCents": 49000
+    },
+    {
+      "sku": "WZ-SETUP-TEAM",
+      "name": "Einrichtung Team ab",
+      "billing": "one_time_from",
+      "amountCents": 149000
+    },
+    {
+      "sku": "WZ-SETUP-BUSINESS",
+      "name": "Einrichtung Business ab",
+      "billing": "one_time_from",
+      "amountCents": 249000
+    },
+    {
+      "sku": "WZ-CUSTOM",
+      "name": "Individuelle Leistung",
+      "billing": "custom",
+      "amountCents": null
+    }
+  ],
+  "presets": [
+    {
+      "id": "solo-start",
+      "name": "Solo Start",
+      "skus": [
+        "WZ-CORE",
+        "WZ-CUSTOMERS",
+        "WZ-SETUP-SOLO"
+      ],
+      "chooseOne": [
+        "WZ-TIME",
+        "WZ-ORDERS"
+      ]
+    },
+    {
+      "id": "solo-complete",
+      "name": "Solo Complete",
+      "skus": [
+        "WZ-CORE",
+        "WZ-CUSTOMERS",
+        "WZ-ORDERS",
+        "WZ-TIME",
+        "WZ-DOCS",
+        "WZ-SETUP-SOLO"
+      ]
+    },
+    {
+      "id": "team-field",
+      "name": "Team Field",
+      "skus": [
+        "WZ-CORE",
+        "WZ-CUSTOMERS",
+        "WZ-ORDERS",
+        "WZ-TIME",
+        "WZ-DOCS",
+        "WZ-TEAM-5",
+        "WZ-SETUP-TEAM"
+      ]
+    },
+    {
+      "id": "team-control",
+      "name": "Team Control",
+      "skus": [
+        "WZ-CORE",
+        "WZ-CUSTOMERS",
+        "WZ-ORDERS",
+        "WZ-TIME",
+        "WZ-DOCS",
+        "WZ-TEAM-5",
+        "WZ-MANAGEMENT",
+        "WZ-APPROVALS",
+        "WZ-ANALYTICS",
+        "WZ-SETUP-TEAM"
+      ]
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "skus": [
+        "WZ-CORE",
+        "WZ-SETUP-BUSINESS"
+      ]
+    }
+  ]
+}
