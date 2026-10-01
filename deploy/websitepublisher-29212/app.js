@@ -11,13 +11,13 @@ async function sendQueued(c,latestRevision){
   if(c.type!=='time.start')input.expectedRevision=Number.isInteger(latestRevision)?latestRevision:c.expectedRevision;
   return apiJson('/time/commands',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({operation:c.type,input})});
 }
-async function syncNow(){
+let syncPromise=null,syncAgain=false;async function syncNow(){if(syncPromise){syncAgain=true;return syncPromise}syncPromise=(async()=>{do{syncAgain=false;await syncOnce()}while(syncAgain)})().finally(()=>{syncPromise=null});return syncPromise}async function syncOnce(){
   if(!config.apiBase)return alert('Der WerkZ-Test-Backendserver ist noch nicht angeschlossen. Die Befehle bleiben geordnet lokal gespeichert.');
   if(!navigator.onLine)return setStatus('Offline – Befehle bleiben gespeichert','warn');
   try{
     await apiJson('/session');const commands=(await all('commands')).sort((a,b)=>a.sequence-b.sequence),byId=new Map(commands.map(c=>[c.id,c])),revisions=new Map();
     for(const c of commands)if(c.status==='synced'&&Number.isInteger(c.result?.revision))revisions.set(c.entityId,c.result.revision);
-    for(const c of commands.filter(c=>c.status==='queued'||c.status==='failed')){
+    for(const c of commands.filter(c=>c.status==='queued'||c.status==='failed'||c.status==='syncing')){
       const cause=c.causationId?byId.get(c.causationId):null;
       if(c.causationId&&cause?.status!=='synced'){if(cause?.status==='conflict'){c.status='conflict';c.lastError={code:'CAUSATION_CONFLICT',message:'Vorherige Änderung hat einen Konflikt.'};await put('commands',c)}continue}
       c.status='syncing';c.attempts++;await put('commands',c);
