@@ -59,8 +59,11 @@ Not yet verified/implemented as production:
 ## 2. Branch freshness problem — FIRST ACTION
 
 Current comparison at checkpoint:
-- `main` tip at audit time: `a9747f71957e5bcc980a5c7b7f55889332440f81`;
-- `codex/issue-3-commercial` was 12 commits ahead and 35 commits behind main;
+- current audited `main` tip: `6276c056d36d00ebddc10dab50ff9d02c0c72435`;
+- current active branch head: `d81e9068e8ecabe74a6fde1d7a80fbe2eb302428` (`Add commercial catalog v0.2 pricing direction`);
+- last CI-verified implementation commit remains `82b465626d3e87dc4405acbde032ad675262d360`;
+- `codex/issue-3-commercial` is 12 commits ahead and 41 commits behind main at this audit;
+- PR #4 is draft and GitHub currently reports it as not mergeable until branch/base divergence is resolved;
 - the branch contains Issue #3 implementation plus `config/catalog/werkz-v0.2.json`;
 - main contains newer KB-v1.41 commercial/security/deployment/integration/control-plane decisions.
 
