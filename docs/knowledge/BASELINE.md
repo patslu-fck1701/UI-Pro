@@ -131,3 +131,23 @@ Deleted specialized forms:
 Operational player reporting now stays intentionally simple: the existing `bug_report` form stores the report as a WebsitePublisher lead and sends an internal server-side notification. Deep log/config analysis is performed on demand from the actual files/logs instead of being mirrored into permanent WebsitePublisher entities.
 
 `mediaasset` and `werkzreflection` explicitly remain.
+
+## Cross-cutting platform foundations
+
+The following repository documents are now part of the canonical WerkZ baseline and apply across modules:
+
+- `docs/security/SECURITY_PRIVACY_FOUNDATION.md`
+- `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
+- `docs/integrations/INTEGRATION_STRATEGY.md`
+
+They establish from the start:
+- capability/tenant enforcement and negative tests;
+- SecretStore/credential references instead of plaintext business-table secrets;
+- audit, backup/restore, retention/exit and incident-response expectations;
+- cloud-first/agent-optional deployment;
+- signed packages and trusted update/revocation paths for local agents;
+- one enrollment model across installer/MDM/automation paths;
+- provider-neutral OAuth/webhook/queue/retry/idempotency/mapping contracts;
+- separation of WebsitePublisher marketing/reference surfaces from customer runtime and production data.
+
+These are engineering constraints, not a signal that all production infrastructure is already implemented.
