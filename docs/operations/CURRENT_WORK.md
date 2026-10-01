@@ -546,4 +546,33 @@ Mandatory additions:
 Do not interrupt Issue #3 correctness/device-test gates.
 
 Before normal paid production rollout, Issues #5, #6 and #7 are all mandatory readiness blocks. They may be implemented in coordinated branches, but licensing/security/IP/OSS gates must remain separately verifiable.
+## Canonical risk & concerns register
+
+WerkZ now maintains a permanent negative/uncertainty layer:
+
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+Supporting IP/legal gates:
+- `docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md`
+- `docs/legal/DATA_RIGHTS_WORDING_GUIDE.md`
+
+This register is mandatory reading before:
+- paid production launch;
+- patent/design/trademark filing;
+- major public technical disclosure;
+- new contractor/contributor access;
+- major dependency/licence decisions;
+- security/compliance claims.
+
+Latest concerns added from the 2026-10-02 research:
+- public disclosure can destroy patent novelty;
+- Gebrauchsmuster is not a fast software-patent substitute;
+- design rights are unexamined at registration and can later fall;
+- database rights require qualifying substantial investment and are not automatic for customer data;
+- data “ownership” wording is legally too crude;
+- employee inventions need ArbnErfG handling;
+- defensive publication requires a patent-or-publish decision;
+- public repository content cannot be protected as a secret merely by labelling it confidential.
+
+Issue #7 remains the implementation umbrella for the IP/OSS/brand/legal-readiness concerns.
 
