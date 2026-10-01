@@ -1,15 +1,20 @@
 # Local Codex Snapshot
 
-**Baseline:** KB-v1.39  
+**Baseline:** KB-v1.40  
 **Corrected:** 2026-10-01
 
-## Authoritative local-state rule
+## Authoritative phone-based Codex baseline
 
-The owner has explicitly defined the real local baseline as **`WerkZ.zip` on the PC / the local Codex workspace derived from it**.
+Codex is currently working on the phone through connected tools and cannot inspect PC-local files.
 
-Do not treat any later archive as the current local state merely because it has a newer date or a name such as `codex_working`, `prepared` or `consolidated`.
+The canonical accessible implementation baseline is:
 
-Known historical archive metadata may remain useful for comparison, but it is not authority over the owner's stated local baseline.
+- Files Library path: `/WerkZ/Baseline/WerkZ.zip`
+- library file id: `libfile_356b20f709588191905c43ed43edd7c4`
+
+Codex must materialize/use this ZIP as the current development baseline.
+
+Do not substitute a later archive merely because it has a newer date or a name such as `codex_working`, `prepared`, `consolidated` or `handoff`. Those are reference/delta snapshots only unless specific changes are intentionally merged.
 
 ## Known historical snapshot hashes
 
@@ -21,13 +26,14 @@ These hashes document historical artifacts only.
 
 ## Correct workflow for Codex
 
-1. Open the owner's actual local WerkZ project / original `WerkZ.zip` baseline.
-2. Create a fresh backup/snapshot before modification.
-3. Inventory the actual local structure and working features.
-4. Read the 2026-10-01 handoff/delta documentation.
-5. Apply deltas deliberately; do not replace the workspace blindly.
-6. Run tests/readback and document the resulting new local state.
-7. Only after that may a newly generated archive be called the current local Codex state.
+1. Use Files plugin to materialize `/WerkZ/Baseline/WerkZ.zip`.
+2. Create a fresh working copy before modification.
+3. Inventory the ZIP's actual structure and working features.
+4. Read the KB-v1.40 GitHub/Drive architecture and handoff documentation.
+5. Build forward from this baseline and merge only deliberate deltas.
+6. Run tests/readback and document every resulting change.
+7. Commit safe, verified work to GitHub in small increments.
+8. Do not wait for or request a PC-local comparison; PC synchronization is a separate later transfer/deployment task.
 
 ## Current delta to apply
 
