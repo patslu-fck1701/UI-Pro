@@ -10,6 +10,7 @@ module.exports = {
   ...require('./integrations/lifecycle'),
   ...require('./time/production'),
   ...require('./time/durable'),
+  ...require('./time/recovery'),
   ...require('./time/application'),
   ...require('./time/http'),
   ...require('./time/offline'),
