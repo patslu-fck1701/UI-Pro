@@ -29,6 +29,15 @@
     });
   }
   const allCommands=()=>store('commands','readonly',value=>value.getAll());
+  async function nextSequence(){
+    const db=await dbPromise;
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('state','readwrite'),object=tx.objectStore('state'),request=object.get('command-sequence');
+      let sequence;
+      request.onsuccess=()=>{sequence=(request.result?.value||0)+1;object.put({key:'command-sequence',value:sequence})};
+      request.onerror=()=>reject(request.error);tx.oncomplete=()=>resolve(sequence);tx.onabort=()=>reject(tx.error);
+    });
+  }
   const putCommand=value=>store('commands','readwrite',object=>object.put(value));
   async function getState(key){return store('state','readonly',object=>object.get(key))}
   async function setState(key,value){return store('state','readwrite',object=>object.put({key,value}))}
@@ -77,21 +86,43 @@
     const digest=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer());
     return 'sha256:'+Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
   }
+  const entityIdOf=entry=>entry.entityId||entry.payload?.id||entry.payload?.timeRecordId;
+  const commandOrder=(a,b)=>(a.sequence??Number.MAX_SAFE_INTEGER)-(b.sequence??Number.MAX_SAFE_INTEGER)
+    ||String(a.createdAtLocal).localeCompare(String(b.createdAtLocal))||String(a.id).localeCompare(String(b.id));
   async function enqueue(type,payload,expectedRevision){
     if(!session)throw new Error('Bitte zuerst anmelden.');
+    const all=(await allCommands()).sort(commandOrder),entityId=payload.id||payload.timeRecordId;
+    const related=all.filter(value=>entityIdOf(value)===entityId),sequence=await nextSequence();
     const entry={
       id:'cmd_'+uuid(),idempotencyKey:'idem_'+uuid(),organisationId:session.organisationId,actorId:session.actorId,
-      createdAtLocal:new Date().toISOString(),type,payload,expectedRevision,status:'queued',attempts:0,lastError:null
+      createdAtLocal:new Date().toISOString(),sequence,entityId,causationId:related.at(-1)?.id||null,
+      type,payload,expectedRevision,status:'queued',attempts:0,lastError:null
     };
     await putCommand(entry);await sync();return entry;
   }
   async function sync(){
-    const entries=(await allCommands()).filter(entry=>entry.status==='queued'||entry.status==='failed');
+    const all=(await allCommands()).sort(commandOrder);
+    const entries=all.filter(entry=>entry.status==='queued'||entry.status==='failed');
+    const byId=new Map(all.map(entry=>[entry.id,entry])),revisions=new Map();
+    for(const entry of all){
+      if(entry.status==='synced'&&Number.isInteger(entry.result?.revision))revisions.set(entityIdOf(entry),entry.result.revision);
+    }
     if(!navigator.onLine){setConnection(entries.length+' offline vorgemerkt');await renderConflicts();return}
     for(const entry of entries){
+      const cause=entry.causationId?byId.get(entry.causationId):null;
+      if(entry.causationId&&(!cause||cause.status!=='synced')){
+        if(cause?.status==='conflict'){
+          entry.status='conflict';entry.lastError={code:'CAUSATION_CONFLICT',message:'Vorheriger Offline-Befehl hat einen Konflikt.',details:null};
+          await putCommand(entry);byId.set(entry.id,entry);
+        }
+        continue;
+      }
+      const latest=revisions.get(entityIdOf(entry));
+      if(entry.causationId&&latest!==undefined)entry.expectedRevision=latest;
       entry.status='syncing';entry.attempts++;await putCommand(entry);
       try{
         entry.result=await send(entry);entry.status='synced';entry.lastError=null;
+        if(Number.isInteger(entry.result?.revision))revisions.set(entityIdOf(entry),entry.result.revision);
         if(entry.type==='time.evidence.add'){
           const {timeRecordId,mime,size,hash,fileName}=entry.payload;
           entry.payload={timeRecordId,mime,size,hash,fileName};
@@ -101,7 +132,7 @@
         entry.status=error.code==='REVISION_CONFLICT'?'conflict':'failed';
         entry.lastError={code:error.code||'ERROR',message:publicError(error),details:error.details||null};
       }
-      await putCommand(entry);
+      await putCommand(entry);byId.set(entry.id,entry);
     }
     const pending=(await allCommands()).filter(entry=>entry.status!=='synced').length;
     setConnection(pending?pending+' offen':'Synchronisiert',pending?'warning':'');
