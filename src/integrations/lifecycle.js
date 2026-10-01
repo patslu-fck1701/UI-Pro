@@ -51,7 +51,11 @@ class RetryJobWorker {
   enqueue({organisationId,idempotencyKey,kind,payload}){
     if(!organisationId||!idempotencyKey||!kind)throw error('VALIDATION_ERROR','Job incomplete');
     const key=organisationId+':'+idempotencyKey;
-    if(this.keys.has(key))return structuredClone(this.jobs.get(this.keys.get(key)));
+    if(this.keys.has(key)){
+      const existing=this.jobs.get(this.keys.get(key));
+      if(existing.kind!==kind||JSON.stringify(existing.payload)!==JSON.stringify(payload||{}))throw error('IDEMPOTENCY_CONFLICT','Idempotency key already belongs to another job');
+      return structuredClone(existing);
+    }
     const id='job_'+(this.jobs.size+1),value={id,organisationId,idempotencyKey,kind,payload:structuredClone(payload||{}),
       status:'queued',attempts:0,nextRetryAt:this.clock().toISOString(),lastError:null,result:null};
     this.jobs.set(id,value);this.keys.set(key,id);return structuredClone(value);
