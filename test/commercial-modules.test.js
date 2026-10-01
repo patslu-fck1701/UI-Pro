@@ -69,7 +69,7 @@ test('v0.2 composes setup managed operation and deployment as separate offer axe
 
 test('v0.2 has no permanent free tier or priceable small module lines',()=>{
   const catalog=new CommercialCatalog(catalogV2);
-  assert.equal(catalogV2.permanentFreeTier,true,false);
+  assert.notEqual(catalogV2.permanentFreeTier,true);
   for(const sku of catalogV2.modulePricing.skus)assert.throws(()=>catalog.item(sku),/Unknown priceable SKU/);
   assert.equal([...catalog.items.values()].some(x=>x.billing==='free'),false);
 });
