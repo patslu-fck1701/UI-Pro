@@ -1,6 +1,11 @@
 'use strict';
 
 function error(code,message){const value=new Error(message);value.code=code;return value}
+function stableJson(value){
+  if(Array.isArray(value))return '['+value.map(stableJson).join(',')+']';
+  if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+stableJson(value[key])).join(',')+'}';
+  return JSON.stringify(value);
+}
 class OAuthAccountLifecycle {
   constructor({secretStore,clock=()=>new Date(),audit=()=>{}}){this.secretStore=secretStore;this.clock=clock;this.audit=audit;this.accounts=new Map();}
   connect({organisationId,provider,connectionKey,accessToken,refreshToken=null,expiresAt=null,scopes=[]}){
@@ -53,7 +58,7 @@ class RetryJobWorker {
     const key=organisationId+':'+idempotencyKey;
     if(this.keys.has(key)){
       const existing=this.jobs.get(this.keys.get(key));
-      if(existing.kind!==kind||JSON.stringify(existing.payload)!==JSON.stringify(payload||{}))throw error('IDEMPOTENCY_CONFLICT','Idempotency key already belongs to another job');
+      if(existing.kind!==kind||stableJson(existing.payload)!==stableJson(payload||{}))throw error('IDEMPOTENCY_CONFLICT','Idempotency key already belongs to another job');
       return structuredClone(existing);
     }
     const id='job_'+(this.jobs.size+1),value={id,organisationId,idempotencyKey,kind,payload:structuredClone(payload||{}),
