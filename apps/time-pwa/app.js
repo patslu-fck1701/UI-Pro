@@ -8,7 +8,7 @@
     order:$('order'),mileageStart:$('mileage-start'),history:$('history'),conflictsCard:$('conflicts-card'),
     conflicts:$('conflicts'),dialog:$('entry-dialog'),dialogTitle:$('dialog-title'),entryValue:$('entry-value')
   };
-  let session=null,running=null,timer=null,dialogAction=null;
+  let session=null,running=null,timer=null,dialogAction=null,syncPromise=null,syncAgain=false;
 
   const uuid=()=>crypto.randomUUID();
   const now=()=>new Date().toISOString();
@@ -101,8 +101,13 @@
     await putCommand(entry);await sync();return entry;
   }
   async function sync(){
+    if(syncPromise){syncAgain=true;return syncPromise}
+    syncPromise=(async()=>{do{syncAgain=false;await syncOnce()}while(syncAgain)})().finally(()=>{syncPromise=null});
+    return syncPromise;
+  }
+  async function syncOnce(){
     const all=(await allCommands()).sort(commandOrder);
-    const entries=all.filter(entry=>entry.status==='queued'||entry.status==='failed');
+    const entries=all.filter(entry=>entry.status==='queued'||entry.status==='failed'||entry.status==='syncing');
     const byId=new Map(all.map(entry=>[entry.id,entry])),revisions=new Map();
     for(const entry of all){
       if(entry.status==='synced'&&Number.isInteger(entry.result?.revision))revisions.set(entityIdOf(entry),entry.result.revision);
