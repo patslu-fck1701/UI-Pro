@@ -1,6 +1,6 @@
 # WerkZ Deployment Topology
 
-**Baseline:** KB-v1.34  
+**Baseline:** KB-v1.39  
 **Date:** 2026-10-01
 
 ## Core decision
