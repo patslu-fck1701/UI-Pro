@@ -10,5 +10,6 @@ module.exports = {
   ...require('./time/production'),
   ...require('./time/durable'),
   ...require('./time/application'),
+  ...require('./time/http'),
   ...require('./time/offline')
 };
