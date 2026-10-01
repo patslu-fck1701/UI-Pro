@@ -405,6 +405,23 @@ State concrete controls and audited/certified scope only when evidence exists.
 Issue #6:
 https://github.com/patslu-fck1701/UI-Pro/issues/6
 
+## 18A. OSS/IP release dependency
+
+Security release evidence must include legal provenance for shipped components.
+
+Also read:
+`docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+
+Issue #7:
+https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+Release evidence should include:
+- dependency/licence inventory;
+- SBOM;
+- required third-party notices/licence texts;
+- provenance for bundled fonts/assets;
+- rights basis for material proprietary contributions.
+
 ## 19. Definition of done
 
 This foundation is operational when:
