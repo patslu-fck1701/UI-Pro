@@ -3,7 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.40
-**Last verified Issue #3 branch commit:** `81a6da094d47ffe166b90b6d005536bd268a60f4`  
+**Last verified Issue #3 branch commit:** `82b465626d3e87dc4405acbde032ad675262d360`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
@@ -110,3 +110,26 @@ Read:
 4. active issue and latest commits
 
 Then continue automatically.
+
+
+## Continuation result — Time production domain
+
+Verified branch commit: `82b465626d3e87dc4405acbde032ad675262d360`  
+CI run: `36894530431` — success
+
+Implemented:
+
+- provider-neutral AuthPort, tenant TimeRepositoryPort and EvidenceStoragePort;
+- tenant-keyed records and cross-tenant denial;
+- optional order link and mileage;
+- optimistic revisions and visible conflict errors;
+- reasoned correction history with before/change evidence;
+- private photo metadata and tenant gallery;
+- offline command envelopes with exactly-once idempotency, retry state and conflict state;
+- automated check that production Time source has no WebsitePublisher runtime tokens.
+
+Verification: syntax passed; lint 13 files passed; runtime contract/type check 7 modules passed; tests 27/27 passed; npm audit reported 0 vulnerabilities.
+
+Remaining: durable SQLite/server adapter, real object upload/storage, PWA IndexedDB/mobile UI, HTTP/multi-device integration tests, Library ZIP reconciliation and PR #4 review/merge.
+
+Next block: continue Issue #3 with durable adapters and HTTP-neutral integration tests.
