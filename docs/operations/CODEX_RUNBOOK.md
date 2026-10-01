@@ -244,4 +244,22 @@ Rules:
 - public source must not be treated as a trade secret;
 - AI-assisted code still requires human, security and licence review;
 - brand filing requires documented clearance first.
+## Risk and concerns invariant
+
+Every material recommendation must be checked against:
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+When new research is incorporated, preserve:
+- useful recommendation;
+- material concern/downside;
+- uncertainty;
+- rejected/overbroad claim;
+- mitigation/decision gate;
+- source/evidence where material.
+
+For patents/designs/database rights/data wording also read:
+- `docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md`
+- `docs/legal/DATA_RIGHTS_WORDING_GUIDE.md`
+
+Do not erase an unresolved concern by rewriting only the positive recommendation.
 
