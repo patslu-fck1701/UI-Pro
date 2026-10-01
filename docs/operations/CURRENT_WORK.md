@@ -623,6 +623,6 @@ Implemented on PR #8:
 - support/EOL/release-channel metadata, vulnerability triage/CRA assessment state, temporary support grants and AI transparency metadata;
 - `SECURITY.md` and reproducible SPDX SBOM/licence gate.
 
-Combined branch CI checkpoint `36939485259`: 67/67 tests, syntax/lint/typecheck/SBOM check passed, npm audit 0. Latest small SBOM correction requires a fresh final CI check.
+Combined branch CI checkpoint `36940187087`: 70/70 tests, syntax/lint/typecheck/SBOM check passed, npm audit 0. Provider-neutral OAuth account lifecycle and bounded retry/dead-letter worker are also implemented.
 
 Open external/human gates: persistent test HTTPS host and iPhone run (#3); repository visibility decision, signing infrastructure, production device persistence (#5); operating security process/restore drill/legal classification (#6); contributor rights, brand clearance, font packaging and insurance (#7).
