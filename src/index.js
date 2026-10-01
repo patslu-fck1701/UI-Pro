@@ -5,5 +5,6 @@ module.exports = {
   ...require('./modules/module-registry'),
   ...require('./modules/management'),
   ...require('./commercial/catalog'),
-  ...require('./integrations/approval-channel')
+  ...require('./integrations/approval-channel'),
+  ...require('./time/production')
 };

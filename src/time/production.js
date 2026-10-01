@@ -44,7 +44,7 @@ class InMemoryTenantTimeRepository extends TimeRepositoryPort {
     return value?clone(value):null;
   }
   list(organisationId){
-    return [...this.records.values()].filter(x=>x.organisationId===organisationId).map(clone);
+    return [...this.records.values()].filter(x=>x.organisationId===organisationId).map(value=>clone(value));
   }
   update(organisationId,id,{expectedRevision,apply,idempotencyKey}){
     const ik=this.key(organisationId,idempotencyKey);

@@ -1,6 +1,6 @@
 {
   "name": "werkz-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "WerkZ modular-monolith core for KB-v1.40",
   "type": "commonjs",
@@ -8,7 +8,7 @@
     "test": "node --test",
     "lint": "node tools/lint.js",
     "typecheck": "node tools/typecheck.js",
-    "check": "node --check src/core/werkz-core.js && node --check src/modules/module-registry.js && node --check src/modules/management.js && node --check src/commercial/catalog.js && node --check src/integrations/approval-channel.js",
+    "check": "node --check src/core/werkz-core.js && node --check src/modules/module-registry.js && node --check src/modules/management.js && node --check src/commercial/catalog.js && node --check src/integrations/approval-channel.js && node --check src/time/production.js",
     "verify": "npm run check && npm run lint && npm run typecheck && npm test"
   },
   "engines": { "node": ">=20" }
