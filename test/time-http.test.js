@@ -48,9 +48,10 @@ test('HTTP Time commands and multipart evidence use durable application boundary
   }finally{await fx.close()}
 });
 
-test('HTTP CORS allowlist rejects unknown origins and does not trust client tenant fields',async()=>{
+test('HTTP CORS allowlist rejects unknown origins, permits same-origin requests and does not trust client tenant fields',async()=>{
   const fx=await fixture();try{
     const denied=await fetch(fx.base+'/session',{headers:{origin:'https://evil.example',cookie:'werkz_session=a'}});assert.equal(denied.status,403);
+    const sameOriginResponse=await fetch(fx.base+'/session',{headers:{origin:fx.base,cookie:'werkz_session=a'}});assert.equal(sameOriginResponse.status,200);
     const response=await command(fx.base,'a','time.start',{organisationId:'org-b',actorId:'user-b',idempotencyKey:'tenant-spoof'});
     const result=await response.json();assert.equal(result.data.organisationId,'org-a');assert.equal(result.data.actorId,'user-a');
   }finally{await fx.close()}
