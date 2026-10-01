@@ -32,7 +32,7 @@ class FileTimeRepository extends TimeRepositoryPort {
     this.state.idempotency[ik]=value;this.persist();return clone(value);
   }
   get(org,id){const value=this.state.records[this.key(org,id)];return value?clone(value):null}
-  list(org){return Object.values(this.state.records).filter(x=>x.organisationId===org).map(clone)}
+  list(org){return Object.values(this.state.records).filter(x=>x.organisationId===org).map(value=>clone(value))}
   update(org,id,{expectedRevision,apply,idempotencyKey}){
     const ik=this.key(org,idempotencyKey);
     if(this.state.idempotency[ik])return clone(this.state.idempotency[ik]);
@@ -66,7 +66,7 @@ class FilePrivateEvidenceStorage extends EvidenceStoragePort {
     const metadata={id,organisationId,ownerId,timeRecordId,mime,size:bytes.length,hash:'sha256:'+digest,objectKey:'objects/'+objectName,visibility:'private'};
     this.state.objects[this.key(organisationId,id)]=metadata;this.state.idempotency[ik]=metadata;this.persist();return clone(metadata);
   }
-  listPrivate(org,timeRecordId){return Object.values(this.state.objects).filter(x=>x.organisationId===org&&x.timeRecordId===timeRecordId).map(clone)}
+  listPrivate(org,timeRecordId){return Object.values(this.state.objects).filter(x=>x.organisationId===org&&x.timeRecordId===timeRecordId).map(value=>clone(value))}
   getPrivate(org,id){
     const metadata=this.state.objects[this.key(org,id)];if(!metadata)throw notFound('Evidence not found');
     const objectPath=path.resolve(this.root,metadata.objectKey);
