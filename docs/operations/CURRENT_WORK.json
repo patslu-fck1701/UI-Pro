@@ -30,5 +30,19 @@
   ],
   "next_trigger": "Owner says 'weiter': follow CODEX_RUNBOOK.md and CURRENT_WORK without asking where to look.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
-  "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md"
+  "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
+  "last_verified_issue_branch_commit": "81a6da094d47ffe166b90b6d005536bd268a60f4",
+  "active_pull_request": {
+    "number": 4,
+    "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
+    "draft": true
+  },
+  "research_sources": [
+    {
+      "path": "/WerkZ/Research/Werk_Z_Integrationsbericht_Oktober_2026.txt",
+      "library_file_id": "libfile_c5e86a5960208191874decec75d09404",
+      "purpose": "connector/API architecture and provider preparation research"
+    }
+  ],
+  "current_continuation": "Finish Issue #3 Time production ports/offline/private storage/correction/cross-tenant tests; add provider-neutral integration contracts only. Real provider adapters are next package after Issue #3 completion."
 }
