@@ -2,7 +2,7 @@
   "schema_version": 1,
   "updated_at": "2026-10-01",
   "baseline": "KB-v1.40",
-  "state": "IN_PROGRESS",
+  "state": "BLOCKED",
   "repository": "patslu-fck1701/UI-Pro",
   "active_issue": {
     "number": 3,
@@ -28,7 +28,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Owner says 'weiter': follow CODEX_RUNBOOK.md and CURRENT_WORK without asking where to look.",
+  "next_trigger": "When Codex usage is available again and owner says 'weiter', resume active Issue #3 from the last verified branch commit and current continuation.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
@@ -79,5 +79,11 @@
     "HTTP and multi-device integration tests",
     "review and merge PR #4"
   ],
-  "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business."
+  "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
+  "blocker": {
+    "type": "USAGE_LIMIT",
+    "system": "Codex",
+    "temporary": true,
+    "note": "Current Codex usage limit reached. Resume Issue #3 when usage is available again; no product/technical redesign required."
+  }
 }
