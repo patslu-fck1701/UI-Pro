@@ -243,7 +243,7 @@ Direct GitHub audit confirmed:
 - `test/commercial-modules.test.js` still imports `werkz-v0.1.json`;
 - `config/catalog/werkz-v0.2.json` exists, but active quote/catalog behavior has not yet been migrated to it.
 
-At the audit checkpoint, `codex/issue-3-commercial` was 12 commits ahead and 35 commits behind `main`. Main has since received further control-plane commits, so Codex MUST make a fresh comparison before work.
+Current audited branch head is `d81e9068e8ecabe74a6fde1d7a80fbe2eb302428` (v0.2 catalog only after the verified code checkpoint). Current main tip is `6276c056d36d00ebddc10dab50ff9d02c0c72435`. The active branch is 12 commits ahead and 41 commits behind main. PR #4 is draft and currently not mergeable until the branch/base divergence is resolved. Codex MUST still make a fresh comparison at resume time.
 
 First continuation order:
 1. read latest main control plane and `CODEX_RESUME_NOW.md`;
