@@ -8,6 +8,7 @@ class AuthPort { resolveSession(_) { throw new Error('AuthPort.resolveSession mu
 class TimeRepositoryPort {
   create(_) { throw new Error('TimeRepositoryPort.create must be implemented'); }
   get(_,__) { throw new Error('TimeRepositoryPort.get must be implemented'); }
+  list(_) { throw new Error('TimeRepositoryPort.list must be implemented'); }
   update(_,__,___) { throw new Error('TimeRepositoryPort.update must be implemented'); }
 }
 class EvidenceStoragePort {
@@ -60,17 +61,20 @@ class InMemoryTenantTimeRepository extends TimeRepositoryPort {
 }
 
 class InMemoryPrivateEvidenceStorage extends EvidenceStoragePort {
-  constructor(){super();this.objects=new Map();}
-  putPrivate({organisationId,ownerId,timeRecordId,mime,size,hash,objectKey}){
+  constructor(){super();this.objects=new Map();this.idempotency=new Map();}
+  key(org,id){return org+':'+id}
+  putPrivate({organisationId,ownerId,timeRecordId,mime,size,hash,objectKey,idempotencyKey}){
+    const ik=this.key(organisationId,idempotencyKey);
+    if(this.idempotency.has(ik))return clone(this.idempotency.get(ik));
     const metadata={id:uid('file'),organisationId,ownerId,timeRecordId,mime,size,hash,objectKey,visibility:'private'};
-    this.objects.set(organisationId+':'+metadata.id,metadata);
+    this.objects.set(this.key(organisationId,metadata.id),metadata);this.idempotency.set(ik,metadata);
     return clone(metadata);
   }
   listPrivate(organisationId,timeRecordId){
-    return [...this.objects.values()].filter(x=>x.organisationId===organisationId&&x.timeRecordId===timeRecordId).map(clone);
+    return [...this.objects.values()].filter(x=>x.organisationId===organisationId&&x.timeRecordId===timeRecordId).map(value=>clone(value));
   }
   getPrivate(organisationId,id){
-    const value=this.objects.get(organisationId+':'+id);
+    const value=this.objects.get(this.key(organisationId,id));
     if(!value){const error=new Error('Evidence not found');error.code='NOT_FOUND';throw error;}
     return clone(value);
   }
@@ -112,6 +116,15 @@ class TimeProductionService {
     if(!session.capabilities.includes(capability)){const error=new Error('Missing capability: '+capability);error.code='FORBIDDEN';throw error;}
     return session;
   }
+  event(session,eventType,entityId,idempotencyKey,payload={}){
+    this.audit({
+      organisationId:session.organisationId,actorId:session.actorId,entityType:'time-record',
+      entityId,eventType,summary:eventType,idempotencyKey,source:'werkz.time',payload:clone(payload)
+    });
+  }
+  conflict(session,error,operation,idempotencyKey){
+    this.event(session,'time.conflict',error.entityId,idempotencyKey,{operation,expectedRevision:error.expected,actualRevision:error.actual});
+  }
   start(token,input){
     const s=this.session(token,'time.start');
     const record={
@@ -121,30 +134,52 @@ class TimeProductionService {
       mileageStart:input.mileageStart??null,mileageEnd:null,note:input.note||'',status:'running'
     };
     const result=this.repository.create(record,input.idempotencyKey);
-    this.audit({organisationId:s.organisationId,actorId:s.actorId,eventType:'time.started',entityId:result.id});
+    this.event(s,'time.started',result.id,input.idempotencyKey,{orderId:result.orderId});
     return result;
   }
   stop(token,input){
     const s=this.session(token,'time.stop');
-    return this.repository.update(s.organisationId,input.id,{expectedRevision:input.expectedRevision,idempotencyKey:input.idempotencyKey,apply:record=>{
-      record.endedAt=input.endedAt||this.clock().toISOString();record.mileageEnd=input.mileageEnd??record.mileageEnd;record.status='finished';return record;
-    }});
+    try{
+      const result=this.repository.update(s.organisationId,input.id,{expectedRevision:input.expectedRevision,idempotencyKey:input.idempotencyKey,apply:record=>{
+        record.endedAt=input.endedAt||this.clock().toISOString();record.mileageEnd=input.mileageEnd??record.mileageEnd;record.status='finished';return record;
+      }});
+      this.event(s,'time.stopped',result.id,input.idempotencyKey,{revision:result.revision});
+      return result;
+    }catch(error){if(error.code==='REVISION_CONFLICT')this.conflict(s,error,'stop',input.idempotencyKey);throw error;}
   }
   correct(token,input){
     const s=this.session(token,'time.correct');
-    if(!String(input.reason||'').trim())throw new Error('Correction reason required');
-    return this.repository.update(s.organisationId,input.id,{expectedRevision:input.expectedRevision,idempotencyKey:input.idempotencyKey,apply:record=>{
-      const before={startedAt:record.startedAt,endedAt:record.endedAt,mileageStart:record.mileageStart,mileageEnd:record.mileageEnd,note:record.note};
-      for(const field of ['startedAt','endedAt','mileageStart','mileageEnd','note'])if(input.changes[field]!==undefined)record[field]=input.changes[field];
-      record.corrections.push({id:this.id('correction'),actorId:s.actorId,at:this.clock().toISOString(),reason:input.reason,before,changes:clone(input.changes)});
-      return record;
-    }});
+    if(!String(input.reason||'').trim()){const error=new Error('Correction reason required');error.code='VALIDATION_ERROR';throw error;}
+    try{
+      const result=this.repository.update(s.organisationId,input.id,{expectedRevision:input.expectedRevision,idempotencyKey:input.idempotencyKey,apply:record=>{
+        const before={startedAt:record.startedAt,endedAt:record.endedAt,mileageStart:record.mileageStart,mileageEnd:record.mileageEnd,note:record.note};
+        for(const field of ['startedAt','endedAt','mileageStart','mileageEnd','note'])if(input.changes[field]!==undefined)record[field]=input.changes[field];
+        record.corrections.push({id:this.id('correction'),actorId:s.actorId,at:this.clock().toISOString(),reason:input.reason,before,changes:clone(input.changes)});
+        return record;
+      }});
+      this.event(s,'time.corrected',result.id,input.idempotencyKey,{revision:result.revision,reason:input.reason,fields:Object.keys(input.changes)});
+      return result;
+    }catch(error){if(error.code==='REVISION_CONFLICT')this.conflict(s,error,'correct',input.idempotencyKey);throw error;}
   }
   addPhoto(token,input){
     const s=this.session(token,'document.upload');
     const record=this.repository.get(s.organisationId,input.timeRecordId);
     if(!record){const error=new Error('Time record not found');error.code='NOT_FOUND';throw error;}
-    return this.storage.putPrivate({organisationId:s.organisationId,ownerId:s.actorId,timeRecordId:record.id,mime:input.mime,size:input.size,hash:input.hash,objectKey:input.objectKey});
+    const result=this.storage.putPrivate({
+      organisationId:s.organisationId,ownerId:s.actorId,timeRecordId:record.id,mime:input.mime,
+      size:input.size,hash:input.hash,objectKey:input.objectKey,bytes:input.bytes,idempotencyKey:input.idempotencyKey
+    });
+    this.event(s,'time.evidence.added',record.id,input.idempotencyKey,{evidenceId:result.id,mime:result.mime,size:result.size,hash:result.hash});
+    return result;
+  }
+  get(token,id){
+    const s=this.session(token,'time.start'),record=this.repository.get(s.organisationId,id);
+    if(!record){const error=new Error('Time record not found');error.code='NOT_FOUND';throw error;}
+    return record;
+  }
+  list(token){
+    const s=this.session(token,'time.start');
+    return this.repository.list(s.organisationId);
   }
   gallery(token,timeRecordId){
     const s=this.session(token,'time.start');
