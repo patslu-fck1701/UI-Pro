@@ -6,13 +6,17 @@
 
 Repository: `patslu-fck1701/UI-Pro`
 
-Every Codex/agent session starts here:
+Every Codex/agent session starts from the **latest files on `main`**, even when the implementation work happens on another branch:
 
-1. `docs/operations/CODEX_RUNBOOK.md` — this protocol.
-2. `docs/operations/CURRENT_WORK.md` — human-readable current state.
-3. `docs/operations/CURRENT_WORK.json` — machine-readable pointer/state.
-4. GitHub issue referenced by `CURRENT_WORK.md/json`.
-5. Recent commits after `last_verified_commit`.
+1. `main:docs/operations/CODEX_RUNBOOK.md` — this protocol.
+2. `main:docs/operations/CURRENT_WORK.json` — machine-readable pointer/state.
+3. `main:docs/operations/CURRENT_WORK.md` — human-readable current state.
+4. `main:docs/operations/CODEX_RESUME_NOW.md` when present — current exact continuation checkpoint.
+5. GitHub issue referenced by `CURRENT_WORK.md/json`, including newest comments.
+6. Compare `main` with the active implementation branch before editing code.
+7. Recent commits after the recorded last verified implementation commit.
+
+A branch-local copy of CURRENT_WORK may be stale. The latest `main` control plane wins.
 
 Do not infer the current task from old chat messages when these files exist.
 
@@ -20,11 +24,13 @@ Do not infer the current task from old chat messages when these files exist.
 
 When the owner says only **"weiter"**:
 
-1. Read `CURRENT_WORK.json`.
-2. Read `CURRENT_WORK.md`.
-3. Open the referenced active GitHub issue.
-4. Inspect recent repository commits and any issue comments after the recorded last verified commit.
-5. If status is `IN_PROGRESS`, continue the current work package.
+1. Read latest `main:CURRENT_WORK.json`.
+2. Read latest `main:CURRENT_WORK.md`.
+3. Read `main:CODEX_RESUME_NOW.md` if present.
+4. Open the referenced active GitHub issue and newest comments.
+5. Inspect recent repository commits after the recorded last verified implementation commit.
+6. Compare latest `main` against the active work branch. If the branch is behind, synchronize it safely before new implementation and rerun verification.
+7. If status is `IN_PROGRESS`, continue the current work package.
 6. If status is `READY_FOR_REVIEW`, verify tests/results and close gaps.
 7. If status is `DONE_NEEDS_NEXT_ORDER`, derive the next work package from:
    - completed work;
@@ -162,3 +168,33 @@ These are not optional issue-specific notes. Every implementation package must p
 Before introducing a new runtime dependency, provider, customer-side agent, credential store, installer, background worker or production data path, check the change against all three foundations.
 
 Do not weaken these baselines merely to make a demo work. If a work package cannot yet satisfy a production gate, keep the implementation explicitly non-production and record the gap.
+
+
+## Active-branch freshness rule
+
+The persistent control plane lives on `main`; implementation may live on a feature branch.
+
+Before new implementation:
+- fetch latest main;
+- compare main and active branch;
+- if main contains newer architecture, commercial, security, deployment, integration or control-plane decisions, bring them into the active branch first;
+- preserve already verified implementation commits;
+- prefer a reviewable safe merge when a history rewrite/rebase would add unnecessary recovery risk;
+- rerun the existing verification suite immediately after synchronization.
+
+Never continue for hours on a stale branch merely because its branch-local CURRENT_WORK file says IN_PROGRESS.
+
+## Commercial migration guard
+
+The current canonical pricing direction is v0.2.
+
+- no permanent Free/Basic production tier;
+- v0.1 small per-module prices are historical seed/test data only;
+- no PR may merge active commercial behavior that re-establishes those values as canonical/public pricing;
+- module entitlements remain independent from priceable offer lines;
+- setup, managed operation and deployment/infrastructure must remain separately representable.
+
+See:
+- `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
+- `docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md`
+- `docs/operations/CODEX_RESUME_NOW.md`
