@@ -8,5 +8,6 @@ module.exports = {
   ...require('./integrations/approval-channel'),
   ...require('./time/production'),
   ...require('./time/durable'),
-  ...require('./time/application')
+  ...require('./time/application'),
+  ...require('./time/offline')
 };
