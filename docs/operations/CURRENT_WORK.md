@@ -507,3 +507,43 @@ When Issue #3 reaches `DONE_NEEDS_NEXT_ORDER`, Issue #5 and Issue #6 are both ma
 
 Live provider integrations must not bypass Issue #5/#6 release and security gates.
 
+## Mandatory queued IP/OSS/brand work — Issue #7
+
+Canonical foundation:
+`docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+
+Queued issue:
+**#7 — WerkZ IP Ownership, OSS Compliance & Brand Protection**  
+https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+Supporting registers:
+- `docs/legal/IP_PROVENANCE_REGISTER.md`
+- `COPYRIGHT_AND_PROPRIETARY_NOTICE.md`
+- `THIRD_PARTY_NOTICES.md`
+- `docs/legal/BRAND_CLEARANCE_REGISTER.md`
+- `docs/legal/INSURANCE_READINESS_CHECKLIST.md`
+
+Verified baseline 2026-10-01:
+- `UI-Pro` is public;
+- main previously had no top-level LICENSE/NOTICE;
+- Issue #3 package declares `private:true` and currently no npm dependencies;
+- prototype Time pages reference Manrope via Google Fonts.
+
+Mandatory additions:
+- chain-of-title register for material contributors;
+- explicit freelancer/agency rights clauses;
+- AI-assisted development provenance + human review;
+- OSS licence classification and CI licence/SBOM gate;
+- reproducible third-party notices;
+- self-host approved production fonts/assets where practical;
+- preserve trade-secret status through actual secrecy measures, not labels;
+- trademark clearance for Werk Z/WerkZ before filing/major spend;
+- canonical brand spelling decision;
+- insurance readiness decision before normal paid production rollout.
+
+### Sequencing
+
+Do not interrupt Issue #3 correctness/device-test gates.
+
+Before normal paid production rollout, Issues #5, #6 and #7 are all mandatory readiness blocks. They may be implemented in coordinated branches, but licensing/security/IP/OSS gates must remain separately verifiable.
+
