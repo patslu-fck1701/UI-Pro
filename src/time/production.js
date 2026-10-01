@@ -35,8 +35,10 @@ class InMemoryTenantTimeRepository extends TimeRepositoryPort {
   create(record,idempotencyKey){
     const ik=this.key(record.organisationId,idempotencyKey);
     if(this.idempotency.has(ik)) return clone(this.idempotency.get(ik));
+    const recordKey=this.key(record.organisationId,record.id);
+    if(this.records.has(recordKey)){const error=new Error('Time record id already exists');error.code='ID_CONFLICT';throw error;}
     const value={...clone(record),revision:1,corrections:[]};
-    this.records.set(this.key(value.organisationId,value.id),value);
+    this.records.set(recordKey,value);
     this.idempotency.set(ik,value);
     return clone(value);
   }
@@ -128,7 +130,7 @@ class TimeProductionService {
   start(token,input){
     const s=this.session(token,'time.start');
     const record={
-      id:this.id('time'),organisationId:s.organisationId,actorId:s.actorId,
+      id:input.id||this.id('time'),organisationId:s.organisationId,actorId:s.actorId,
       orderId:input.orderId||null,customerLabel:input.customerLabel||null,
       startedAt:input.startedAt||this.clock().toISOString(),endedAt:null,
       mileageStart:input.mileageStart??null,mileageEnd:null,note:input.note||'',status:'running'
