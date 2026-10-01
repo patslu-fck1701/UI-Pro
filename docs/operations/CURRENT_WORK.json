@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "updated_at": "2026-10-01",
-  "baseline": "KB-v1.40",
+  "baseline": "KB-v1.41",
   "state": "IN_PROGRESS",
   "repository": "patslu-fck1701/UI-Pro",
   "active_issue": {
@@ -9,49 +9,235 @@
     "title": "Codex Next: commercial modules, entitlements, pricing catalog & Time productionization",
     "url": "https://github.com/patslu-fck1701/UI-Pro/issues/3"
   },
-  "active_branch": "codex/issue-3-commercial",
+  "canonical_phone_baseline": {
+    "files_library_path": "/WerkZ/Baseline/WerkZ.zip",
+    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4"
+  },
+  "start_here": [
+    "docs/operations/CODEX_RUNBOOK.md",
+    "docs/operations/CURRENT_WORK.md",
+    "docs/operations/CURRENT_WORK.json",
+    "docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md",
+    "docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md",
+    "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
+    "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md",
+    "docs/integrations/INTEGRATION_STRATEGY.md"
+  ],
+  "completion_required": [
+    "tests",
+    "build",
+    "lint_if_available",
+    "typecheck_if_available",
+    "meaningful_commits",
+    "update_CURRENT_WORK_md",
+    "update_CURRENT_WORK_json",
+    "completion_comment_on_active_issue"
+  ],
+  "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
+  "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
+  "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
+  "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
     "draft": true
   },
-  "canonical_phone_baseline": {
-    "files_library_path": "/WerkZ/Baseline/WerkZ.zip",
-    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4",
-    "materialized": false,
-    "blocker": "download_file requires a ready execution workspace"
-  },
-  "last_verified_commit": "5302e0ac96a33c87b0bdcd2df14a14abb91608d7",
+  "research_sources": [
+    {
+      "path": "/WerkZ/Research/Werk_Z_Integrationsbericht_Oktober_2026.txt",
+      "library_file_id": "libfile_c5e86a5960208191874decec75d09404",
+      "purpose": "connector/API architecture and provider preparation research"
+    },
+    {
+      "path": "conversation/Files Library: Werk_Z_Recht_Schutzbericht_NEU_2026-10-01.txt",
+      "library_file_id": "libfile_5d136d2dad948191868284839d1e7cf5",
+      "purpose": "security/privacy/legal-readiness engineering baseline"
+    },
+    {
+      "path": "conversation/Files Library: Werk Z – Deployment-, Installations- und Onboarding-Strategie für Kundenumgebungen",
+      "library_file_id": "libfile_8c6fd3baef60819185d165fd09a2e051",
+      "purpose": "cloud/agent deployment, enrollment, packaging, signing and onboarding baseline"
+    },
+    {
+      "path": "conversation/Files Library: Zusammenfassung (Executive Summary)",
+      "library_file_id": "libfile_cbe8eb41c5e48191a9662acd5eb6e995",
+      "purpose": "cross-check of security/deployment/legal requirements"
+    },
+    {
+      "path": "conversation/Files Library: Werk_Z_Integrationsbericht_Oktober_2026.md",
+      "library_file_id": "libfile_4af2653afd24819199bc0de988d38300",
+      "purpose": "current integration/API research copy"
+    }
+  ],
+  "current_continuation": "Issue #3 Block 3A/3B: durable Time repository + private object storage + HTTP-neutral application boundary + concurrent-device tests, then IndexedDB/PWA mobile Time surface. Provider-neutral integration contracts only.",
   "last_verified_ci": {
-    "run_id": 36892514478,
+    "run_id": 36894530431,
     "conclusion": "success",
     "tests": {
-      "total": 19,
-      "passed": 19,
+      "total": 27,
+      "passed": 27,
       "failed": 0
     },
     "syntax_check": "passed",
-    "lint": "passed",
-    "typecheck": "passed"
+    "lint": {
+      "status": "passed",
+      "files": 13
+    },
+    "typecheck": {
+      "status": "passed",
+      "modules": 7
+    },
+    "npm_vulnerabilities": 0
   },
-  "completed_this_block": [
-    "module contracts",
-    "organisation entitlements",
-    "versioned catalog seed",
-    "quote price snapshots",
-    "package preset expansion",
-    "contract entitlement mapping",
-    "management projection",
-    "local approval and notification adapters"
+  "completed_this_continuation": [
+    "Time Auth/repository/storage ports",
+    "tenant isolation and optimistic revisions",
+    "correction history and mileage",
+    "private photo metadata and gallery",
+    "offline idempotency and visible conflict state"
   ],
   "remaining": [
     "Library ZIP reconciliation",
-    "Time gallery and correction UI",
-    "offline queue and conflict handling",
-    "server persistence",
-    "private photo storage",
-    "multi-device and cross-tenant integration tests"
+    "durable SQLite/server adapter",
+    "PWA IndexedDB/mobile surfaces",
+    "private object upload adapter",
+    "HTTP and multi-device integration tests",
+    "review and merge PR #4",
+    "migrate commercial quote/catalog behavior from v0.1 seed pricing to v0.2 before PR #4 merge"
   ],
-  "next_recommended_block": "Continue Issue #3 with WerkZ Time production ports, offline command/conflict contracts, private photo metadata and cross-tenant integration tests.",
-  "next_trigger": "Owner says 'weiter': follow CODEX_RUNBOOK.md and continue Issue #3."
+  "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
+  "foundation_sync": {
+    "status": "linked",
+    "commit": "0462de80760b61164050d0f382e7c7576d4584b3",
+    "mandatory_docs": [
+      "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
+      "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md",
+      "docs/integrations/INTEGRATION_STRATEGY.md"
+    ]
+  },
+  "implementation_guards": [
+    "WebsitePublisher remains marketing/reference only; no production customer database/runtime dependency",
+    "cloud-first and agent-optional; smartphone-only Solo remains supported",
+    "local agent is least-privilege, outbound-preferred, no generic remote shell, signed-update only",
+    "secrets are referenced via replaceable secret storage; no plaintext customer secrets in business tables or logs",
+    "tenant isolation and cross-tenant negative tests are release gates",
+    "critical actions remain audited and approvals are core state, not messenger state",
+    "provider APIs stay behind provider-neutral connector/OAuth/webhook/queue/mapping contracts",
+    "production release requires backup/restore, retention/exit, incident-response and provider/subprocessor data-flow readiness"
+  ],
+  "commercial_pricing_v2": {
+    "status": "canonical_direction",
+    "doc": "docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md",
+    "active_branch_catalog": "config/catalog/werkz-v0.2.json",
+    "supersedes": "v0.1 small per-module monthly price seed as commercial source of truth",
+    "setup_from_eur": {
+      "solo": 490,
+      "team": 1490,
+      "business": 2490
+    },
+    "managed_operation_from_eur_per_month": {
+      "solo": 79,
+      "team": 179,
+      "business": 349
+    },
+    "deployment_modes": [
+      "managed_cloud",
+      "dedicated_cloud",
+      "hybrid_connector",
+      "existing_customer_hardware",
+      "werkz_box",
+      "dedicated_on_prem"
+    ],
+    "rules": [
+      "modules remain technical entitlements and are included/scoped in offers unless later explicitly line-priced",
+      "assess existing customer infrastructure before proposing new hardware",
+      "WerkZ-supplied hardware is procured only after order and separated from provisioning/management",
+      "PR #4 must migrate quote/catalog behavior to v0.2 before merge"
+    ],
+    "permanent_free_tier": false,
+    "free_tier_note": "No permanent Free/Basic production tier. A future time-limited demo/sandbox may be considered separately."
+  },
+  "customer_readiness_2026": {
+    "phase": "October-December 2026",
+    "objective": "controlled first-customer readiness, not broad launch",
+    "gates": [
+      "durable server persistence and private object storage",
+      "production auth/recovery and tenant isolation tests",
+      "backup/restore and exit validation",
+      "incident-response and support path",
+      "contract/service-description/AVV-if-applicable/TOM/subprocessor package",
+      "connector enrollment/signing/update foundation where local software is used",
+      "demo, quote, onboarding, acceptance and support flow dry-run"
+    ]
+  },
+  "usage_limit": {
+    "status": "resolved",
+    "resolved_at_local": "2026-10-01T20:55:00+02:00",
+    "owner_confirmed": true
+  },
+  "resume_document": "docs/operations/CODEX_RESUME_NOW.md",
+  "branch_sync": {
+    "active_branch": "codex/issue-3-commercial",
+    "audit_snapshot": {
+      "main_commit": "6276c056d36d00ebddc10dab50ff9d02c0c72435",
+      "branch_head": "d81e9068e8ecabe74a6fde1d7a80fbe2eb302428",
+      "last_ci_verified_implementation": "82b465626d3e87dc4405acbde032ad675262d360",
+      "ahead_by": 12,
+      "behind_by": 41,
+      "status": "diverged",
+      "pr_mergeable": false
+    },
+    "rule": "Freshly compare current main vs active branch at resume time, then safely synchronize before new implementation. Main control-plane decisions win; preserve verified Issue #3 code."
+  },
+  "verified_implementation": [
+    "module manifests and organisation entitlements",
+    "quote price snapshots and contract-to-entitlement mapping",
+    "optional management projection",
+    "generic local approval/notification adapters",
+    "Time AuthPort / TimeRepositoryPort / EvidenceStoragePort",
+    "tenant isolation",
+    "optimistic revisions and explicit conflict state",
+    "correction history",
+    "optional mileage",
+    "private photo metadata and tenant gallery",
+    "offline command idempotency/retry/conflict state",
+    "WebsitePublisher runtime-token decoupling test"
+  ],
+  "known_code_gaps": [
+    "Time repository is still in-memory",
+    "Evidence storage is still in-memory metadata only; no durable object bytes",
+    "Offline queue is still in-memory; no IndexedDB adapter",
+    "no transport-neutral application/use-case layer yet",
+    "audit coverage incomplete for stop/correction/evidence/conflict",
+    "no generic PWA/mobile production-oriented Time surface yet",
+    "no durable restart tests",
+    "no HTTP/network transport tests",
+    "no live provider integrations"
+  ],
+  "commercial_migration_gate": {
+    "canonical_catalog": "config/catalog/werkz-v0.2.json",
+    "historical_catalog": "config/catalog/werkz-v0.1.json",
+    "current_gap": "CommercialCatalog and commercial tests still use v0.1 items/presets behavior; v0.2 exists but is not active.",
+    "required": [
+      "make v0.2 loadable by active catalog/quote code",
+      "preserve historical quote snapshots",
+      "separate priceable offer lines from module entitlements",
+      "test setup + managed operation + deployment quote composition",
+      "test no permanent Free/Basic tier",
+      "prevent v0.1 small per-module prices from becoming canonical/public behavior"
+    ]
+  },
+  "resume_sequence": [
+    "read latest main CODEX_RUNBOOK/CURRENT_WORK/CODEX_RESUME_NOW and Issue #3 newest comments",
+    "fresh compare main vs codex/issue-3-commercial",
+    "safely synchronize active branch with main and rerun existing verify suite",
+    "migrate commercial catalog/quotes/tests to v0.2",
+    "implement durable Time repository with restart/idempotency persistence",
+    "implement durable tenant-scoped private evidence/object storage",
+    "add transport-neutral application boundary and complete audit events",
+    "add concurrent-device/cross-tenant/restart integration tests",
+    "add OfflineQueuePort with IndexedDB boundary and generic PWA Time surface",
+    "add provider-neutral integration contracts only",
+    "rerun full verification and update PR #4, CURRENT_WORK and Issue #3"
+  ]
 }
