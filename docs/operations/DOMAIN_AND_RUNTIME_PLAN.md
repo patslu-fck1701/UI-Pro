@@ -1,6 +1,6 @@
 # Domain and Runtime Plan
 
-**Baseline:** KB-v1.34  
+**Baseline:** KB-v1.39  
 **Date:** 2026-10-01
 
 ## Public company domain
