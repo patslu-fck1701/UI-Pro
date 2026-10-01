@@ -8,7 +8,8 @@ const PUBLIC_MESSAGES=Object.freeze({
   REVISION_CONFLICT:'The record changed on another device',
   VALIDATION_ERROR:'Invalid request',
   HASH_MISMATCH:'Evidence integrity check failed',
-  INTEGRITY_ERROR:'Stored data integrity check failed'
+  INTEGRITY_ERROR:'Stored data integrity check failed',
+  ID_CONFLICT:'Record identifier already exists'
 });
 
 function validation(message,field){
