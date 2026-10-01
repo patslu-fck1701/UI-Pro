@@ -1,51 +1,63 @@
 # Domain and Runtime Plan
 
-**Baseline:** KB-v1.33
-**Date:** 2026-09-30
+**Baseline:** KB-v1.34  
+**Date:** 2026-10-01
 
-## Intended domain
+## Public company domain
 
-Primary public domain: **werkz-digital.eu**
+Primary intended public domain: **werkz-digital.eu**.
 
-Status: reported purchased, not yet connected. Verify exact spelling in the registrar account before DNS changes.
+Status: reported purchased; WebsitePublisher project status still uses its project subdomain until a custom-domain connection is actually verified.
 
-Registrar/provider context currently points to INWX, but credentials and registrar account data are not stored here.
+Do not claim DNS/SSL is live without verification.
 
-## WebsitePublisher target
+## Company website
 
-Canonical project: **23947**
+WebsitePublisher project **23947** is the public WerkZ company website.
 
-Fallback URL: https://project23947.websitepublisher.ai/
+Fallback:
+https://project23947.websitepublisher.ai/
 
-WebsitePublisher custom-domain connection is owner-controlled in the dashboard. It is not performed by an AI/MCP write.
+Public site responsibilities:
+- WerkZ marketing/customer explanation;
+- modules/workflows;
+- pricing guidance;
+- pre-check/detail-check;
+- technical/security detail;
+- selected references;
+- DeutschZ public server pages.
 
-After domain confirmation, the documented WebsitePublisher DNS target is:
+## Operational WerkZ app
 
-| Type | Host | Value | TTL |
-|---|---|---|---|
-| A | @ | 206.189.242.68 | 3600 / Auto |
-| A | www | 206.189.242.68 | 3600 / Auto |
+The product runtime is separate from the company website.
 
-Dashboard path: Project 23947 -> Publish -> Connect your own domain -> Validate & Save
+Target examples:
+- `app.werkz-digital.eu`;
+- customer-specific subdomain;
+- isolated customer domain/instance;
+- later on-prem deployment where required.
 
-WebsitePublisher provisions SSL after a valid connection.
+A solo customer must be able to use the hosted app with only a smartphone.
 
-Before changing DNS, check for conflicting A, AAAA or CNAME records on @ and www.
+## Public URL strategy
 
-## URL strategy
+WerkZ:
+- `/`
+- `/werkz.html`
+- `/werkz-funktionen.html`
+- `/werkz-technik.html`
+- `/werkz-sicherheit.html`
+- `/werkz-fragebogen.html`
+- `/werkz-detailcheck.html`
+- `/werkz-zeiterfassung.html`
 
-Keep working public URLs stable during consolidation. Do not delete or rename existing WerkZ/DeutschZ routes without a migration/redirect plan.
+DeutschZ:
+- `/server.html` — active live-server hub
+- `/roadmap.html` — active roadmap
+- `/deutschz-story.html` — spoiler-gated story
 
-Recommended roles:
+Do not delete or rename live routes without KEEP/MERGE/ARCHIVE/REMOVE review and a redirect/migration plan where appropriate.
 
-- / — WerkZ main entry
-- /werkz-funktionen.html — capabilities and workflows
-- /werkz-technik.html — technology and integrations
-- /werkz-sicherheit.html — security
-- /werkz-fragebogen.html — intake/pre-check
-- /werkz-zeiterfassung.html — WerkZ Time module
-- /server.html — DeutschZ technical reference
-- /deutschz-feedback.html — DeutschZ feedback
-- /roadmap.html — DeutschZ roadmap
+## DNS
 
-Project 29212 must not receive new canonical product development. Archive first; remove later when the owner has confirmed the backup.
+Any existing A/AAAA/CNAME state must be rechecked immediately before changes. Historical DNS notes are not proof of current live routing.
