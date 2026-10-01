@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-01",
+  "baseline": "KB-v1.40",
+  "state": "IN_PROGRESS",
+  "repository": "patslu-fck1701/UI-Pro",
+  "active_issue": {
+    "number": 3,
+    "title": "Codex Next: commercial modules, entitlements, pricing catalog & Time productionization",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/3"
+  },
+  "canonical_phone_baseline": {
+    "files_library_path": "/WerkZ/Baseline/WerkZ.zip",
+    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4"
+  },
+  "start_here": [
+    "docs/operations/CODEX_RUNBOOK.md",
+    "docs/operations/CURRENT_WORK.md",
+    "docs/operations/CURRENT_WORK.json"
+  ],
+  "completion_required": [
+    "tests",
+    "build",
+    "lint_if_available",
+    "typecheck_if_available",
+    "meaningful_commits",
+    "update_CURRENT_WORK_md",
+    "update_CURRENT_WORK_json",
+    "completion_comment_on_active_issue"
+  ],
+  "next_trigger": "When owner says 'weiter', read current state and continue/derive next issue without asking where to look."
+}
