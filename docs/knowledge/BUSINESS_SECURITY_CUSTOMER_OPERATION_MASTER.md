@@ -101,6 +101,20 @@ Mandatory directions:
 - clear Werk Z/WerkZ variants before trademark filing/large brand spend;
 - decide insurance coverage before regular paid production customers.
 
+## Risk and concerns rule
+
+WerkZ decisions must capture material downsides, uncertainties and stop-gates, not only the preferred solution.
+
+Canonical register:
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+For IP/product decisions in particular:
+- patent/design filings require a value + novelty + disclosure review;
+- public technical disclosure may remove patent options;
+- data/database rights must not be assumed from hosting or processing alone;
+- trade-secret protection requires actual secrecy measures;
+- research-report claims must be checked against primary/current sources before becoming canonical.
+
 ## Legal/privacy/security gate
 
 Before a normal paid production customer, align implementation with:
