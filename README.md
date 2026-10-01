@@ -2,7 +2,7 @@
 
 This repository is the canonical GitHub-side product/engineering base for **WerkZ**. The repository is still technically named `UI-Pro`; logical product name: **WerkZ**.
 
-**Semantic baseline:** KB-v1.39  
+**Semantic baseline:** KB-v1.40  
 **Corrected:** 2026-10-01  
 **Legacy UI-Pro state:** `archive/legacy-ui-pro-before-werkz-2026-09-28`
 
