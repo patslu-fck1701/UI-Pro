@@ -103,3 +103,19 @@ The Gabriel-specific/private implementation remains a UX/behaviour reference. Th
 ## Safety
 
 Do not publish private cost models, customer data, passwords, tokens or personal test fixtures. Do not delete live/unique web functions merely to save plan slots; merge first and verify preservation.
+
+## Extended deployment / connector baseline
+
+The full installer, local-agent, enrollment and release model is defined in:
+
+`docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
+
+Key extension to this topology:
+- hosted/PWA remains the default customer runtime;
+- a local WerkZ Agent is optional and only required for local/LAN systems;
+- local agents are constrained connectors, not remote shells;
+- all packaging paths converge on one logical enrollment model;
+- cloud provider webhooks terminate in WerkZ Cloud and can be relayed to closed customer networks over an outbound agent connection;
+- Windows/macOS/Linux/container/MDM/on-prem distribution are packaging profiles over the same product contracts, not separate product forks.
+
+Security and privacy constraints for every deployment profile are defined in `docs/security/SECURITY_PRIVACY_FOUNDATION.md`.
