@@ -528,9 +528,9 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "00241d9907c2e13fc7b41abe2986a6d4eecac1a9",
+    "latest_verified_commit": "3d450c8e4817bd2c8a15878d2aec08519c797484",
     "latest_verified_ci": {
-      "run_id": 36940860355,
+      "run_id": 36941665275,
       "conclusion": "success",
       "tests": {
         "total": 74,
@@ -571,7 +571,8 @@
       "production signing infrastructure and device persistence",
       "security operations and restore drill",
       "contributor rights/brand/insurance human decisions"
-    ]
+    ],
+    "stacked_base_sync": "0 behind codex/issue-3-commercial after merge commit 3d450c8e4817bd2c8a15878d2aec08519c797484"
   },
   "time_test_deployment": {
     "status": "deployable_external_host_pending",
