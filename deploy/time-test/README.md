@@ -30,3 +30,15 @@ docker compose -f deploy/time-test/compose.yaml up --build
 ```
 
 Publish behind a persistent HTTPS reverse proxy, verify `/healthz`, then set the WebsitePublisher runtime config `apiBase` to that HTTPS origin. Do not register the proxy until that target exists and has passed the HTTP integration tests.
+
+## Backup and restore drill
+
+Stop the test server before copying or restoring its data volume. This prevents a Time JSON snapshot and photo index from being taken at different moments.
+
+```powershell
+node tools/time-backup.js backup ./var/time-test ./var/time-test-backup-2026-10-01
+node tools/time-backup.js verify ./var/time-test-backup-2026-10-01
+node tools/time-backup.js restore ./var/time-test-backup-2026-10-01 ./var/time-test
+```
+
+Restore verifies the backup hashes and the Time/evidence tenant links before replacing the dedicated data directory. It retains the previous directory under the returned `priorRoot` path for recovery. Review and remove it later through an explicit retention procedure.
