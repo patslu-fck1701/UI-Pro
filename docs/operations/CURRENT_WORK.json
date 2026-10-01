@@ -526,22 +526,22 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "a5d5d8aa1719c8729a01b6efa5ca66338b28a3c1",
+    "latest_verified_commit": "00241d9907c2e13fc7b41abe2986a6d4eecac1a9",
     "latest_verified_ci": {
-      "run_id": 36940537603,
+      "run_id": 36940860355,
       "conclusion": "success",
       "tests": {
-        "total": 72,
-        "passed": 72,
+        "total": 74,
+        "passed": 74,
         "failed": 0
       },
       "lint": {
         "status": "passed",
-        "files": 38
+        "files": 42
       },
       "typecheck": {
         "status": "passed",
-        "modules": 16
+        "modules": 17
       },
       "oss_check": "passed",
       "npm_vulnerabilities": 0
@@ -559,7 +559,9 @@
       "OAuth account lifecycle with secret references and revocation",
       "idempotent integration worker with backoff/dead-letter/health",
       "Time and private evidence backup/verify/restore CLI with hash and tenant-link checks",
-      "backup-mutation-restore and tamper tests"
+      "backup-mutation-restore and tamper tests",
+      "atomic file-backed enrollment state with restart-persistent token replay denial and device revocation",
+      "external-key release manifest sign/verify CLI with artifact hashes and tamper test"
     ],
     "blockers": [
       "Issue #3 persistent HTTPS host/iPhone test",
