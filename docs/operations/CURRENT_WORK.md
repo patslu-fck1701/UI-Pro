@@ -3,7 +3,8 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.40
-**Last control-plane commit:** `4a0651fb8ecd0ae847f13bd9b11056570ca08483`
+**Last verified Issue #3 branch commit:** `81a6da094d47ffe166b90b6d005536bd268a60f4`  
+**Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
 
@@ -55,6 +56,37 @@ Files Library:
 `/WerkZ/Baseline/WerkZ.zip`
 
 Do not wait for PC comparison.
+
+## Latest verified progress
+
+Issue #3 has implemented the commercial/module foundation on draft PR #4:
+- module manifests + SKUs;
+- organisation entitlements + guard/audit/suspend/reactivate;
+- versioned catalog + editable presets;
+- quote price snapshots;
+- contract-to-entitlement mapping;
+- optional management projection;
+- generic NotificationPort/ApprovalChannel + idempotent local adapters.
+
+Reported verification:
+- CI success;
+- 19/19 tests passed;
+- lint/typecheck/build checks passed.
+
+Remaining work:
+- Time AuthPort/session boundary;
+- server repository/persistence boundary;
+- offline command queue + conflict semantics;
+- private photo/document storage + gallery;
+- correction/history;
+- optional mileage;
+- multi-device/cross-tenant integration tests;
+- remove remaining WebsitePublisher production assumptions.
+
+New integration research source:
+`/WerkZ/Research/Werk_Z_Integrationsbericht_Oktober_2026.txt`
+
+Use it to keep the connector boundary provider-neutral. Real provider adapters are the likely next package after Issue #3, not a reason to skip the remaining Time production work.
 
 ## Required completion state
 
