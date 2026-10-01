@@ -81,6 +81,26 @@ Mandatory directions:
 - test backup/restore beyond full-system backup existence;
 - publish only concrete implemented compliance controls.
 
+## IP ownership, OSS and brand protection rule
+
+WerkZ commercialization requires a clean rights chain, third-party licence compliance and a documented brand decision.
+
+Canonical detail:
+`docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+
+Implementation issue:
+https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+Mandatory directions:
+- document rights basis for owner/employee/freelancer/agency contributions;
+- do not assume §69b solves freelancer rights;
+- treat AI-assisted output as reviewed project input, not automatic proof of copyrightability/non-infringement;
+- maintain OSS/font/media inventory and release notices;
+- generate SBOM + third-party notices before production release;
+- preserve reasonable secrecy measures for actual trade secrets;
+- clear Werk Z/WerkZ variants before trademark filing/large brand spend;
+- decide insurance coverage before regular paid production customers.
+
 ## Legal/privacy/security gate
 
 Before a normal paid production customer, align implementation with:
@@ -127,6 +147,7 @@ October–December 2026 is the customer-readiness phase:
 - Security/privacy: `docs/security/SECURITY_PRIVACY_FOUNDATION.md`
 - Licensing/IP protection: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
 - Product security lifecycle/compliance: `docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+- IP/OSS/brand: `docs/legal/IP_OSS_BRAND_FOUNDATION.md`
 - Deployment/connector: `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
 - Integrations: `docs/integrations/INTEGRATION_STRATEGY.md`
 - Product/module boundaries: `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`
