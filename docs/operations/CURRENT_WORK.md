@@ -658,3 +658,11 @@ Verified code commit: `60f02980100da9b9b38373056231fb818c4fc562`
 CI run: `36941862033` — success; 74/74 tests, lint 42 files, runtime contract/typecheck 17 modules, SPDX gate passed, npm audit 0 known vulnerabilities.
 
 The retry worker now rejects reuse of an organisation-scoped idempotency key for a different job kind or payload. Equivalent JSON payloads with reordered properties replay the existing job. The automated regression covers both cases. The worker remains an in-memory foundation; durable production job storage is still a separate implementation gate.
+
+
+## Durable integration retry reference adapter
+
+Verified code commit: `c105a32e8c1d4f4641bc4eadd71f7c043fc542fb`  
+CI run: `36942044195` — success; 75/75 tests, lint 43 JavaScript files, runtime contract/typecheck 18 modules, SPDX gate passed, npm audit 0 known vulnerabilities.
+
+`FileRetryJobState` saves queued/running/completed/dead-letter jobs atomically to a private file. `RetryJobWorker` reconstructs idempotency keys on restart and puts interrupted `running` jobs back into retry state. Tests cover replay, changed-payload denial, interruption recovery and completed-job non-reexecution. This is a single-process reference adapter; multi-worker locking/leases, transactionality with external providers and deployment-level durability still require a production implementation.
