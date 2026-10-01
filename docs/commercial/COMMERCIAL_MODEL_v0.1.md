@@ -21,6 +21,14 @@ Current public competitor pricing shows a broad range:
 - Clockodo: narrowly focused time/project tracking is much cheaper, around 4–12 € per user/month.
 - Papershift uses a base fee plus package/user logic.
 
+
+Official pricing pages checked for this snapshot:
+- https://www.tooltime.app/preise
+- https://hero-software.de/preise
+- https://openhandwerk.de/preise/
+- https://www.clockodo.com/de/preise/
+- https://www.papershift.com/preise
+
 Implication:
 - pure time tracking is a commodity and must not carry the entire WerkZ margin;
 - integrated operational workflow/automation can credibly sit in the ~70–300+ €/month market band;
