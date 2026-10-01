@@ -3,6 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.40
+**Last control-plane commit:** `4a0651fb8ecd0ae847f13bd9b11056570ca08483`
 
 ## Active issue
 
