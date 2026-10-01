@@ -133,3 +133,16 @@ Verification: syntax passed; lint 13 files passed; runtime contract/type check 7
 Remaining: durable SQLite/server adapter, real object upload/storage, PWA IndexedDB/mobile UI, HTTP/multi-device integration tests, Library ZIP reconciliation and PR #4 review/merge.
 
 Next block: continue Issue #3 with durable adapters and HTTP-neutral integration tests.
+
+## Next continuation — durable adapters + PWA
+
+Codex should continue Issue #3 from branch commit `82b465626d3e87dc4405acbde032ad675262d360` with:
+- durable Time repository with restart/idempotency persistence;
+- durable private evidence/object storage;
+- transport-neutral application boundary;
+- concurrent-device and cross-tenant integration tests;
+- browser/IndexedDB offline queue adapter;
+- minimal generic mobile/PWA Time reference surface;
+- provider-neutral connector/SecretStore/webhook/sync contracts only.
+
+Do not start real provider APIs until Issue #3 is complete.
