@@ -6,6 +6,7 @@ module.exports = {
   ...require('./modules/management'),
   ...require('./commercial/catalog'),
   ...require('./integrations/approval-channel'),
+  ...require('./integrations/foundation'),
   ...require('./time/production'),
   ...require('./time/durable'),
   ...require('./time/application'),
