@@ -2,6 +2,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY package.json ./
 COPY src ./src
+COPY apps/time-pwa ./apps/time-pwa
 COPY tools/time-test-server.js ./tools/time-test-server.js
 RUN mkdir -p /data && chown -R node:node /app /data
 USER node
