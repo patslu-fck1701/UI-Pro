@@ -417,6 +417,25 @@ Required direction:
 
 Do not add dependencies or bundled assets without recording their licence/provenance.
 
+## 13D. Mandatory risk/concerns review
+
+Before making a new architecture/legal/security recommendation canonical, read:
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+For IP/publication decisions also read:
+- `docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md`
+- `docs/legal/DATA_RIGHTS_WORDING_GUIDE.md`
+
+Do not only record the preferred solution. Preserve:
+- material downside;
+- uncertainty;
+- legal/technical counterargument;
+- stop condition;
+- mitigation;
+- review trigger.
+
+A new research report does not override an existing canonical guardrail merely because it sounds more protective.
+
 ## 14. Meaning of owner saying only "weiter"
 
 When the owner says `weiter`:
