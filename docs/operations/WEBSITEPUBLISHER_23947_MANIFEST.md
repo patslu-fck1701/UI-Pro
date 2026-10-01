@@ -1,63 +1,73 @@
 # WebsitePublisher Project 23947 Manifest
 
-**Baseline:** KB-v1.33
-**Date:** 2026-09-30
+**Baseline:** KB-v1.34  
+**Date:** 2026-10-01
 
-## Canonical runtime
+## Role
 
-- Project: **23947**
-- Fallback: https://project23947.websitepublisher.ai/
-- Planned main domain: **werkz-digital.eu** (reported purchased, not connected yet)
-- WerkZ is the main brand.
-- DeutschZ is the integrated technical reference/lab.
-- WerkZ Time is a reusable module.
+Project **23947** is the **WerkZ company/public website plus selected reference/internal pages**.
 
-## Canonical public WerkZ routes
+It is **not** the canonical operational WerkZ product runtime/database.
+
+Fallback domain:
+https://project23947.websitepublisher.ai/
+
+Planned main public domain: **werkz-digital.eu** — do not claim it live until verified.
+
+## Public WerkZ routes
 
 - `/` — main WerkZ entry
-- `/werkz.html` — overview/pricing
-- `/werkz-funktionen.html` — functions/workflows
-- `/werkz-technik.html` — technology/integrations
-- `/werkz-sicherheit.html` — security
-- `/werkz-fragebogen.html` — intake/pre-check
+- `/werkz.html` — services/pricing guidance
+- `/werkz-funktionen.html` — modules/workflows
+- `/werkz-technik.html` — technical architecture/integrations
+- `/werkz-sicherheit.html` — security/permissions
+- `/werkz-fragebogen.html` — pre-check
 - `/werkz-detailcheck.html` — deeper discovery
-- `/werkz-zeiterfassung.html` — WerkZ Time module
-- `/werkz-en.html` and matching EN subpages — English public set
-- `/impressum.html`, `/datenschutz.html` — legal pages; re-check before commercial launch
+- `/werkz-zeiterfassung.html` — public WerkZ Time reference
+- matching English WerkZ pages
+- `/impressum.html`, `/datenschutz.html`
 
-## DeutschZ routes
+## DeutschZ public routes
 
-- `/server.html` — project/reference overview
-- `/deutschz-punkte.html` — points/black market reference
-- `/deutschz-feedback.html` — feedback/test area
-- `/roadmap.html` — roadmap/community
+DeutschZ is a real active DayZ live server, not merely a reference.
 
-## Internal / development routes
+- `/server.html` — public live-server hub; also bundles current development, workshop/mod context, changelog, ModZ learning content, support/test feedback, vote and archive material
+- `/roadmap.html` — public active roadmap; KEEP
+- `/deutschz-story.html` — complete story behind spoiler gate; noindex
 
-- `/login.html`, `/forgot-password.html`, `/reset-password.html` — auth
-- `/deutschz-admin.html`, `/werkz-admin.html` — admin/internal
-- `/werkz-zeit.html`, `/werkz-zeit-einsatz.html`, `/werkz-zeit-tag.html` — internal WerkZ Time prototype flow
+## Private/internal retained routes
+
+- `/login.html`, `/forgot-password.html`, `/reset-password.html`
+- `/deutschz-admin.html`
+- `/werkz-zeit.html`, `/werkz-zeit-einsatz.html`, `/werkz-zeit-tag.html`
+- `/crypto-lab.html`
+- `/werkz-analyse-simulation.html`
+
+These private pages are references/tools, not proof that the final product runtime should remain in WebsitePublisher.
+
+## Removed / merged routes
+
+Current cleanup removed pages only where their role was considered duplicate/prototype. Important correction:
+- `roadmap.html` was initially removed incorrectly and has been restored.
+- unique DeutschZ content must be preserved through KEEP/MERGE/ARCHIVE logic before any future deletion.
 
 ## Shared fragments
 
 - `site-header`, `site-footer`
-- `werkz-header`, `werkz-header-en`, `werkz-footer`
-- `werkz-security-ribbon`
+- `werkz-header`, `werkz-header-en`, `werkz-footer`, `werkz-footer-en`
 
-## Core assets
+Navigation now labels DeutschZ as live server/development, not only a technical lab.
 
-WerkZ: `css/werkz.css`, `css/werkz-time.css`, `js/werkz-time-core.js`, WerkZ logo/security images.
-DeutschZ: DeutschZ CSS/JS bundles and `images/deutschz-logo-golden.webp`.
-Historical time prototype: `private/arbeitszeit.html` is not the canonical public product source.
+## Resource snapshot
 
-## Historical project 29212
+After the 2026-10-01 correction:
+- pages: **26 / 30** (4 free)
+- assets: **51 / 300** (249 free)
+- entities: **24 / 25** (1 free)
+- internal page-link audit: **0 broken internal page links detected**
 
-Project 29212 is the **latest and most advanced practical Gabriel time-tracking implementation**. It should not become a separate permanent product, but it is the primary source for harvesting the proven mobile workflow, UI and feature behavior into the generic WerkZ Time module. It must be privately archived and feature-parity checked before any owner-side deletion. After successful consolidation/removal, two Starter project slots remain available for real isolated customer/product deployments.
+Do not create a new page/entity merely because a new product feature exists. Product features belong in the WerkZ codebase. Public explanations can usually live inside the existing marketing/technical information architecture.
 
-## Domain switch
+## Deferred visual cleanup
 
-After registrar confirmation, use WebsitePublisher's documented A records for root and `www`, connect the domain to project 23947 in the owner dashboard, validate HTTPS, then update canonical/SEO URLs. Do not claim the domain is live before verification.
-
-## Production boundary for WerkZ Time
-
-Reusable module logic exists, but customer/employee production use still requires server persistence, Tenant Auth, explicit data policies, multi-device testing, private file delivery, backup/restore, cross-tenant negative tests and documented support/deletion rules.
+Some images/variants have undesirable white backgrounds or inconsistent presentation. This is a separate visual cleanup task. Do not mass-delete assets; first scan actual references and preserve necessary originals.
