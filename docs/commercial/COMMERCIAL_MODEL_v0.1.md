@@ -1,3 +1,8 @@
+> **SUPERSEDED COMMERCIAL SEED — DO NOT USE AS CURRENT PRICE AUTHORITY**
+>
+> This v0.1 document is retained for history/migration tests only. Current commercial direction is `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md` and `config/catalog/werkz-v0.2.json`.
+> The 9/19/29-EUR-style per-module monthly values below are not the current canonical/public WerkZ pricing model. No permanent Free/Basic production tier exists.
+
 # WerkZ Commercial Model v0.1
 
 **Date:** 2026-10-01  
