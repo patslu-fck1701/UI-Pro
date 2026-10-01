@@ -8,7 +8,7 @@
 | Domain | Canonical layer |
 |---|---|
 | WerkZ source / commits / branches / repo-local technical docs | this GitHub repository |
-| Owner's actual local working state | local Codex workspace derived from the original `WerkZ.zip` |
+| Phone-based Codex code baseline | Files Library `/WerkZ/Baseline/WerkZ.zip` |
 | Public company website / current web presentation | WebsitePublisher project 23947 |
 | Structured reflection / architecture history | WebsitePublisher tasks/history |
 | Human-readable cross-system knowledge register | Google Drive / WerkZ system knowledge |
@@ -16,9 +16,11 @@
 
 ## Non-negotiable local-baseline rule
 
-The real local state is **not inferred from later ZIPs**.
+Codex is currently working from the phone and cannot inspect the owner's PC.
 
-The owner-defined baseline is the original local `WerkZ.zip` / local Codex project derived from it. Any later ChatGPT-generated archive, WebsitePublisher prototype, GitHub documentation update or handoff package is a delta/reference until Codex deliberately applies it to the local workspace and verifies the result.
+For this environment, the canonical accessible implementation baseline is Files Library `/WerkZ/Baseline/WerkZ.zip` (library file id `libfile_356b20f709588191905c43ed43edd7c4`).
+
+Codex should materialize that ZIP and develop forward from it. Later prepared/working/consolidated/handoff ZIPs are reference/delta snapshots only. No PC comparison is required for the current phone-based development session; transfer/synchronization back to the PC is a separate later step.
 
 ## Main product direction
 
