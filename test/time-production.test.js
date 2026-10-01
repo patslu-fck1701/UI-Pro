@@ -37,6 +37,18 @@ test('Time production works without order and retains optional mileage',()=>{
   assert.equal(stopped.revision,2);
 });
 
+test('client-generated stable Time IDs support offline chains and reject collisions',()=>{
+  const {service}=setup();
+  const started=service.start('a',{id:'time_offline_1',idempotencyKey:'offline-start'});
+  assert.equal(started.id,'time_offline_1');
+  const stopped=service.stop('a',{id:started.id,expectedRevision:1,idempotencyKey:'offline-stop'});
+  assert.equal(stopped.status,'finished');
+  assert.throws(
+    ()=>service.start('a',{id:'time_offline_1',idempotencyKey:'different-command'}),
+    error=>error.code==='ID_CONFLICT'
+  );
+});
+
 test('history correction requires reason and preserves before/changes audit data',()=>{
   const {service}=setup();
   const started=service.start('a',{note:'roh',idempotencyKey:'s'});
