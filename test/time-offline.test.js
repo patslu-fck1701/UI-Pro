@@ -101,3 +101,13 @@ test('a revision conflict explicitly blocks causal descendants',async()=>{
   assert.equal(entries[0].status,'conflict');assert.equal(entries[1].status,'conflict');
   assert.equal(entries[1].lastError.code,'CAUSATION_CONFLICT');
 });
+
+test('an interrupted syncing entry retries with its original idempotency key',async()=>{
+  const driver=new MemoryOfflineQueueDriver(),queue=new PersistentOfflineQueue(driver);
+  const entry=await queue.enqueue(command({id:'interrupted',idempotencyKey:'idem-interrupted'}));
+  await driver.put({...entry,status:'syncing',attempts:1});
+  const reloaded=new PersistentOfflineQueue(driver),seen=[];
+  await reloaded.sync(async current=>{seen.push(current.idempotencyKey);return {ok:true,data:{id:'time-1',revision:2}}});
+  assert.deepEqual(seen,['idem-interrupted']);
+  assert.equal((await reloaded.list())[0].status,'synced');
+});
