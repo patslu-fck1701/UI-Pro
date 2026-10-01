@@ -474,3 +474,36 @@ Do not interrupt the remaining Issue #3 correctness/device-test gates merely to 
 
 When Issue #3 reaches `DONE_NEEDS_NEXT_ORDER`, the next-order decision must explicitly read Issue #5 and `LICENSING_IP_PROTECTION_FOUNDATION.md` before live provider adapters or customer production rollout. Licensing/enrollment/release security may be combined with Integration Foundation work, but it may not be silently skipped.
 
+## Mandatory queued product-security work — Issue #6
+
+Canonical foundation:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Queued issue:
+**#6 — WerkZ Product Security Lifecycle, CRA & AI Transparency**  
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+This incorporates the 2026-10-01 deployment/security research and adds the current 2026 requirements missing from that report.
+
+Mandatory additions:
+- vulnerability intake -> triage -> remediation -> security release -> customer/regulatory assessment;
+- CRA reporting decision path for applicable products/incidents;
+- support/EOL metadata with explicit `supported_until`;
+- Article 50 AI transparency state for applicable AI interactions/content;
+- OIDC/SAML/SCIM-ready enterprise identity direction;
+- OAuth Device Authorization Grant style approval for headless connector enrollment where suitable;
+- signed MSI remains the canonical first Windows Agent package; MSIX is optional per customer/platform support;
+- release channels: canary, pilot, stable, optional LTS;
+- time-limited/scoped/audited support access;
+- tenant-aware restore testing across DB + private files + entitlements + audit;
+- no `apt-key` future design, no S/MIME claim for Linux packages, no default CPU/BIOS licensing, no generic remote-admin backdoor;
+- no blanket GDPR/NIS2/CRA/ISO/TISAX claims without evidence.
+
+### Sequencing
+
+Do not interrupt the remaining Issue #3 correctness/device-test gates.
+
+When Issue #3 reaches `DONE_NEEDS_NEXT_ORDER`, Issue #5 and Issue #6 are both mandatory security/deployment work before a normal paid production rollout. They may be combined if the implementation keeps licensing/enrollment and product-security lifecycle concerns distinct.
+
+Live provider integrations must not bypass Issue #5/#6 release and security gates.
+
