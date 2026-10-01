@@ -636,3 +636,11 @@ CI run: `36940860355` — success; 74/74 tests, lint 42 JavaScript files, runtim
 Issue #5 now also has atomic file-backed enrollment state: one-time token use, device identity and revocation survive process restart. A release-manifest CLI signs hashes of actual artifacts using an external Ed25519 private-key file and verifies signature, integrity and expiry; the repository contains no key. Automated tests cover restart/replay/revocation and manifest tampering.
 
 PR #8 remains Draft and stacked on PR #4. Production key custody, CI signing, repository visibility and actual customer enrollment remain external/governance gates; neither PR is a production-readiness claim.
+
+
+## Persistent HTTPS test deployment prepared
+
+Verified implementation/deployment commit: `ec7c9284d5cf2034f96fe5c64b65ff853a45e854`  
+CI run: `36941514632` — success; existing 59-test verification retained.
+
+`deploy/time-test/render.yaml` now defines an owner-controlled Render Docker service with TLS, a persistent `/data` disk, health check and secret runtime environment variables. `deploy/time-test/README.md` contains the exact deployment, health/API, project-29212 binding and iPhone acceptance steps. The Render paid plan/account and secret entry cannot be provisioned through the connected tools. No HTTPS URL exists yet; project 29212 `apiBase` remains null. Cross-site Safari cookie behavior needs the physical device check; a verified multipart-capable same-origin proxy or same-site host may be needed. PR #4 remains Draft and Issue #3 IN_PROGRESS.
