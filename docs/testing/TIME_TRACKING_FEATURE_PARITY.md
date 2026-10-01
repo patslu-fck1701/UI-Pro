@@ -41,4 +41,9 @@ The merge must be additive: do not regress a useful 29212 capability merely beca
 
 ## Production boundary
 
-Local encryption and local authentication are not substitutes for real tenant authorization. Production customer/employee deployment still requires WebsitePublisher Tenant Auth, server persistence, explicit tenant/row policies, private file storage and real cross-tenant tests.
+Local encryption and local authentication are not substitutes for real tenant authorization. Production customer/employee deployment requires WerkZ-owned authentication/session ports, server persistence, explicit tenant/row policies, private file storage and real cross-tenant tests. WebsitePublisher remains reference/UX only.
+
+
+## Issue #3 implementation status
+
+The generic Core now proves standalone Time, entitlement suspension without data deletion and later module activation. Still open: gallery, correction UI, odometer, IndexedDB/offline queue, server repository, private photo storage and multi-device conflict tests. These are not claimed complete.

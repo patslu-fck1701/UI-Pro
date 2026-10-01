@@ -89,3 +89,18 @@ The time-tracking module contributes the mobile execution/time/evidence portion 
 **WerkZ Team / Business** extends the same operating model across multiple roles and departments such as office, management, HR, accounting, production/workshop, purchasing and field installation. Each role receives an appropriate view and rights while events remain linked to the same business objects.
 
 The reusable rule is: build small modules with stable contracts, then connect them into an end-to-end business workflow. Do not market one isolated module as the whole product.
+
+
+## Superseding production boundary — Issue #3
+
+The earlier WebsitePublisher Tenant Auth/entity path is superseded for production.
+
+WerkZ Time production uses WerkZ-owned ports:
+
+- authenticated actor/session context supplied by a WerkZ AuthPort;
+- tenant-scoped repository and storage ports;
+- private evidence storage;
+- explicit server-side entitlement and capability guards;
+- no `admin_token`, WebsitePublisher entity, project URL or CDN dependency.
+
+WebsitePublisher remains a UX/reference source only. The module manifest in `src/modules/module-registry.js` makes this boundary machine-testable.

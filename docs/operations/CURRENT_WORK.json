@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-01",
+  "baseline": "KB-v1.40",
+  "state": "IN_PROGRESS",
+  "repository": "patslu-fck1701/UI-Pro",
+  "active_issue": {
+    "number": 3,
+    "title": "Codex Next: commercial modules, entitlements, pricing catalog & Time productionization",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/3"
+  },
+  "active_branch": "codex/issue-3-commercial",
+  "active_pull_request": {
+    "number": 4,
+    "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
+    "draft": true
+  },
+  "canonical_phone_baseline": {
+    "files_library_path": "/WerkZ/Baseline/WerkZ.zip",
+    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4",
+    "materialized": false,
+    "blocker": "download_file requires a ready execution workspace"
+  },
+  "last_verified_commit": "5302e0ac96a33c87b0bdcd2df14a14abb91608d7",
+  "last_verified_ci": {
+    "run_id": 36892514478,
+    "conclusion": "success",
+    "tests": {
+      "total": 19,
+      "passed": 19,
+      "failed": 0
+    },
+    "syntax_check": "passed",
+    "lint": "passed",
+    "typecheck": "passed"
+  },
+  "completed_this_block": [
+    "module contracts",
+    "organisation entitlements",
+    "versioned catalog seed",
+    "quote price snapshots",
+    "package preset expansion",
+    "contract entitlement mapping",
+    "management projection",
+    "local approval and notification adapters"
+  ],
+  "remaining": [
+    "Library ZIP reconciliation",
+    "Time gallery and correction UI",
+    "offline queue and conflict handling",
+    "server persistence",
+    "private photo storage",
+    "multi-device and cross-tenant integration tests"
+  ],
+  "next_recommended_block": "Continue Issue #3 with WerkZ Time production ports, offline command/conflict contracts, private photo metadata and cross-tenant integration tests.",
+  "next_trigger": "Owner says 'weiter': follow CODEX_RUNBOOK.md and continue Issue #3."
+}
