@@ -8,6 +8,7 @@ module.exports = {
   ...require('./integrations/approval-channel'),
   ...require('./integrations/foundation'),
   ...require('./integrations/lifecycle'),
+  ...require('./integrations/durable'),
   ...require('./time/production'),
   ...require('./time/durable'),
   ...require('./time/recovery'),
