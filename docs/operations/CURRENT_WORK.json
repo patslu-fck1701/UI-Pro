@@ -526,13 +526,13 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "024b2e0ffcf3493d265ff6f23158c84e24ac1a53",
+    "latest_verified_commit": "28f7e084ef04ae9009bd95b9bbacffc5cc140708",
     "latest_verified_ci": {
-      "run_id": 36939485259,
+      "run_id": 36940133840,
       "conclusion": "success",
       "tests": {
-        "total": 67,
-        "passed": 67,
+        "total": 70,
+        "passed": 70,
         "failed": 0
       },
       "npm_vulnerabilities": 0
@@ -546,7 +546,9 @@
       "temporary scoped support grants",
       "AI transparency state",
       "SECURITY.md",
-      "SPDX SBOM and npm licence gate"
+      "SPDX SBOM and npm licence gate",
+      "OAuth account lifecycle with secret references and revocation",
+      "idempotent integration worker with backoff/dead-letter/health"
     ],
     "blockers": [
       "Issue #3 persistent HTTPS host/iPhone test",
