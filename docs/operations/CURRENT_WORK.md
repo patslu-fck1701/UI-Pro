@@ -432,3 +432,45 @@ Codex continuation after the already-recorded PWA correctness fixes:
 - multipart evidence route;
 - connect the WebsitePublisher test config only after API verification;
 - then perform the physical iPhone test.
+
+## Mandatory queued security work — Issue #5
+
+New canonical foundation:
+`docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
+
+Queued issue:
+**#5 — WerkZ Licensing, Enrollment & Release Security**  
+https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+This work incorporates the 2026-10-01 copy-protection/licensing research, corrected for the actual WerkZ architecture.
+
+Mandatory decisions:
+- browser/PWA code is assumed inspectable; do not use obfuscation as the authority boundary;
+- protected use is authorised server-side from authenticated identity -> server-derived organisation -> entitlements/capabilities;
+- copied frontend files must not grant a valid customer deployment;
+- local Agent copies require fresh organisation-bound enrollment/device identity;
+- distributed packages/releases must have a signing/integrity verification path;
+- On-Prem/offline deployments use asymmetrically signed licence/entitlement documents where appropriate;
+- no reusable master licence/signing secret is shipped;
+- normal connector networking prefers outbound TLS/443 with no generic remote shell;
+- HSM-per-customer, dongles, TPM attestation, secure enclaves and TUF are deferred unless a real customer/deployment threat model requires them;
+- mandatory statutory software rights must remain preserved in licence wording.
+
+### Repository visibility blocker
+
+Direct GitHub audit on 2026-10-01 confirmed `patslu-fck1701/UI-Pro` is **public**.
+
+Before proprietary production source, release/signing internals or other confidential implementation is treated as secret, the owner must either:
+1. change the working product repository to private; or
+2. deliberately split public-safe material from private product repositories.
+
+Codex must never commit customer data, provider tokens, signing private keys, licence-signing private keys or production credentials. If a real secret is ever exposed publicly, rotate/revoke it; deleting a commit is not sufficient.
+
+The connected GitHub automation available in this workflow does not expose a repository-visibility mutation, so this owner-level repository setting remains an explicit governance blocker until resolved.
+
+### Sequencing
+
+Do not interrupt the remaining Issue #3 correctness/device-test gates merely to start Issue #5.
+
+When Issue #3 reaches `DONE_NEEDS_NEXT_ORDER`, the next-order decision must explicitly read Issue #5 and `LICENSING_IP_PROTECTION_FOUNDATION.md` before live provider adapters or customer production rollout. Licensing/enrollment/release security may be combined with Integration Foundation work, but it may not be silently skipped.
+
