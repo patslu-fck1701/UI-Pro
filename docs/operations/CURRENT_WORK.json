@@ -440,6 +440,33 @@
   "mandatory_cross_cutting_reading": [
     "docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md",
     "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
-    "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md"
-  ]
+    "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md",
+    "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md"
+  ],
+  "queued_product_security_issue": {
+    "number": 6,
+    "title": "WerkZ Product Security Lifecycle, CRA & AI Transparency",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/6",
+    "sequencing": "Finish Issue #3; then Issue #5 and #6 are mandatory before normal paid production rollout.",
+    "canonical_foundation": "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md"
+  },
+  "product_security_lifecycle": {
+    "vulnerability_management": "required",
+    "support_eol_metadata": "required",
+    "cra_reporting_assessment": "required_when_applicable",
+    "ai_transparency_state": "required_when_applicable",
+    "enterprise_identity_direction": [
+      "OIDC",
+      "SAML",
+      "SCIM"
+    ],
+    "release_channels": [
+      "canary",
+      "pilot",
+      "stable",
+      "LTS_optional"
+    ],
+    "support_access": "time_limited_scoped_audited",
+    "restore_testing": "tenant_aware"
+  }
 }
