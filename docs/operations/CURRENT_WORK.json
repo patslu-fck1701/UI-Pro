@@ -38,13 +38,13 @@
   "next_trigger": "Owner says 'weiter': check whether an HTTPS Time test endpoint is available. If yes, verify it, set project 29212 apiBase and execute iPhone acceptance. If not, keep Issue #3 external blocker current and continue public-safe Issue #5/#6/#7 implementation on separate branches without putting secrets in the public repository.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "cb2d882d10165995cb380afcbf1dae280f2e8f02",
+  "last_verified_issue_branch_commit": "d61d185db991f469aad8a470c156421d49d5963b",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
     "draft": true,
     "mergeable": true,
-    "head": "cb2d882d10165995cb380afcbf1dae280f2e8f02"
+    "head": "d61d185db991f469aad8a470c156421d49d5963b"
   },
   "research_sources": [
     {
@@ -73,19 +73,19 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 automated gates are complete. External acceptance remains: provision persistent non-production HTTPS host, connect project 29212 apiBase after verification, then physical iPhone camera/install/offline/reconnect test.",
+  "current_continuation": "Issue #3 automated gates including interrupted-sync recovery are complete. External acceptance remains persistent non-production HTTPS host, project 29212 API binding, and physical iPhone camera/install/offline/reconnect test.",
   "last_verified_ci": {
-    "run_id": 36938296872,
+    "run_id": 36939896731,
     "conclusion": "success",
     "tests": {
-      "total": 58,
-      "passed": 58,
+      "total": 59,
+      "passed": 59,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 29
+      "files": 28
     },
     "typecheck": {
       "status": "passed",
@@ -386,7 +386,9 @@
       "explicit conflict blocking",
       "complete offline Blob chain after reload",
       "exactly-once replay"
-    ]
+    ],
+    "interrupted_sync_recovery": "implemented_and_tested",
+    "service_worker_private_response_guard": "implemented"
   },
   "websitepublisher_time_test": {
     "status": "live_frontend_sync_capable_backend_disconnected",
