@@ -528,9 +528,9 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "3d450c8e4817bd2c8a15878d2aec08519c797484",
+    "latest_verified_commit": "60f02980100da9b9b38373056231fb818c4fc562",
     "latest_verified_ci": {
-      "run_id": 36941665275,
+      "run_id": 36941862033,
       "conclusion": "success",
       "tests": {
         "total": 74,
@@ -563,14 +563,16 @@
       "Time and private evidence backup/verify/restore CLI with hash and tenant-link checks",
       "backup-mutation-restore and tamper tests",
       "atomic file-backed enrollment state with restart-persistent token replay denial and device revocation",
-      "external-key release manifest sign/verify CLI with artifact hashes and tamper test"
+      "external-key release manifest sign/verify CLI with artifact hashes and tamper test",
+      "retry worker rejects cross-payload/kind idempotency-key reuse while allowing equivalent reordered JSON replay"
     ],
     "blockers": [
       "Issue #3 persistent HTTPS host/iPhone test",
       "public repository visibility decision",
       "production signing infrastructure and device persistence",
       "security operations and restore drill",
-      "contributor rights/brand/insurance human decisions"
+      "contributor rights/brand/insurance human decisions",
+      "durable production job storage and multi-worker coordination"
     ],
     "stacked_base_sync": "0 behind codex/issue-3-commercial after merge commit 3d450c8e4817bd2c8a15878d2aec08519c797484"
   },
