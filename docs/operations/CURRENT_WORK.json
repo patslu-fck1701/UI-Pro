@@ -526,15 +526,24 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "28f7e084ef04ae9009bd95b9bbacffc5cc140708",
+    "latest_verified_commit": "a5d5d8aa1719c8729a01b6efa5ca66338b28a3c1",
     "latest_verified_ci": {
-      "run_id": 36940133840,
+      "run_id": 36940537603,
       "conclusion": "success",
       "tests": {
-        "total": 70,
-        "passed": 70,
+        "total": 72,
+        "passed": 72,
         "failed": 0
       },
+      "lint": {
+        "status": "passed",
+        "files": 38
+      },
+      "typecheck": {
+        "status": "passed",
+        "modules": 16
+      },
+      "oss_check": "passed",
       "npm_vulnerabilities": 0
     },
     "implemented": [
@@ -548,7 +557,9 @@
       "SECURITY.md",
       "SPDX SBOM and npm licence gate",
       "OAuth account lifecycle with secret references and revocation",
-      "idempotent integration worker with backoff/dead-letter/health"
+      "idempotent integration worker with backoff/dead-letter/health",
+      "Time and private evidence backup/verify/restore CLI with hash and tenant-link checks",
+      "backup-mutation-restore and tamper tests"
     ],
     "blockers": [
       "Issue #3 persistent HTTPS host/iPhone test",
