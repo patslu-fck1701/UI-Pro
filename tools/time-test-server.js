@@ -3,7 +3,7 @@
 const http=require('node:http'),path=require('node:path'),fs=require('node:fs'),crypto=require('node:crypto');
 const {ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,TimeProductionService,TimeApplication,createTimeHttpHandler}=require('../src');
 
-function runtimeSecret(name,bytes,{logValue=false}={}){
+function runtimeSecret(name,bytes){
   const configured=process.env[name];
   if(configured)return configured;
   if(process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS!=='1')throw new Error(name+' is required');
@@ -11,8 +11,23 @@ function runtimeSecret(name,bytes,{logValue=false}={}){
   process.stdout.write(JSON.stringify({
     kind:'ephemeral-test-secret',
     name,
-    value:logValue?value:undefined,
     note:'Non-production only; regenerated on process restart'
+  })+'\n');
+  return value;
+}
+function runtimeLoginCode(){
+  const configured=process.env.WERKZ_TEST_LOGIN_CODE;
+  if(configured)return configured;
+  if(process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS!=='1')throw new Error('WERKZ_TEST_LOGIN_CODE is required');
+  const renderServiceId=process.env.RENDER_SERVICE_ID;
+  const value=renderServiceId
+    ? crypto.createHash('sha256').update('werkz-time-device-test:'+renderServiceId).digest('base64url').slice(0,16)
+    : crypto.randomBytes(12).toString('base64url');
+  process.stdout.write(JSON.stringify({
+    kind:'ephemeral-test-login',
+    stableForService:Boolean(renderServiceId),
+    value,
+    note:'Non-production device-test code only'
   })+'\n');
   return value;
 }
@@ -21,7 +36,7 @@ const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'user-device-test';
 const sessionToken=runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
-const loginCode=runtimeSecret('WERKZ_TEST_LOGIN_CODE',12,{logValue:true});
+const loginCode=runtimeLoginCode();
 const allowedOrigin=process.env.WERKZ_TEST_ALLOWED_ORIGIN||'https://project29212.websitepublisher.ai';
 const externalFrontendUrl=process.env.WERKZ_TEST_EXTERNAL_FRONTEND_URL||'';
 const capabilities=['time.start','time.stop','time.correct','document.upload'];
