@@ -3,7 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.41
-**Last verified Issue #3 branch commit:** `cb2d882d10165995cb380afcbf1dae280f2e8f02`  
+**Last verified Issue #3 branch commit:** `d61d185db991f469aad8a470c156421d49d5963b`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
@@ -603,6 +603,15 @@ State remains `IN_PROGRESS` only for external acceptance:
 
 Until then the WebsitePublisher runtime config intentionally remains `apiBase: null` and PR #4 remains Draft.
 
+
+## Follow-up correctness fix — interrupted offline sync
+
+Verified code commit: `d61d185db991f469aad8a470c156421d49d5963b`  
+CI run: `36939896731` — success; 59/59 tests, syntax/lint/typecheck passed, npm audit 0.
+
+A browser/process interruption can leave an IndexedDB entry in `syncing`. The PWA, the project-29212 test client and the shared queue now reprocess such entries with the original idempotency key after reload. Concurrent sync triggers are serialized. The service worker also declines to cache private/no-store or Set-Cookie shell responses.
+
+External HTTPS hosting and physical iPhone acceptance remain open, so Issue #3 is still `IN_PROGRESS` and PR #4 remains Draft.
 
 ## Parallel public-safe security/legal work — Issues #5, #6, #7
 
