@@ -128,6 +128,9 @@ Release metadata must include compatibility, rollback/migration and support/EOL 
 Canonical lifecycle:
 `docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
 
+Implementation issue:
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
 ## Windows package compatibility decision
 
 Signed MSI remains the canonical first Windows Agent package.
