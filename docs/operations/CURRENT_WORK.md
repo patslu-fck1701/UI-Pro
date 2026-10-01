@@ -392,3 +392,43 @@ Current final continuation order:
 - rerun full CI;
 - perform real HTTPS browser/device test;
 - final PR #4 review/merge decision.
+
+
+## Live WebsitePublisher HTTPS device-test host
+
+ChatGPT prepared a real HTTPS device-test frontend in WebsitePublisher project 29212.
+
+Use:
+`https://project29212.websitepublisher.ai/werkz-time-test.html`
+
+Purpose:
+- iPhone/browser device test;
+- HTTPS;
+- IndexedDB;
+- local stable Time IDs;
+- start/stop;
+- note/correction;
+- mileage;
+- binary photo Blob + SHA-256;
+- explicit monotonic command sequence + causation chain.
+
+Important:
+- test page is noindex/nofollow;
+- current mode is LOCAL DEVICE TEST;
+- no production customer data;
+- backend sync is intentionally disabled until Codex finishes the API/correctness gates;
+- runtime config is `https://cdn.websitepublisher.ai/custom/wid29212/config/werkz-time-test.json`;
+- current `apiBase` is null.
+
+Detailed handoff:
+`docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md`
+
+WebsitePublisher project 23947 is NOT the Time test host; it is near its page limit and remains the company/marketing site.
+
+Codex continuation after the already-recorded PWA correctness fixes:
+- expose a non-production HTTPS API matching TimeApplication;
+- session identity server-derived;
+- commands route;
+- multipart evidence route;
+- connect the WebsitePublisher test config only after API verification;
+- then perform the physical iPhone test.
