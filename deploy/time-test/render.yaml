@@ -1,0 +1,29 @@
+# Render Blueprint for the non-production WerkZ Time device test.
+# Deploy only into an owner-controlled Render account. Persistent disks require a paid
+# plan; the owner must review the resulting charges before provisioning.
+services:
+  - type: web
+    name: werkz-time-device-test
+    runtime: docker
+    plan: starter
+    dockerContext: .
+    dockerfilePath: ./deploy/time-test/Dockerfile
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    disk:
+      name: werkz-time-test-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: WERKZ_TIME_DATA_DIR
+        value: /data
+      - key: WERKZ_TEST_ALLOWED_ORIGIN
+        value: https://project29212.websitepublisher.ai
+      - key: WERKZ_TEST_ORGANISATION_ID
+        value: org-device-test
+      - key: WERKZ_TEST_ACTOR_ID
+        value: user-device-test
+      - key: WERKZ_TEST_SESSION_TOKEN
+        sync: false
+      - key: WERKZ_TEST_LOGIN_CODE
+        sync: false
