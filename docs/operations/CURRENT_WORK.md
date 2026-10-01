@@ -172,3 +172,27 @@ Important consequence for the remaining Issue #3 work:
 - production-readiness claims remain blocked until the security/privacy/commercial-readiness gates are satisfied.
 
 Source research is stored in the connected Files Library and mirrored through the repository foundation docs; chat is not the only record.
+
+
+## Commercial pricing model v2
+
+The earlier small per-module monthly price seed is superseded as the commercial source of truth.
+
+Canonical direction:
+- public entry/setup: Solo from €490, Team from €1,490, Business from €2,490;
+- realistic project ranges may be materially higher depending on scope;
+- managed operation: Solo from €79/month, Team from €179/month, Business from €349/month;
+- modules remain technical entitlements, not a public €9/€19/€29 price list;
+- solution scope and deployment are separate axes;
+- deployment choices: Managed Cloud, Dedicated Cloud, Hybrid + Connector, suitable existing customer hardware, WerkZ Box, Dedicated/On-Premise;
+- existing customer infrastructure must be assessed before proposing new hardware;
+- a WerkZ-supplied box is procured only after order, with hardware, procurement/handling, provisioning and ongoing management shown separately;
+- self-managed handover remains possible without an artificial mandatory subscription; support/security/updates are then separately contracted.
+
+Canonical document:
+`docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
+
+Active Issue #3 branch also contains:
+`config/catalog/werkz-v0.2.json`
+
+**Merge guard:** PR #4 must not ship the v0.1 €9/€19/€29 module price seed as the canonical public/commercial model. Codex must migrate quote/catalog behavior to v0.2 while preserving module entitlements and versioned quote snapshots.
