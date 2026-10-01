@@ -348,6 +348,94 @@ Deployment/customer-agent implementation then follows the same security foundati
 - no embedded customer secrets;
 - Cloud / Hybrid / WerkZ Box / On-Premise remain deployment choices, not separate products.
 
+## 13A. Mandatory licensing/security package after Issue #3
+
+The 2026-10-01 copy-protection/licensing research has been converted into the canonical foundation:
+
+`docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
+
+Tracked implementation:
+**Issue #5 — WerkZ Licensing, Enrollment & Release Security**  
+https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+When Issue #3 is complete, do not start live provider integrations or customer production rollout without reading Issue #5.
+
+Required direction:
+- server-side tenant + entitlement authority; frontend is not trusted for licensing;
+- organisation-bound connector/device enrollment and revocation;
+- signed/trusted release artifacts and update verification;
+- signed asymmetric offline/On-Prem licence model where applicable;
+- no embedded reusable master licence/signing secret;
+- obfuscation only as defence-in-depth;
+- resolve the currently public `UI-Pro` repository before proprietary production source is treated as confidential.
+
+Issue #5 may be executed before or combined with the Integration Foundation implementation, but its controls are mandatory and must not be omitted.
+
+## 13B. Mandatory product-security lifecycle after Issue #3
+
+Canonical foundation:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Tracked implementation:
+**Issue #6 — WerkZ Product Security Lifecycle, CRA & AI Transparency**  
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+After Issue #3, Issue #5 and Issue #6 are both mandatory before normal paid production rollout.
+
+Required direction:
+- vulnerability intake/remediation and CRA reporting decision path;
+- support/EOL metadata;
+- AI transparency/review state where applicable;
+- enterprise identity extensible to OIDC/SAML/SCIM;
+- standards-based device approval for headless connector enrollment;
+- release channels + rollback/support metadata;
+- time-limited audited support access;
+- tenant-aware recovery testing;
+- no unsupported compliance marketing claims.
+
+Issue #5 and #6 may be implemented together if the branch remains reviewable and verification covers both.
+
+## 13C. Mandatory IP/OSS/brand package after Issue #3
+
+Canonical foundation:
+`docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+
+Tracked implementation:
+**Issue #7 — WerkZ IP Ownership, OSS Compliance & Brand Protection**  
+https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+After Issue #3, Issues #5, #6 and #7 are mandatory before normal paid production rollout.
+
+Required direction:
+- contributor/contractor rights provenance;
+- AI-assisted development provenance and human review;
+- OSS/font/media licence inventory;
+- SBOM + third-party notices;
+- trade-secret controls/private repository decision;
+- trademark/brand clearance;
+- insurance readiness decision.
+
+Do not add dependencies or bundled assets without recording their licence/provenance.
+
+## 13D. Mandatory risk/concerns review
+
+Before making a new architecture/legal/security recommendation canonical, read:
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+For IP/publication decisions also read:
+- `docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md`
+- `docs/legal/DATA_RIGHTS_WORDING_GUIDE.md`
+
+Do not only record the preferred solution. Preserve:
+- material downside;
+- uncertainty;
+- legal/technical counterargument;
+- stop condition;
+- mitigation;
+- review trigger.
+
+A new research report does not override an existing canonical guardrail merely because it sounds more protective.
+
 ## 14. Meaning of owner saying only "weiter"
 
 When the owner says `weiter`:

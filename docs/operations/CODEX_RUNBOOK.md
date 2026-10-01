@@ -198,3 +198,68 @@ See:
 - `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
 - `docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md`
 - `docs/operations/CODEX_RESUME_NOW.md`
+
+## Mandatory licensing/IP protection foundation
+
+For any work touching commercial entitlements, authentication/tenant authority, connector installation, local Agent identity, packaging, updates, On-Prem/offline deployment or production rollout, also read:
+
+- `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
+- Issue #5: https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+Do not treat minification/obfuscation as access control. Do not embed reusable licence/signing secrets. A copied frontend or Agent directory must not become a valid customer deployment without server-side entitlement or device-enrollment authority.
+
+The public/private repository policy is a release-governance decision: never commit real customer/provider/signing secrets even if repository visibility changes later.
+
+## Mandatory product-security lifecycle foundation
+
+For work touching production release, Agent/On-Prem distribution, security incidents, AI-assisted product features, enterprise identity, support access or recovery, also read:
+
+- `docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+- Issue #6: https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+Required operating rules:
+- vulnerability handling is a lifecycle process;
+- support/EOL metadata is part of the product model;
+- CRA/AI/NIS2/GDPR applicability is assessed by scope, not advertised as a blanket claim;
+- AI transparency state is preserved where applicable;
+- enterprise identity remains OIDC/SAML/SCIM-capable;
+- support access is temporary/scoped/audited;
+- restore testing covers tenant isolation and private-object consistency.
+
+Do not mark production-ready solely because feature tests pass.
+
+## Mandatory IP/OSS/brand foundation
+
+For work touching dependencies, fonts/assets, contributors/contractors, AI-assisted code, packaging/distribution, trademark/brand decisions or commercial handover, also read:
+
+- `docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+- `docs/legal/IP_PROVENANCE_REGISTER.md`
+- `THIRD_PARTY_NOTICES.md`
+- Issue #7: https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+Rules:
+- no unreviewed third-party component enters production;
+- no blanket proprietary notice may overwrite third-party licences;
+- no freelancer/agency contribution is accepted without an adequate rights basis;
+- public source must not be treated as a trade secret;
+- AI-assisted code still requires human, security and licence review;
+- brand filing requires documented clearance first.
+## Risk and concerns invariant
+
+Every material recommendation must be checked against:
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+When new research is incorporated, preserve:
+- useful recommendation;
+- material concern/downside;
+- uncertainty;
+- rejected/overbroad claim;
+- mitigation/decision gate;
+- source/evidence where material.
+
+For patents/designs/database rights/data wording also read:
+- `docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md`
+- `docs/legal/DATA_RIGHTS_WORDING_GUIDE.md`
+
+Do not erase an unresolved concern by rewriting only the positive recommendation.
+

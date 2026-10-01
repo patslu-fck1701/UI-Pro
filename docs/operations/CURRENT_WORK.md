@@ -3,7 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.41
-**Last verified Issue #3 branch commit:** `82b465626d3e87dc4405acbde032ad675262d360`  
+**Last verified Issue #3 branch commit:** `953a625e312bd3e6b60653c2a065eac857cb57c4`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
@@ -260,3 +260,319 @@ First continuation order:
 Do not start live Microsoft/Google/WhatsApp/DATEV adapters inside Issue #3.
 Do not mark Issue #3 complete merely because architecture docs are present.
 Do not merge PR #4 while active commercial behavior still depends on the v0.1 price seed.
+
+
+## Continuation result — KB-v1.41 sync, pricing v0.2 and durable adapters
+
+Verified branch commit: `c94ff071c2cf18fb760f3cf2f868889f85b9f02e`  
+CI run: `36912967631` — success
+
+Completed:
+
+- safely merged current `main` foundations into the active branch at `e530445` without rewriting verified history;
+- migrated active commercial behavior to v0.2;
+- separated setup, managed operation and deployment offer lines from technical module entitlements;
+- preserved historical v0.1 quote snapshots while preventing old module prices from active v0.2 behavior;
+- added atomic file-backed Time repository with restart-persistent records, revisions, corrections and idempotency;
+- added private file evidence storage with real bytes outside business records, atomic metadata, SHA-256/size verification and tenant-scoped reads;
+- documented SQLite deferral: no native dependency added to the phone/GitHub workflow; the durable reference port remains SQLite/PostgreSQL-ready.
+
+Verification: syntax passed; lint 15 files passed; runtime contract/type check 8 modules passed; tests 32/32 passed; npm audit reported 0 vulnerabilities.
+
+Library retry result remains: `download_file requires a ready execution workspace`. No substitute ZIP was used.
+
+Next: transport-neutral Time application boundary, complete audit events and application-level concurrent-device tests, then IndexedDB/PWA surface.
+
+
+## Continuation result — Time application boundary and audit completeness
+
+Verified branch commit: `6c7cba206720c44b266fe94359c6df760039fb17`  
+CI run: `36914579975` — success
+
+Completed:
+
+- added a framework-independent Time application/use-case boundary for start, stop, correction, get/list, evidence, gallery and offline command dispatch;
+- added stable serializable validation/domain error results, including explicit revision conflicts;
+- completed audit events for start, stop, correction, evidence upload and rejected stale mutations;
+- audit payloads contain evidence metadata only, never private object bytes;
+- added durable application-level tests for two-device concurrency, stale revisions, restart persistence, idempotent replay and cross-tenant denial;
+- verified Time still works without an order and WebsitePublisher remains absent from the production runtime.
+
+Verification: syntax passed; lint 17 JavaScript files passed; runtime contract/type check 9 CommonJS modules passed; tests 35/35 passed; npm audit reported 0 vulnerabilities.
+
+State remains `IN_PROGRESS`. Next block: OfflineQueuePort with an IndexedDB driver boundary and deterministic fake-driver tests, followed by the generic mobile/PWA Time surface and provider-neutral integration contracts. No live provider integration is authorized in Issue #3.
+
+Library baseline remains unmaterialized because the tool reports `download_file requires a ready execution workspace`; no substitute ZIP or PC comparison was used.
+
+
+## Continuation result — persistent browser offline queue boundary
+
+Verified branch commit: `40de5a63a3a3186ce882929c649ae610b1e9f412`  
+CI run: `36914906481` — success
+
+Completed:
+
+- introduced `OfflineQueuePort` and a replaceable storage-driver contract;
+- implemented a browser `IndexedDbOfflineQueueDriver` without making browser state the production system of record;
+- persists queued/syncing/synced/failed/conflict status, attempts, sanitized errors and results;
+- deduplicates idempotency keys per organisation;
+- keeps revision conflicts visible across application reload and requires explicit retry;
+- added deterministic reload, retry, conflict and cross-organisation tests.
+
+Verification: syntax passed; lint 19 JavaScript files passed; runtime contract/type check 10 CommonJS modules passed; tests 40/40 passed; npm audit reported 0 vulnerabilities.
+
+State remains `IN_PROGRESS`. Next block: generic mobile/PWA Time surface wired to these boundaries, followed by provider-neutral integration contracts.
+
+
+## Continuation result — mobile Time PWA and integration foundation
+
+Verified branch commit: `08c5aea346b9a7ac04a8670248f9711508d8a016`  
+CI run: `36920123116` — success
+
+Completed:
+
+- added the installable mobile Time shell under `apps/time-pwa`;
+- added large touch controls for start/stop, optional customer/order, mileage, notes, correction, history, offline state and visible conflicts;
+- added a static-only service worker that never caches API/business responses;
+- uses server session cookies and the transport-neutral `/time/commands` contract; no embedded credentials or WebsitePublisher runtime;
+- photo capture is intentionally an honest hook: it does not report success until binary Evidence transport exists;
+- added provider-neutral `SecretStorePort`, `ConnectorPort`, registry, IntegrationAccount/Event/SyncJob store, verified/deduplicated WebhookGateway and versioned MappingEngine;
+- no live Microsoft, Google, WhatsApp or DATEV adapter was introduced.
+
+Verification: syntax passed; lint 24 JavaScript files passed; runtime contract/type check 11 CommonJS modules passed; tests 48/48 passed; npm audit reported 0 vulnerabilities.
+
+State remains `IN_PROGRESS`. Remaining completion gates: queue binary photo Blobs without Base64, run/manual-test the PWA in a real browser, review PR #2 versus PR #4, and review/merge PR #4. The Library ZIP remains blocked by the unavailable ready execution workspace.
+
+
+## Continuation result — binary offline evidence and PR supersession
+
+Verified branch commit: `953a625e312bd3e6b60653c2a065eac857cb57c4`  
+CI run: `36920881329` — success
+
+Completed:
+
+- stores captured photos as binary IndexedDB Blobs, never Base64/data URLs;
+- computes SHA-256 and queues tenant/actor/idempotency metadata;
+- uploads via multipart only when connected and removes Blob bytes from the completed queue entry;
+- added a multipart-neutral server application boundary with size/hash/private-storage validation;
+- added stable client-generated Time IDs so offline start, correction, photo and stop form one synchronizable chain;
+- added collision protection to memory and durable repositories;
+- added dependency-free Windows PWA serving and exact smartphone/manual test instructions;
+- proved PR #4 contains PR #2 completely: 87 commits ahead, 0 behind, with PR #2 head as merge base;
+- closed draft PR #2 as superseded, without deleting its branch or code.
+
+Verification: syntax passed; lint 25 JavaScript files passed; runtime contract/type check 11 CommonJS modules passed; tests 52/52 passed; npm audit reported 0 vulnerabilities.
+
+State remains `IN_PROGRESS` because camera/install/service-worker/IndexedDB behavior still needs a real browser/device plus HTTPS test API. PR #4 remains draft pending that result and final review.
+
+
+## Validation audit after Codex continuation — manual code review
+
+Independent review of the current Issue #3 branch found two release-critical gaps not covered by the current 52-test CI suite:
+
+1. **Service-worker cache boundary is broader than documented.**
+   - `apps/time-pwa/sw.js` currently intercepts every GET and caches every successful GET response.
+   - The PWA uses `/api/session` as a GET.
+   - Therefore the current implementation can cache API/session responses even though the documentation/tests claim the worker caches only the static shell.
+   - Before browser release testing, restrict service-worker handling/caching to an explicit same-origin static-shell allowlist and never cache `/api/*`, authenticated responses or operational data.
+
+2. **Offline command ordering/revision chaining is not yet deterministic in the real PWA client.**
+   - `apps/time-pwa/app.js` stores commands with random UUID keys and calls IndexedDB `getAll()` without sorting by creation/sequence before sync.
+   - An offline chain such as start -> correction/photo -> stop can therefore be replayed out of business order.
+   - Even in chronological order, queued correction/stop commands can share the same local expected revision unless the client deterministically chains server revisions/results.
+   - Stable client-generated Time IDs solve entity identity, but not command ordering/version propagation.
+   - Before final device acceptance, add explicit sequence/causation ordering and deterministic revision propagation/rebase/conflict behavior, with functional tests of complete offline start -> edit/photo -> stop -> reconnect flows.
+
+These are now completion gates in addition to the existing real-browser/HTTPS test.
+
+Current final continuation order:
+- fix static-shell-only service-worker policy;
+- fix deterministic offline command ordering/revision chain;
+- add automated tests for both;
+- rerun full CI;
+- perform real HTTPS browser/device test;
+- final PR #4 review/merge decision.
+
+
+## Live WebsitePublisher HTTPS device-test host
+
+ChatGPT prepared a real HTTPS device-test frontend in WebsitePublisher project 29212.
+
+Use:
+`https://project29212.websitepublisher.ai/werkz-time-test.html`
+
+Purpose:
+- iPhone/browser device test;
+- HTTPS;
+- IndexedDB;
+- local stable Time IDs;
+- start/stop;
+- note/correction;
+- mileage;
+- binary photo Blob + SHA-256;
+- explicit monotonic command sequence + causation chain.
+
+Important:
+- test page is noindex/nofollow;
+- current mode is LOCAL DEVICE TEST;
+- no production customer data;
+- backend sync is intentionally disabled until Codex finishes the API/correctness gates;
+- runtime config is `https://cdn.websitepublisher.ai/custom/wid29212/config/werkz-time-test.json`;
+- current `apiBase` is null.
+
+Detailed handoff:
+`docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md`
+
+WebsitePublisher project 23947 is NOT the Time test host; it is near its page limit and remains the company/marketing site.
+
+Codex continuation after the already-recorded PWA correctness fixes:
+- expose a non-production HTTPS API matching TimeApplication;
+- session identity server-derived;
+- commands route;
+- multipart evidence route;
+- connect the WebsitePublisher test config only after API verification;
+- then perform the physical iPhone test.
+
+## Mandatory queued security work — Issue #5
+
+New canonical foundation:
+`docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
+
+Queued issue:
+**#5 — WerkZ Licensing, Enrollment & Release Security**  
+https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+This work incorporates the 2026-10-01 copy-protection/licensing research, corrected for the actual WerkZ architecture.
+
+Mandatory decisions:
+- browser/PWA code is assumed inspectable; do not use obfuscation as the authority boundary;
+- protected use is authorised server-side from authenticated identity -> server-derived organisation -> entitlements/capabilities;
+- copied frontend files must not grant a valid customer deployment;
+- local Agent copies require fresh organisation-bound enrollment/device identity;
+- distributed packages/releases must have a signing/integrity verification path;
+- On-Prem/offline deployments use asymmetrically signed licence/entitlement documents where appropriate;
+- no reusable master licence/signing secret is shipped;
+- normal connector networking prefers outbound TLS/443 with no generic remote shell;
+- HSM-per-customer, dongles, TPM attestation, secure enclaves and TUF are deferred unless a real customer/deployment threat model requires them;
+- mandatory statutory software rights must remain preserved in licence wording.
+
+### Repository visibility blocker
+
+Direct GitHub audit on 2026-10-01 confirmed `patslu-fck1701/UI-Pro` is **public**.
+
+Before proprietary production source, release/signing internals or other confidential implementation is treated as secret, the owner must either:
+1. change the working product repository to private; or
+2. deliberately split public-safe material from private product repositories.
+
+Codex must never commit customer data, provider tokens, signing private keys, licence-signing private keys or production credentials. If a real secret is ever exposed publicly, rotate/revoke it; deleting a commit is not sufficient.
+
+The connected GitHub automation available in this workflow does not expose a repository-visibility mutation, so this owner-level repository setting remains an explicit governance blocker until resolved.
+
+### Sequencing
+
+Do not interrupt the remaining Issue #3 correctness/device-test gates merely to start Issue #5.
+
+When Issue #3 reaches `DONE_NEEDS_NEXT_ORDER`, the next-order decision must explicitly read Issue #5 and `LICENSING_IP_PROTECTION_FOUNDATION.md` before live provider adapters or customer production rollout. Licensing/enrollment/release security may be combined with Integration Foundation work, but it may not be silently skipped.
+
+## Mandatory queued product-security work — Issue #6
+
+Canonical foundation:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Queued issue:
+**#6 — WerkZ Product Security Lifecycle, CRA & AI Transparency**  
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+This incorporates the 2026-10-01 deployment/security research and adds the current 2026 requirements missing from that report.
+
+Mandatory additions:
+- vulnerability intake -> triage -> remediation -> security release -> customer/regulatory assessment;
+- CRA reporting decision path for applicable products/incidents;
+- support/EOL metadata with explicit `supported_until`;
+- Article 50 AI transparency state for applicable AI interactions/content;
+- OIDC/SAML/SCIM-ready enterprise identity direction;
+- OAuth Device Authorization Grant style approval for headless connector enrollment where suitable;
+- signed MSI remains the canonical first Windows Agent package; MSIX is optional per customer/platform support;
+- release channels: canary, pilot, stable, optional LTS;
+- time-limited/scoped/audited support access;
+- tenant-aware restore testing across DB + private files + entitlements + audit;
+- no `apt-key` future design, no S/MIME claim for Linux packages, no default CPU/BIOS licensing, no generic remote-admin backdoor;
+- no blanket GDPR/NIS2/CRA/ISO/TISAX claims without evidence.
+
+### Sequencing
+
+Do not interrupt the remaining Issue #3 correctness/device-test gates.
+
+When Issue #3 reaches `DONE_NEEDS_NEXT_ORDER`, Issue #5 and Issue #6 are both mandatory security/deployment work before a normal paid production rollout. They may be combined if the implementation keeps licensing/enrollment and product-security lifecycle concerns distinct.
+
+Live provider integrations must not bypass Issue #5/#6 release and security gates.
+
+## Mandatory queued IP/OSS/brand work — Issue #7
+
+Canonical foundation:
+`docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+
+Queued issue:
+**#7 — WerkZ IP Ownership, OSS Compliance & Brand Protection**  
+https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+Supporting registers:
+- `docs/legal/IP_PROVENANCE_REGISTER.md`
+- `COPYRIGHT_AND_PROPRIETARY_NOTICE.md`
+- `THIRD_PARTY_NOTICES.md`
+- `docs/legal/BRAND_CLEARANCE_REGISTER.md`
+- `docs/legal/INSURANCE_READINESS_CHECKLIST.md`
+
+Verified baseline 2026-10-01:
+- `UI-Pro` is public;
+- main previously had no top-level LICENSE/NOTICE;
+- Issue #3 package declares `private:true` and currently no npm dependencies;
+- prototype Time pages reference Manrope via Google Fonts.
+
+Mandatory additions:
+- chain-of-title register for material contributors;
+- explicit freelancer/agency rights clauses;
+- AI-assisted development provenance + human review;
+- OSS licence classification and CI licence/SBOM gate;
+- reproducible third-party notices;
+- self-host approved production fonts/assets where practical;
+- preserve trade-secret status through actual secrecy measures, not labels;
+- trademark clearance for Werk Z/WerkZ before filing/major spend;
+- canonical brand spelling decision;
+- insurance readiness decision before normal paid production rollout.
+
+### Sequencing
+
+Do not interrupt Issue #3 correctness/device-test gates.
+
+Before normal paid production rollout, Issues #5, #6 and #7 are all mandatory readiness blocks. They may be implemented in coordinated branches, but licensing/security/IP/OSS gates must remain separately verifiable.
+## Canonical risk & concerns register
+
+WerkZ now maintains a permanent negative/uncertainty layer:
+
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+Supporting IP/legal gates:
+- `docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md`
+- `docs/legal/DATA_RIGHTS_WORDING_GUIDE.md`
+
+This register is mandatory reading before:
+- paid production launch;
+- patent/design/trademark filing;
+- major public technical disclosure;
+- new contractor/contributor access;
+- major dependency/licence decisions;
+- security/compliance claims.
+
+Latest concerns added from the 2026-10-02 research:
+- public disclosure can destroy patent novelty;
+- Gebrauchsmuster is not a fast software-patent substitute;
+- design rights are unexamined at registration and can later fall;
+- database rights require qualifying substantial investment and are not automatic for customer data;
+- data “ownership” wording is legally too crude;
+- employee inventions need ArbnErfG handling;
+- defensive publication requires a patent-or-publish decision;
+- public repository content cannot be protected as a secret merely by labelling it confidential.
+
+Issue #7 remains the implementation umbrella for the IP/OSS/brand/legal-readiness concerns.
+

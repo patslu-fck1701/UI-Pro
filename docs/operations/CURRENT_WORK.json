@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-01",
+  "updated_at": "2026-10-02",
   "baseline": "KB-v1.41",
   "state": "IN_PROGRESS",
   "repository": "patslu-fck1701/UI-Pro",
@@ -11,7 +11,9 @@
   },
   "canonical_phone_baseline": {
     "files_library_path": "/WerkZ/Baseline/WerkZ.zip",
-    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4"
+    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4",
+    "materialized": false,
+    "blocker": "download_file requires a ready execution workspace"
   },
   "start_here": [
     "docs/operations/CODEX_RUNBOOK.md",
@@ -33,10 +35,10 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
+  "next_trigger": "Owner says 'weiter': read latest main control plane, validation_audit and docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md. First fix service-worker cache boundary and deterministic offline revision/order behavior, then expose verified HTTPS test API, connect WebsitePublisher project 29212 test config, run CI, and perform/record physical iPhone/browser acceptance.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
+  "last_verified_issue_branch_commit": "953a625e312bd3e6b60653c2a065eac857cb57c4",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
@@ -69,23 +71,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 Block 3A/3B: durable Time repository + private object storage + HTTP-neutral application boundary + concurrent-device tests, then IndexedDB/PWA mobile Time surface. Provider-neutral integration contracts only.",
+  "current_continuation": "Issue #3 final PWA correctness gate: fix service-worker API caching risk and deterministic offline command ordering/revision chaining, rerun CI, then perform real HTTPS browser/device verification and final PR #4 review.",
   "last_verified_ci": {
-    "run_id": 36894530431,
+    "run_id": 36920881329,
     "conclusion": "success",
     "tests": {
-      "total": 27,
-      "passed": 27,
+      "total": 52,
+      "passed": 52,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 13
+      "files": 25
     },
     "typecheck": {
       "status": "passed",
-      "modules": 7
+      "modules": 11
     },
     "npm_vulnerabilities": 0
   },
@@ -93,17 +95,37 @@
     "Time Auth/repository/storage ports",
     "tenant isolation and optimistic revisions",
     "correction history and mileage",
-    "private photo metadata and gallery",
-    "offline idempotency and visible conflict state"
+    "private photo bytes, metadata and gallery",
+    "durable restart/idempotency adapters",
+    "transport-neutral Time application boundary",
+    "complete Time success/conflict audit events",
+    "application-level concurrent-device, cross-tenant and restart tests",
+    "OfflineQueuePort with browser IndexedDB driver boundary",
+    "persistent queued/syncing/synced/failed/conflict lifecycle",
+    "offline reload, tenant-scoped deduplication and explicit retry tests",
+    "installable mobile Time PWA static shell",
+    "mobile start/stop/note/mileage/correction/history and conflict surface",
+    "static-only service worker cache with no API/business response caching",
+    "provider-neutral SecretStore and Connector ports",
+    "tenant-resolved verified/deduplicated WebhookGateway",
+    "IntegrationAccount, IntegrationEvent, SyncJob and versioned MappingProfile contracts",
+    "binary PWA evidence Blob queue with SHA-256 and multipart transfer",
+    "multipart-neutral server evidence upload boundary",
+    "stable client-generated Time IDs for complete offline command chains",
+    "server-side client ID collision protection",
+    "Windows PWA start and smartphone test guide",
+    "PR #2 confirmed fully contained in PR #4 and closed as superseded"
   ],
   "remaining": [
-    "Library ZIP reconciliation",
-    "durable SQLite/server adapter",
-    "PWA IndexedDB/mobile surfaces",
-    "private object upload adapter",
-    "HTTP and multi-device integration tests",
-    "review and merge PR #4",
-    "migrate commercial quote/catalog behavior from v0.1 seed pricing to v0.2 before PR #4 merge"
+    "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
+    "real browser/manual PWA verification with HTTPS test API",
+    "final PR #4 review and merge decision",
+    "fix service-worker static-shell-only cache boundary",
+    "make real PWA offline command ordering and revision chaining deterministic",
+    "automated complete offline start/edit/photo/stop reconnect tests",
+    "finish WebsitePublisher test-host API connection after PWA correctness fixes",
+    "provide HTTPS non-production Time API and connect project 29212 test config",
+    "physical iPhone/browser acceptance run"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -178,16 +200,9 @@
   "resume_document": "docs/operations/CODEX_RESUME_NOW.md",
   "branch_sync": {
     "active_branch": "codex/issue-3-commercial",
-    "audit_snapshot": {
-      "main_commit": "6276c056d36d00ebddc10dab50ff9d02c0c72435",
-      "branch_head": "d81e9068e8ecabe74a6fde1d7a80fbe2eb302428",
-      "last_ci_verified_implementation": "82b465626d3e87dc4405acbde032ad675262d360",
-      "ahead_by": 12,
-      "behind_by": 41,
-      "status": "diverged",
-      "pr_mergeable": false
-    },
-    "rule": "Freshly compare current main vs active branch at resume time, then safely synchronize before new implementation. Main control-plane decisions win; preserve verified Issue #3 code."
+    "merge_commit": "e5304454c5a66a4cd02d786d4930ab9a8d061334",
+    "synced_main_commit": "6b7aea3d356d588826ab9364f58cbb7aee09db58",
+    "status": "synchronized_and_verified"
   },
   "verified_implementation": [
     "module manifests and organisation entitlements",
@@ -201,30 +216,28 @@
     "optional mileage",
     "private photo metadata and tenant gallery",
     "offline command idempotency/retry/conflict state",
-    "WebsitePublisher runtime-token decoupling test"
+    "WebsitePublisher runtime-token decoupling test",
+    "atomic file-backed Time repository and private evidence bytes",
+    "transport-neutral Time application DTO/error boundary",
+    "complete start/stop/correction/evidence/conflict audit events without object bytes",
+    "durable concurrent-device/cross-tenant/restart integration tests"
   ],
   "known_code_gaps": [
-    "Time repository is still in-memory",
-    "Evidence storage is still in-memory metadata only; no durable object bytes",
-    "Offline queue is still in-memory; no IndexedDB adapter",
-    "no transport-neutral application/use-case layer yet",
-    "audit coverage incomplete for stop/correction/evidence/conflict",
-    "no generic PWA/mobile production-oriented Time surface yet",
-    "no durable restart tests",
-    "no HTTP/network transport tests",
-    "no live provider integrations"
+    "IndexedDB, service worker, camera and install behavior are not yet exercised in a real browser/device",
+    "no deployed HTTPS HTTP adapter/test environment is available in this tool session",
+    "provider contracts exist but no live provider adapters (intentionally out of scope)"
   ],
   "commercial_migration_gate": {
+    "status": "implemented_and_verified",
     "canonical_catalog": "config/catalog/werkz-v0.2.json",
     "historical_catalog": "config/catalog/werkz-v0.1.json",
-    "current_gap": "CommercialCatalog and commercial tests still use v0.1 items/presets behavior; v0.2 exists but is not active.",
-    "required": [
-      "make v0.2 loadable by active catalog/quote code",
-      "preserve historical quote snapshots",
-      "separate priceable offer lines from module entitlements",
-      "test setup + managed operation + deployment quote composition",
-      "test no permanent Free/Basic tier",
-      "prevent v0.1 small per-module prices from becoming canonical/public behavior"
+    "verified": [
+      "v0.2 active model loads",
+      "setup plus managed operation plus deployment composition",
+      "module entitlements separate from price lines",
+      "historical v0.1 quote snapshots preserved",
+      "no permanent free tier",
+      "no active small module price lines"
     ]
   },
   "resume_sequence": [
@@ -239,5 +252,251 @@
     "add OfflineQueuePort with IndexedDB boundary and generic PWA Time surface",
     "add provider-neutral integration contracts only",
     "rerun full verification and update PR #4, CURRENT_WORK and Issue #3"
-  ]
+  ],
+  "durable_time": {
+    "status": "reference_adapters_implemented",
+    "repository": "atomic JSON file adapter",
+    "evidence_storage": "private file bytes plus atomic metadata index",
+    "verified": [
+      "restart persistence",
+      "idempotency across restart",
+      "revision conflict across restart",
+      "tenant separation",
+      "object bytes and metadata across restart",
+      "hash and size integrity",
+      "cross-tenant denial",
+      "idempotent upload retry"
+    ]
+  },
+  "application_boundary": {
+    "status": "implemented_and_verified",
+    "operations": [
+      "time.start",
+      "time.stop",
+      "time.correct",
+      "time.get",
+      "time.list",
+      "time.evidence.add",
+      "time.gallery",
+      "offline command dispatch"
+    ],
+    "stable_errors": [
+      "UNAUTHENTICATED",
+      "FORBIDDEN",
+      "ENTITLEMENT_DENIED",
+      "NOT_FOUND",
+      "REVISION_CONFLICT",
+      "VALIDATION_ERROR",
+      "HASH_MISMATCH",
+      "INTEGRITY_ERROR"
+    ],
+    "audit_events": [
+      "time.started",
+      "time.stopped",
+      "time.corrected",
+      "time.evidence.added",
+      "time.conflict"
+    ],
+    "ci_run_id": 36914579975
+  },
+  "offline_queue": {
+    "status": "implemented_and_verified",
+    "port": "OfflineQueuePort",
+    "browser_driver": "IndexedDbOfflineQueueDriver",
+    "deterministic_test_driver": "MemoryOfflineQueueDriver",
+    "persisted_fields": [
+      "command envelope",
+      "payload",
+      "status",
+      "attempts",
+      "lastError",
+      "result"
+    ],
+    "statuses": [
+      "queued",
+      "syncing",
+      "synced",
+      "failed",
+      "conflict"
+    ],
+    "ci_run_id": 36914906481
+  },
+  "time_pwa": {
+    "status": "implemented_automated_verified_manual_browser_pending",
+    "path": "apps/time-pwa",
+    "features": [
+      "installable manifest",
+      "offline static shell",
+      "mobile start/stop",
+      "optional customer/order",
+      "mileage",
+      "note/correction",
+      "history",
+      "offline queue status",
+      "visible conflicts",
+      "binary offline photo Blob queue",
+      "SHA-256 multipart evidence upload",
+      "stable offline Time entity IDs"
+    ],
+    "guards": [
+      "no embedded credentials",
+      "no WebsitePublisher runtime",
+      "no API response caching",
+      "no fake photo upload success",
+      "20 MB evidence limit",
+      "server-side size/hash validation",
+      "Blob removed from completed queue entry"
+    ],
+    "ci_run_id": 36920881329
+  },
+  "integration_foundation": {
+    "status": "contracts_implemented_and_verified",
+    "contracts": [
+      "SecretStorePort",
+      "ConnectorPort",
+      "ConnectorRegistry",
+      "IntegrationStore",
+      "WebhookGateway",
+      "MappingEngine"
+    ],
+    "live_provider_adapters": false,
+    "ci_run_id": 36920123116
+  },
+  "pull_request_review": {
+    "pr2": {
+      "state": "closed",
+      "reason": "fully superseded by PR #4",
+      "head": "39c5ae225078a90180814ae395b516499c2b311c"
+    },
+    "pr4": {
+      "state": "open_draft",
+      "head": "953a625e312bd3e6b60653c2a065eac857cb57c4"
+    },
+    "comparison": {
+      "ahead_by": 87,
+      "behind_by": 0,
+      "merge_base_is_pr2_head": true
+    }
+  },
+  "validation_audit": {
+    "status": "release_gaps_found",
+    "reviewed_at_local": "2026-10-01T22:40:00+02:00",
+    "findings": [
+      {
+        "id": "PWA-SW-CACHE-BOUNDARY",
+        "severity": "release_critical",
+        "finding": "Service worker currently caches all successful GET requests; /api/session is GET, so authenticated/API responses may be cached despite static-shell-only claim.",
+        "required_fix": "Use explicit static-shell allowlist and bypass /api/*, authenticated and operational responses."
+      },
+      {
+        "id": "PWA-OFFLINE-ORDER-REVISION",
+        "severity": "release_critical",
+        "finding": "Real PWA sync uses IndexedDB getAll on random UUID-keyed commands without deterministic business ordering; offline start/edit/photo/stop chains can replay out of order and share stale expected revisions.",
+        "required_fix": "Persist explicit sequence/causation order and deterministic revision propagation/conflict handling; add complete offline-chain tests."
+      }
+    ]
+  },
+  "websitepublisher_time_test": {
+    "status": "live_frontend_local_device_test",
+    "project_id": 29212,
+    "url": "https://project29212.websitepublisher.ai/werkz-time-test.html",
+    "config_url": "https://cdn.websitepublisher.ai/custom/wid29212/config/werkz-time-test.json",
+    "api_base": null,
+    "purpose": "HTTPS/iPhone/browser test host only; not production runtime",
+    "implemented": [
+      "IndexedDB",
+      "stable local Time IDs",
+      "start/stop",
+      "notes/correction",
+      "mileage",
+      "binary photo Blob",
+      "SHA-256",
+      "20 MB cap",
+      "monotonic command sequence",
+      "causation chain",
+      "local history"
+    ],
+    "backend_required": [
+      "server-derived session identity",
+      "POST /time/commands",
+      "POST /time/evidence multipart",
+      "HTTPS reachability"
+    ],
+    "documentation": "docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md"
+  },
+  "queued_security_issue": {
+    "number": 5,
+    "title": "WerkZ Licensing, Enrollment & Release Security",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/5",
+    "sequencing": "Finish Issue #3 correctness/device-test gates first; then Issue #5 is mandatory before live provider/customer production rollout.",
+    "canonical_foundation": "docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md"
+  },
+  "repository_visibility_guard": {
+    "verified_at": "2026-10-01",
+    "repository": "patslu-fck1701/UI-Pro",
+    "observed_visibility": "public",
+    "requirement": "Resolve private-vs-public split before proprietary production source is treated as confidential; never commit customer/provider/signing secrets."
+  },
+  "mandatory_cross_cutting_reading": [
+    "docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md",
+    "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
+    "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md",
+    "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md",
+    "docs/legal/IP_OSS_BRAND_FOUNDATION.md",
+    "docs/legal/IP_PROVENANCE_REGISTER.md",
+    "THIRD_PARTY_NOTICES.md",
+    "docs/governance/RISK_CONCERNS_REGISTER.md"
+  ],
+  "queued_product_security_issue": {
+    "number": 6,
+    "title": "WerkZ Product Security Lifecycle, CRA & AI Transparency",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/6",
+    "sequencing": "Finish Issue #3; then Issue #5 and #6 are mandatory before normal paid production rollout.",
+    "canonical_foundation": "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md"
+  },
+  "product_security_lifecycle": {
+    "vulnerability_management": "required",
+    "support_eol_metadata": "required",
+    "cra_reporting_assessment": "required_when_applicable",
+    "ai_transparency_state": "required_when_applicable",
+    "enterprise_identity_direction": [
+      "OIDC",
+      "SAML",
+      "SCIM"
+    ],
+    "release_channels": [
+      "canary",
+      "pilot",
+      "stable",
+      "LTS_optional"
+    ],
+    "support_access": "time_limited_scoped_audited",
+    "restore_testing": "tenant_aware"
+  },
+  "queued_ip_oss_brand_issue": {
+    "number": 7,
+    "title": "WerkZ IP Ownership, OSS Compliance & Brand Protection",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/7",
+    "sequencing": "Finish Issue #3; Issues #5, #6 and #7 are mandatory before normal paid production rollout.",
+    "canonical_foundation": "docs/legal/IP_OSS_BRAND_FOUNDATION.md"
+  },
+  "ip_oss_brand_readiness": {
+    "chain_of_title": "required",
+    "contractor_rights": "required_before_external_contribution",
+    "ai_provenance": "required_for_material_assisted_work",
+    "oss_license_scan": "required_before_production_release",
+    "sbom": "required",
+    "third_party_notices": "required",
+    "trademark_clearance": "required_before_filing_or_major_brand_spend",
+    "insurance_decision": "required_before_normal_paid_production"
+  },
+  "risk_concerns_register": {
+    "path": "docs/governance/RISK_CONCERNS_REGISTER.md",
+    "status": "canonical",
+    "rule": "Material recommendations must preserve downside, uncertainty, stop-gates and mitigations.",
+    "ip_supporting_gates": [
+      "docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md",
+      "docs/legal/DATA_RIGHTS_WORDING_GUIDE.md"
+    ]
+  }
 }

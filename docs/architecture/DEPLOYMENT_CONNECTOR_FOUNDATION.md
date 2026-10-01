@@ -81,6 +81,65 @@ Enrollment tokens are one-time/short-lived, are not long-term credentials, may b
 
 Device credentials are distinct from human sessions and customer-provider credentials.
 
+## Licensing and copied-install protection
+
+Enrollment and commercial entitlement are related but distinct:
+
+- organisation entitlements decide which modules/capabilities a customer may use;
+- device enrollment decides which local Agent/device may represent that organisation;
+- signed release metadata proves the origin/integrity of distributed software;
+- a signed offline licence/entitlement document is used for On-Prem/offline deployments when continuous cloud verification is inappropriate.
+
+A copied browser frontend must not grant tenant/data/module authority. A copied Agent directory must not create a second enrolled device. Do not embed reusable master licence secrets in installers or local binaries.
+
+Obfuscation may be used later for compiled components, but never replaces authentication, tenant isolation, entitlement enforcement, enrollment or signature verification.
+
+Canonical detail: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`  
+Implementation issue: https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+## Enterprise identity and device authorisation
+
+The core identity boundary must remain provider-neutral and extensible to:
+- OIDC;
+- SAML for enterprise environments where required;
+- SCIM provisioning for users/groups;
+- MFA/WebAuthn;
+- joiner/mover/leaver automation and audit.
+
+For headless or browser-limited local Agents, a standards-based OAuth 2.0 Device Authorization Grant style flow is preferred where suitable:
+Agent -> verification URI/code/QR -> customer admin approves in browser -> Agent polls over outbound HTTPS -> server issues device credential.
+
+Do not make CPU/BIOS fingerprinting the default commercial licence boundary.
+
+References:
+- https://www.rfc-editor.org/info/rfc7643/
+- https://www.rfc-editor.org/info/rfc8628/
+
+## Release channels and support lifecycle
+
+Distributed Agents/On-Prem components must be able to participate in explicit release channels:
+- canary;
+- pilot;
+- stable;
+- optional LTS.
+
+Release metadata must include compatibility, rollback/migration and support/EOL state.
+
+Canonical lifecycle:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Implementation issue:
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+## Windows package compatibility decision
+
+Signed MSI remains the canonical first Windows Agent package.
+
+MSIX may be added when the customer estate supports the needed capabilities. Microsoft currently documents MSIX Windows-service support on Windows 10 2004+ and Windows Server 2022, but not Windows Server 2019.
+
+Reference:
+https://learn.microsoft.com/en-us/windows/msix/supported-platforms
+
 ## Secret placement
 
 The installer is never a secret store.
@@ -164,3 +223,5 @@ Read together with:
 - docs/security/SECURITY_PRIVACY_FOUNDATION.md
 - docs/integrations/INTEGRATION_STRATEGY.md
 - docs/architecture/DEPLOYMENT_TOPOLOGY.md
+- docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md
+- docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md
