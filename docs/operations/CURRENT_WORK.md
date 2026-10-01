@@ -364,3 +364,31 @@ Completed:
 Verification: syntax passed; lint 25 JavaScript files passed; runtime contract/type check 11 CommonJS modules passed; tests 52/52 passed; npm audit reported 0 vulnerabilities.
 
 State remains `IN_PROGRESS` because camera/install/service-worker/IndexedDB behavior still needs a real browser/device plus HTTPS test API. PR #4 remains draft pending that result and final review.
+
+
+## Validation audit after Codex continuation — manual code review
+
+Independent review of the current Issue #3 branch found two release-critical gaps not covered by the current 52-test CI suite:
+
+1. **Service-worker cache boundary is broader than documented.**
+   - `apps/time-pwa/sw.js` currently intercepts every GET and caches every successful GET response.
+   - The PWA uses `/api/session` as a GET.
+   - Therefore the current implementation can cache API/session responses even though the documentation/tests claim the worker caches only the static shell.
+   - Before browser release testing, restrict service-worker handling/caching to an explicit same-origin static-shell allowlist and never cache `/api/*`, authenticated responses or operational data.
+
+2. **Offline command ordering/revision chaining is not yet deterministic in the real PWA client.**
+   - `apps/time-pwa/app.js` stores commands with random UUID keys and calls IndexedDB `getAll()` without sorting by creation/sequence before sync.
+   - An offline chain such as start -> correction/photo -> stop can therefore be replayed out of business order.
+   - Even in chronological order, queued correction/stop commands can share the same local expected revision unless the client deterministically chains server revisions/results.
+   - Stable client-generated Time IDs solve entity identity, but not command ordering/version propagation.
+   - Before final device acceptance, add explicit sequence/causation ordering and deterministic revision propagation/rebase/conflict behavior, with functional tests of complete offline start -> edit/photo -> stop -> reconnect flows.
+
+These are now completion gates in addition to the existing real-browser/HTTPS test.
+
+Current final continuation order:
+- fix static-shell-only service-worker policy;
+- fix deterministic offline command ordering/revision chain;
+- add automated tests for both;
+- rerun full CI;
+- perform real HTTPS browser/device test;
+- final PR #4 review/merge decision.
