@@ -650,3 +650,11 @@ CI run: `36941514632` — success; existing 59-test verification retained.
 
 Verified merge commit: `3d450c8e4817bd2c8a15878d2aec08519c797484`  
 CI run: `36941665275` — success; 74/74 tests, lint 42 JavaScript files, runtime contract/typecheck 17 modules, SPDX gate passed, npm audit 0 known vulnerabilities. PR #8 is 0 behind PR #4 and remains Draft. The Render Blueprint is deployment preparation only; no external HTTPS service or iPhone acceptance is claimed.
+
+
+## Integration worker idempotency conflict guard
+
+Verified code commit: `60f02980100da9b9b38373056231fb818c4fc562`  
+CI run: `36941862033` — success; 74/74 tests, lint 42 files, runtime contract/typecheck 17 modules, SPDX gate passed, npm audit 0 known vulnerabilities.
+
+The retry worker now rejects reuse of an organisation-scoped idempotency key for a different job kind or payload. Equivalent JSON payloads with reordered properties replay the existing job. The automated regression covers both cases. The worker remains an in-memory foundation; durable production job storage is still a separate implementation gate.
