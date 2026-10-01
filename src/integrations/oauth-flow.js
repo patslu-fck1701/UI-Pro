@@ -6,15 +6,17 @@ const hash=value=>crypto.createHash('sha256').update(value).digest();
 function deny(code,message){const error=new Error(message);error.code=code;throw error}
 function nonempty(value,name){if(typeof value!=='string'||!value.trim())deny('VALIDATION_ERROR',name+' required');return value.trim()}
 class OAuthAuthorizationFlow {
-  constructor({clock=()=>new Date(),random=crypto.randomBytes,audit=()=>{},stateStore=null}={}){
-    this.clock=clock;this.random=random;this.audit=audit;this.stateStore=stateStore;
+  constructor({clock=()=>new Date(),random=crypto.randomBytes,audit=()=>{},stateStore=null,providerConfigs={}}={}){
+    this.clock=clock;this.random=random;this.audit=audit;this.stateStore=stateStore;this.providerConfigs=new Map(Object.entries(providerConfigs));
     this.pending=new Map(stateStore?.load()?.pending||[]);
   }
   persist(){if(this.stateStore)this.stateStore.save({pending:[...this.pending]})}
-  begin({session,providerConfig,connectionKey,scopes=[],ttlMs=10*60*1000}){
+  begin({session,provider,connectionKey,scopes=[],ttlMs=10*60*1000}){
+    const providerConfig=this.providerConfigs.get(nonempty(provider,'provider'));
+    if(!providerConfig)deny('PROVIDER_UNAVAILABLE','OAuth provider unavailable');
     const organisationId=nonempty(session?.organisationId,'organisationId');
     const actorId=nonempty(session?.actorId,'actorId');
-    const provider=nonempty(providerConfig?.id,'provider');
+    if(providerConfig.id!==provider)deny('VALIDATION_ERROR','OAuth provider mismatch');
     nonempty(connectionKey,'connectionKey');
     if(!Array.isArray(scopes)||scopes.some(scope=>typeof scope!=='string'||!scope.trim()))deny('VALIDATION_ERROR','Invalid scopes');
     if(!Number.isSafeInteger(ttlMs)||ttlMs<60*1000||ttlMs>15*60*1000)deny('VALIDATION_ERROR','Invalid OAuth lifetime');
