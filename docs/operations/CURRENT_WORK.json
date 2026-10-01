@@ -441,7 +441,10 @@
     "docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md",
     "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
     "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md",
-    "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md"
+    "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md",
+    "docs/legal/IP_OSS_BRAND_FOUNDATION.md",
+    "docs/legal/IP_PROVENANCE_REGISTER.md",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "queued_product_security_issue": {
     "number": 6,
@@ -468,5 +471,22 @@
     ],
     "support_access": "time_limited_scoped_audited",
     "restore_testing": "tenant_aware"
+  },
+  "queued_ip_oss_brand_issue": {
+    "number": 7,
+    "title": "WerkZ IP Ownership, OSS Compliance & Brand Protection",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/7",
+    "sequencing": "Finish Issue #3; Issues #5, #6 and #7 are mandatory before normal paid production rollout.",
+    "canonical_foundation": "docs/legal/IP_OSS_BRAND_FOUNDATION.md"
+  },
+  "ip_oss_brand_readiness": {
+    "chain_of_title": "required",
+    "contractor_rights": "required_before_external_contribution",
+    "ai_provenance": "required_for_material_assisted_work",
+    "oss_license_scan": "required_before_production_release",
+    "sbom": "required",
+    "third_party_notices": "required",
+    "trademark_clearance": "required_before_filing_or_major_brand_spend",
+    "insurance_decision": "required_before_normal_paid_production"
   }
 }
