@@ -11,7 +11,9 @@
   },
   "canonical_phone_baseline": {
     "files_library_path": "/WerkZ/Baseline/WerkZ.zip",
-    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4"
+    "library_file_id": "libfile_356b20f709588191905c43ed43edd7c4",
+    "materialized": false,
+    "blocker": "download_file requires a ready execution workspace"
   },
   "start_here": [
     "docs/operations/CODEX_RUNBOOK.md",
@@ -36,7 +38,7 @@
   "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
+  "last_verified_issue_branch_commit": "c94ff071c2cf18fb760f3cf2f868889f85b9f02e",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
@@ -69,23 +71,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 Block 3A/3B: durable Time repository + private object storage + HTTP-neutral application boundary + concurrent-device tests, then IndexedDB/PWA mobile Time surface. Provider-neutral integration contracts only.",
+  "current_continuation": "Issue #3: transport-neutral application boundary, complete audit events, concurrent-device integration through application layer, then OfflineQueuePort/IndexedDB and generic PWA Time surface.",
   "last_verified_ci": {
-    "run_id": 36894530431,
+    "run_id": 36912967631,
     "conclusion": "success",
     "tests": {
-      "total": 27,
-      "passed": 27,
+      "total": 32,
+      "passed": 32,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 13
+      "files": 15
     },
     "typecheck": {
       "status": "passed",
-      "modules": 7
+      "modules": 8
     },
     "npm_vulnerabilities": 0
   },
@@ -98,12 +100,12 @@
   ],
   "remaining": [
     "Library ZIP reconciliation",
-    "durable SQLite/server adapter",
+    "transport-neutral Time application boundary",
+    "complete Time audit events",
+    "application-level concurrent-device tests",
     "PWA IndexedDB/mobile surfaces",
-    "private object upload adapter",
-    "HTTP and multi-device integration tests",
-    "review and merge PR #4",
-    "migrate commercial quote/catalog behavior from v0.1 seed pricing to v0.2 before PR #4 merge"
+    "provider-neutral integration contracts",
+    "review and merge PR #4"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -178,16 +180,9 @@
   "resume_document": "docs/operations/CODEX_RESUME_NOW.md",
   "branch_sync": {
     "active_branch": "codex/issue-3-commercial",
-    "audit_snapshot": {
-      "main_commit": "6276c056d36d00ebddc10dab50ff9d02c0c72435",
-      "branch_head": "d81e9068e8ecabe74a6fde1d7a80fbe2eb302428",
-      "last_ci_verified_implementation": "82b465626d3e87dc4405acbde032ad675262d360",
-      "ahead_by": 12,
-      "behind_by": 41,
-      "status": "diverged",
-      "pr_mergeable": false
-    },
-    "rule": "Freshly compare current main vs active branch at resume time, then safely synchronize before new implementation. Main control-plane decisions win; preserve verified Issue #3 code."
+    "merge_commit": "e5304454c5a66a4cd02d786d4930ab9a8d061334",
+    "synced_main_commit": "6b7aea3d356d588826ab9364f58cbb7aee09db58",
+    "status": "synchronized_and_verified"
   },
   "verified_implementation": [
     "module manifests and organisation entitlements",
@@ -215,16 +210,16 @@
     "no live provider integrations"
   ],
   "commercial_migration_gate": {
+    "status": "implemented_and_verified",
     "canonical_catalog": "config/catalog/werkz-v0.2.json",
     "historical_catalog": "config/catalog/werkz-v0.1.json",
-    "current_gap": "CommercialCatalog and commercial tests still use v0.1 items/presets behavior; v0.2 exists but is not active.",
-    "required": [
-      "make v0.2 loadable by active catalog/quote code",
-      "preserve historical quote snapshots",
-      "separate priceable offer lines from module entitlements",
-      "test setup + managed operation + deployment quote composition",
-      "test no permanent Free/Basic tier",
-      "prevent v0.1 small per-module prices from becoming canonical/public behavior"
+    "verified": [
+      "v0.2 active model loads",
+      "setup plus managed operation plus deployment composition",
+      "module entitlements separate from price lines",
+      "historical v0.1 quote snapshots preserved",
+      "no permanent free tier",
+      "no active small module price lines"
     ]
   },
   "resume_sequence": [
@@ -239,5 +234,20 @@
     "add OfflineQueuePort with IndexedDB boundary and generic PWA Time surface",
     "add provider-neutral integration contracts only",
     "rerun full verification and update PR #4, CURRENT_WORK and Issue #3"
-  ]
+  ],
+  "durable_time": {
+    "status": "reference_adapters_implemented",
+    "repository": "atomic JSON file adapter",
+    "evidence_storage": "private file bytes plus atomic metadata index",
+    "verified": [
+      "restart persistence",
+      "idempotency across restart",
+      "revision conflict across restart",
+      "tenant separation",
+      "object bytes and metadata across restart",
+      "hash and size integrity",
+      "cross-tenant denial",
+      "idempotent upload retry"
+    ]
+  }
 }
