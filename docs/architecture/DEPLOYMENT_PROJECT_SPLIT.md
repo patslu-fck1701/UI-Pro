@@ -1,6 +1,6 @@
 # WerkZ Deployment / Product Split — historical decisions
 
-**Baseline:** KB-v1.34  
+**Baseline:** KB-v1.39  
 **Status:** SUPERSEDED
 
 This document preserves the evolution of the deployment decision.
