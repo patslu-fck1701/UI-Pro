@@ -315,3 +315,27 @@ Before normal paid production rollout:
 - trademark clearance performed before filing/major brand spend;
 - insurance decision documented;
 - customer licensing wording remains aligned with mandatory rights.
+## 16. Explicit concerns and stop-gates
+
+WerkZ must preserve negative findings and uncertainty, not only recommendations.
+
+Canonical risk register:
+`docs/governance/RISK_CONCERNS_REGISTER.md`
+
+Additional legal decision gates:
+- `docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md`
+- `docs/legal/DATA_RIGHTS_WORDING_GUIDE.md`
+
+Important concerns:
+- public disclosure can destroy patent novelty;
+- Gebrauchsmuster is not a shortcut for protecting software or methods;
+- registered design is an unexamined right and may later be invalidated;
+- database rights do not automatically arise from hosting/creating lots of customer data;
+- “data ownership” shorthand can misstate copyright/database/privacy/third-party rights;
+- software copyright protects expression, not underlying ideas/principles;
+- employee inventions require a separate ArbnErfG process;
+- defensive publication can destroy WerkZ's own patent option;
+- public repository disclosure is incompatible with relying on trade-secret secrecy for the disclosed information.
+
+Research that conflicts with these guardrails must be escalated rather than silently merged.
+
