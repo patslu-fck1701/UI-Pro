@@ -210,3 +210,21 @@ Do not treat minification/obfuscation as access control. Do not embed reusable l
 
 The public/private repository policy is a release-governance decision: never commit real customer/provider/signing secrets even if repository visibility changes later.
 
+## Mandatory product-security lifecycle foundation
+
+For work touching production release, Agent/On-Prem distribution, security incidents, AI-assisted product features, enterprise identity, support access or recovery, also read:
+
+- `docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+- Issue #6: https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+Required operating rules:
+- vulnerability handling is a lifecycle process;
+- support/EOL metadata is part of the product model;
+- CRA/AI/NIS2/GDPR applicability is assessed by scope, not advertised as a blanket claim;
+- AI transparency state is preserved where applicable;
+- enterprise identity remains OIDC/SAML/SCIM-capable;
+- support access is temporary/scoped/audited;
+- restore testing covers tenant isolation and private-object consistency.
+
+Do not mark production-ready solely because feature tests pass.
+
