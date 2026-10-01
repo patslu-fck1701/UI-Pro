@@ -260,3 +260,25 @@ First continuation order:
 Do not start live Microsoft/Google/WhatsApp/DATEV adapters inside Issue #3.
 Do not mark Issue #3 complete merely because architecture docs are present.
 Do not merge PR #4 while active commercial behavior still depends on the v0.1 price seed.
+
+
+## Continuation result — KB-v1.41 sync, pricing v0.2 and durable adapters
+
+Verified branch commit: `c94ff071c2cf18fb760f3cf2f868889f85b9f02e`  
+CI run: `36912967631` — success
+
+Completed:
+
+- safely merged current `main` foundations into the active branch at `e530445` without rewriting verified history;
+- migrated active commercial behavior to v0.2;
+- separated setup, managed operation and deployment offer lines from technical module entitlements;
+- preserved historical v0.1 quote snapshots while preventing old module prices from active v0.2 behavior;
+- added atomic file-backed Time repository with restart-persistent records, revisions, corrections and idempotency;
+- added private file evidence storage with real bytes outside business records, atomic metadata, SHA-256/size verification and tenant-scoped reads;
+- documented SQLite deferral: no native dependency added to the phone/GitHub workflow; the durable reference port remains SQLite/PostgreSQL-ready.
+
+Verification: syntax passed; lint 15 files passed; runtime contract/type check 8 modules passed; tests 32/32 passed; npm audit reported 0 vulnerabilities.
+
+Library retry result remains: `download_file requires a ready execution workspace`. No substitute ZIP was used.
+
+Next: transport-neutral Time application boundary, complete audit events and application-level concurrent-device tests, then IndexedDB/PWA surface.
