@@ -348,6 +348,29 @@ Deployment/customer-agent implementation then follows the same security foundati
 - no embedded customer secrets;
 - Cloud / Hybrid / WerkZ Box / On-Premise remain deployment choices, not separate products.
 
+## 13A. Mandatory licensing/security package after Issue #3
+
+The 2026-10-01 copy-protection/licensing research has been converted into the canonical foundation:
+
+`docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
+
+Tracked implementation:
+**Issue #5 — WerkZ Licensing, Enrollment & Release Security**  
+https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+When Issue #3 is complete, do not start live provider integrations or customer production rollout without reading Issue #5.
+
+Required direction:
+- server-side tenant + entitlement authority; frontend is not trusted for licensing;
+- organisation-bound connector/device enrollment and revocation;
+- signed/trusted release artifacts and update verification;
+- signed asymmetric offline/On-Prem licence model where applicable;
+- no embedded reusable master licence/signing secret;
+- obfuscation only as defence-in-depth;
+- resolve the currently public `UI-Pro` repository before proprietary production source is treated as confidential.
+
+Issue #5 may be executed before or combined with the Integration Foundation implementation, but its controls are mandatory and must not be omitted.
+
 ## 14. Meaning of owner saying only "weiter"
 
 When the owner says `weiter`:
