@@ -3,7 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.41
-**Last verified Issue #3 branch commit:** `953a625e312bd3e6b60653c2a065eac857cb57c4`  
+**Last verified Issue #3 branch commit:** `cb2d882d10165995cb380afcbf1dae280f2e8f02`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
@@ -576,3 +576,29 @@ Latest concerns added from the 2026-10-02 research:
 
 Issue #7 remains the implementation umbrella for the IP/OSS/brand/legal-readiness concerns.
 
+
+
+## Continuation result — deterministic PWA replay and real HTTP test boundary
+
+Verified implementation commit: `cb2d882d10165995cb380afcbf1dae280f2e8f02`  
+CI run: `36938296872` — success
+
+Implemented:
+- synchronized `codex/issue-3-commercial` with main; branch is 0 commits behind;
+- explicit service-worker static-shell allowlist; session, API, Time and evidence requests are bypassed;
+- monotonic offline sequence, causation links, deterministic replay, confirmed-revision chaining and explicit descendant conflict blocking;
+- complete automated offline start -> note -> binary photo -> stop -> reload -> reconnect -> exactly-once regression;
+- real HTTP transport for server-derived session, Time commands and multipart evidence;
+- durable, deployable non-production test server with private volume and temporary HttpOnly test login;
+- WebsitePublisher project 29212 test client upgraded for the real command/evidence contract and mirrored under `deploy/websitepublisher-29212`;
+- API Proxy inspected: available, currently no endpoints, and cannot replace the missing external HTTPS target;
+- PR #4 updated, main-synchronized and mergeable.
+
+Verification: syntax passed; lint passed; runtime contract/typecheck passed; tests 58/58 passed; npm audit 0 known vulnerabilities.
+
+State remains `IN_PROGRESS` only for external acceptance:
+- provision a persistent public non-production HTTPS host and set runtime-only test secrets;
+- connect `apiBase` after health/HTTP verification;
+- perform the physical iPhone camera/install/offline/reconnect run.
+
+Until then the WebsitePublisher runtime config intentionally remains `apiBase: null` and PR #4 remains Draft.

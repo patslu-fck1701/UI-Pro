@@ -55,3 +55,25 @@ Still manual/not verified by CI:
 - real network loss and recovery timing.
 
 Record browser, OS, device, API build SHA and result when performing the manual run.
+
+
+## Smartphone test available now on project 29212
+
+Open:
+https://project29212.websitepublisher.ai/werkz-time-test.html
+
+While `apiBase` is still null, safely test only local device behavior with non-sensitive dummy data:
+
+1. Confirm “HTTPS bereit” and “IndexedDB bereit”.
+2. Start a dummy time entry without an order.
+3. Add a note and mileage correction.
+4. Capture a disposable photo.
+5. Stop the entry.
+6. Reload Safari/Chrome and confirm history plus the ordered queue remain.
+7. Turn flight mode on, repeat a short start/change/photo/stop chain, reload, then turn flight mode off.
+8. Confirm the page does not claim server synchronization; it must say the backend is not connected.
+9. Delete all local test data with “Testdaten löschen”.
+
+After a verified HTTPS API is connected, repeat the flow after opening the API host's `/test-login` page. Then “Sync prüfen” must end in “Synchronisiert”, each queue item must be synced once, and a stale two-device change must become a visible conflict.
+
+Do not enter real customer, employee, time or photo data in this non-production device test.

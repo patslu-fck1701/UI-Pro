@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-02",
+  "updated_at": "2026-10-01",
   "baseline": "KB-v1.41",
   "state": "IN_PROGRESS",
   "repository": "patslu-fck1701/UI-Pro",
@@ -35,14 +35,16 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Owner says 'weiter': read latest main control plane, validation_audit and docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md. First fix service-worker cache boundary and deterministic offline revision/order behavior, then expose verified HTTPS test API, connect WebsitePublisher project 29212 test config, run CI, and perform/record physical iPhone/browser acceptance.",
+  "next_trigger": "Owner says 'weiter': check whether an HTTPS Time test endpoint is available. If yes, verify it, set project 29212 apiBase and execute iPhone acceptance. If not, keep Issue #3 external blocker current and continue public-safe Issue #5/#6/#7 implementation on separate branches without putting secrets in the public repository.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "953a625e312bd3e6b60653c2a065eac857cb57c4",
+  "last_verified_issue_branch_commit": "cb2d882d10165995cb380afcbf1dae280f2e8f02",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
-    "draft": true
+    "draft": true,
+    "mergeable": true,
+    "head": "cb2d882d10165995cb380afcbf1dae280f2e8f02"
   },
   "research_sources": [
     {
@@ -71,23 +73,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 final PWA correctness gate: fix service-worker API caching risk and deterministic offline command ordering/revision chaining, rerun CI, then perform real HTTPS browser/device verification and final PR #4 review.",
+  "current_continuation": "Issue #3 automated gates are complete. External acceptance remains: provision persistent non-production HTTPS host, connect project 29212 apiBase after verification, then physical iPhone camera/install/offline/reconnect test.",
   "last_verified_ci": {
-    "run_id": 36920881329,
+    "run_id": 36938296872,
     "conclusion": "success",
     "tests": {
-      "total": 52,
-      "passed": 52,
+      "total": 58,
+      "passed": 58,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 25
+      "files": 29
     },
     "typecheck": {
       "status": "passed",
-      "modules": 11
+      "modules": 12
     },
     "npm_vulnerabilities": 0
   },
@@ -117,15 +119,11 @@
     "PR #2 confirmed fully contained in PR #4 and closed as superseded"
   ],
   "remaining": [
-    "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
-    "real browser/manual PWA verification with HTTPS test API",
-    "final PR #4 review and merge decision",
-    "fix service-worker static-shell-only cache boundary",
-    "make real PWA offline command ordering and revision chaining deterministic",
-    "automated complete offline start/edit/photo/stop reconnect tests",
-    "finish WebsitePublisher test-host API connection after PWA correctness fixes",
-    "provide HTTPS non-production Time API and connect project 29212 test config",
-    "physical iPhone/browser acceptance run"
+    "persistent public non-production HTTPS hosting for prepared Time server (external infrastructure)",
+    "runtime-only test session token and temporary login code",
+    "connect project 29212 apiBase after endpoint verification",
+    "physical iPhone camera/install/offline/reconnect acceptance",
+    "final PR #4 ready/merge decision after external acceptance"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -200,9 +198,9 @@
   "resume_document": "docs/operations/CODEX_RESUME_NOW.md",
   "branch_sync": {
     "active_branch": "codex/issue-3-commercial",
-    "merge_commit": "e5304454c5a66a4cd02d786d4930ab9a8d061334",
-    "synced_main_commit": "6b7aea3d356d588826ab9364f58cbb7aee09db58",
-    "status": "synchronized_and_verified"
+    "merge_commit": "9d49a9df216b5f8b94f7d14ab0162ab8580f23b7",
+    "synced_main_commit": "aca2bdb02c2613c258509e77b9e9df0ff1a4c152",
+    "status": "synchronized_and_verified_0_behind"
   },
   "verified_implementation": [
     "module manifests and organisation entitlements",
@@ -223,9 +221,9 @@
     "durable concurrent-device/cross-tenant/restart integration tests"
   ],
   "known_code_gaps": [
-    "IndexedDB, service worker, camera and install behavior are not yet exercised in a real browser/device",
-    "no deployed HTTPS HTTP adapter/test environment is available in this tool session",
-    "provider contracts exist but no live provider adapters (intentionally out of scope)"
+    "physical browser camera/install behavior is not automatable in this tool environment",
+    "no persistent external HTTPS runtime can be provisioned with the connected tools",
+    "provider contracts exist but no live provider adapters (intentional)"
   ],
   "commercial_migration_gate": {
     "status": "implemented_and_verified",
@@ -379,25 +377,19 @@
     }
   },
   "validation_audit": {
-    "status": "release_gaps_found",
-    "reviewed_at_local": "2026-10-01T22:40:00+02:00",
-    "findings": [
-      {
-        "id": "PWA-SW-CACHE-BOUNDARY",
-        "severity": "release_critical",
-        "finding": "Service worker currently caches all successful GET requests; /api/session is GET, so authenticated/API responses may be cached despite static-shell-only claim.",
-        "required_fix": "Use explicit static-shell allowlist and bypass /api/*, authenticated and operational responses."
-      },
-      {
-        "id": "PWA-OFFLINE-ORDER-REVISION",
-        "severity": "release_critical",
-        "finding": "Real PWA sync uses IndexedDB getAll on random UUID-keyed commands without deterministic business ordering; offline start/edit/photo/stop chains can replay out of order and share stale expected revisions.",
-        "required_fix": "Persist explicit sequence/causation order and deterministic revision propagation/conflict handling; add complete offline-chain tests."
-      }
+    "status": "fixed_and_automated_verified",
+    "fixed_at_commit": "cb2d882d10165995cb380afcbf1dae280f2e8f02",
+    "verified": [
+      "static-shell-only service worker regression",
+      "monotonic causal replay",
+      "revision propagation",
+      "explicit conflict blocking",
+      "complete offline Blob chain after reload",
+      "exactly-once replay"
     ]
   },
   "websitepublisher_time_test": {
-    "status": "live_frontend_local_device_test",
+    "status": "live_frontend_sync_capable_backend_disconnected",
     "project_id": 29212,
     "url": "https://project29212.websitepublisher.ai/werkz-time-test.html",
     "config_url": "https://cdn.websitepublisher.ai/custom/wid29212/config/werkz-time-test.json",
@@ -422,7 +414,13 @@
       "POST /time/evidence multipart",
       "HTTPS reachability"
     ],
-    "documentation": "docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md"
+    "documentation": "docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md",
+    "api_proxy": {
+      "available": true,
+      "registered_endpoints": 0,
+      "multipart": "not assumed"
+    },
+    "repository_snapshot": "deploy/websitepublisher-29212/app.js"
   },
   "queued_security_issue": {
     "number": 5,
@@ -497,6 +495,24 @@
     "ip_supporting_gates": [
       "docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md",
       "docs/legal/DATA_RIGHTS_WORDING_GUIDE.md"
+    ]
+  },
+  "time_http": {
+    "status": "implemented_and_automated_verified",
+    "routes": [
+      "GET /session",
+      "POST /time/commands",
+      "POST /time/evidence multipart"
+    ],
+    "identity": "server-derived session",
+    "deployment": "deploy/time-test",
+    "verified": [
+      "CORS allowlist",
+      "tenant spoof ignored",
+      "cross-tenant denial",
+      "durable commands",
+      "binary multipart evidence",
+      "idempotent replay"
     ]
   }
 }
