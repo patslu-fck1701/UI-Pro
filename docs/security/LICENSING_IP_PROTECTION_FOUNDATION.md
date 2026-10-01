@@ -303,6 +303,27 @@ After Issue #3 completes, implement:
 ### Later
 Evaluate HSM/KMS provider, commercial code-signing certificate/provider, enterprise attestation/dongles and advanced update framework based on actual deployment/customer need.
 
+## Product-security lifecycle dependency
+
+Licensing/enrollment controls are not sufficient by themselves for a production rollout.
+
+Also read:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Issue #6:
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+Before normal paid production rollout, distributed product profiles must also have:
+- vulnerability intake/remediation process;
+- support/EOL metadata;
+- CRA reporting assessment path where applicable;
+- security release/channel metadata;
+- AI transparency state where AI features are shipped;
+- temporary/scoped support access;
+- tested recovery expectations.
+
+Issue #5 and Issue #6 may share an implementation branch if responsibilities remain explicit, but neither foundation may be silently omitted.
+
 ## 13. Definition of done
 
 This foundation is implemented only when:
