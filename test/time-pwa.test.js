@@ -58,3 +58,12 @@ test('photo validation caps size and reports success only after queue or server 
   assert.match(source,/Foto sicher übertragen/);
   assert.doesNotMatch(source,/data:image/);
 });
+
+test('offline start creates a stable entity id for subsequent stop and evidence commands',()=>{
+  const source=read('app.js');
+  assert.match(source,/id='time_'\+uuid\(\)/);
+  assert.match(source,/await enqueue\('time\.start',\{id,/);
+  assert.match(source,/setRunning\(\{/);
+  assert.match(source,/timeRecordId:running\.id/);
+  assert.match(source,/await enqueue\('time\.stop',\{id:running\.id/);
+});
