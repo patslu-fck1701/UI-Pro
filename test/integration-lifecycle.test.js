@@ -16,7 +16,9 @@ test('retry worker deduplicates per tenant, backs off and moves exhausted jobs t
   let current=new Date('2026-10-01T00:00:00Z');
   const worker=new RetryJobWorker({clock:()=>current,maxAttempts:2,baseDelayMs:1000});
   const job=worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync',payload:{id:1}});
-  assert.equal(worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync'}).id,job.id);
+  assert.equal(worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync',payload:{id:1}}).id,job.id);
+  assert.throws(()=>worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync',payload:{id:2}}),error=>error.code==='IDEMPOTENCY_CONFLICT');
+  assert.throws(()=>worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'notify',payload:{id:1}}),error=>error.code==='IDEMPOTENCY_CONFLICT');
   assert.notEqual(worker.enqueue({organisationId:'org-b',idempotencyKey:'event-1',kind:'sync'}).id,job.id);
   await worker.runDue(async entry=>{if(entry.organisationId==='org-a')throw new Error('secret provider detail');return {ok:true}});
   assert.equal(worker.get(job.id).status,'retry');assert.equal(worker.get(job.id).lastError.message,'Integration operation failed');
