@@ -91,7 +91,7 @@ class PersistentOfflineQueue extends OfflineQueuePort {
       const found=responseRevision(entry.result);
       if(entry.status==='synced'&&found!==null)revisions.set(entry.entityId,found);
     }
-    for(const entry of entries.filter(value=>['queued','failed'].includes(value.status))){
+    for(const entry of entries.filter(value=>['queued','failed','syncing'].includes(value.status))){
       const cause=entry.causationId?byId.get(entry.causationId):null;
       if(entry.causationId&&(!cause||cause.status!=='synced')){
         if(cause?.status==='conflict'){
