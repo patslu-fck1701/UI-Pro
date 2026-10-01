@@ -3,7 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.41
-**Last verified Issue #3 branch commit:** `40de5a63a3a3186ce882929c649ae610b1e9f412`  
+**Last verified Issue #3 branch commit:** `08c5aea346b9a7ac04a8670248f9711508d8a016`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
@@ -322,3 +322,23 @@ Completed:
 Verification: syntax passed; lint 19 JavaScript files passed; runtime contract/type check 10 CommonJS modules passed; tests 40/40 passed; npm audit reported 0 vulnerabilities.
 
 State remains `IN_PROGRESS`. Next block: generic mobile/PWA Time surface wired to these boundaries, followed by provider-neutral integration contracts.
+
+
+## Continuation result — mobile Time PWA and integration foundation
+
+Verified branch commit: `08c5aea346b9a7ac04a8670248f9711508d8a016`  
+CI run: `36920123116` — success
+
+Completed:
+
+- added the installable mobile Time shell under `apps/time-pwa`;
+- added large touch controls for start/stop, optional customer/order, mileage, notes, correction, history, offline state and visible conflicts;
+- added a static-only service worker that never caches API/business responses;
+- uses server session cookies and the transport-neutral `/time/commands` contract; no embedded credentials or WebsitePublisher runtime;
+- photo capture is intentionally an honest hook: it does not report success until binary Evidence transport exists;
+- added provider-neutral `SecretStorePort`, `ConnectorPort`, registry, IntegrationAccount/Event/SyncJob store, verified/deduplicated WebhookGateway and versioned MappingEngine;
+- no live Microsoft, Google, WhatsApp or DATEV adapter was introduced.
+
+Verification: syntax passed; lint 24 JavaScript files passed; runtime contract/type check 11 CommonJS modules passed; tests 48/48 passed; npm audit reported 0 vulnerabilities.
+
+State remains `IN_PROGRESS`. Remaining completion gates: queue binary photo Blobs without Base64, run/manual-test the PWA in a real browser, review PR #2 versus PR #4, and review/merge PR #4. The Library ZIP remains blocked by the unavailable ready execution workspace.
