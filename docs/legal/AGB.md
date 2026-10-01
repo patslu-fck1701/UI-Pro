@@ -8,7 +8,7 @@
 
 Allgemeine Geschäftsbedingungen (AGB) – WerkZ
 Version 1.0
-Stand: Sept. 30, 2026
+Stand: Okt. 1, 2026
 Anbieter: Patrick Sluzalek
 handelnd unter der Geschäftsbezeichnung WerkZ
 Herzogstraße 11
