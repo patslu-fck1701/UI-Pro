@@ -303,6 +303,25 @@ After Issue #3 completes, implement:
 ### Later
 Evaluate HSM/KMS provider, commercial code-signing certificate/provider, enterprise attestation/dongles and advanced update framework based on actual deployment/customer need.
 
+## IP ownership, OSS and brand dependency
+
+Commercial protection also depends on a clean rights chain and third-party licence compliance.
+
+Canonical detail:
+`docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+
+Implementation issue:
+https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+Before normal paid production rollout:
+- material contributors must have a documented rights basis;
+- freelancer/agency work requires explicit rights clauses;
+- third-party/OSS/font licences must be inventoried and release obligations preserved;
+- SBOM/third-party notices must be reproducible;
+- confidential source must not rely on a public repository for secrecy;
+- trademark clearance must precede filing/major brand spend;
+- mandatory software-user rights remain preserved.
+
 ## Product-security lifecycle dependency
 
 Licensing/enrollment controls are not sufficient by themselves for a production rollout.
