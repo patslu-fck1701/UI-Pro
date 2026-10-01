@@ -97,3 +97,30 @@ October–December 2026 is the customer-readiness phase:
 - Public pre-check: https://project23947.websitepublisher.ai/werkz-fragebogen.html
 - Public technical overview: https://project23947.websitepublisher.ai/werkz-technik.html
 - Public security overview: https://project23947.websitepublisher.ai/werkz-sicherheit.html
+
+
+## Pricing model boundaries and market check
+
+WerkZ intentionally has no permanent free/basic production plan.
+
+Pricing mechanisms are used selectively:
+- **Per-seat** is not the primary model; use it later only where user count materially drives value/cost/support.
+- **Pay-per-use** is appropriate for real variable consumption such as provider messages, AI usage, transactions, storage or compute.
+- **Time-limited demo/sandbox** may be introduced later, but it is not a free production tier.
+- **Annual prepayment/discounts** should be introduced only after real churn/support/cash-flow data exists.
+
+Current German handcraft-software market checks show standard SaaS products already ranging from roughly €60 to €300+ per month depending on tier and users, sometimes with separate implementation or paid add-ons. WerkZ therefore must not price bespoke analysis, integration and deployment below commodity SaaS.
+
+## Pilot rule
+
+A pilot is not automatically free. Prefer a paid or consciously discounted fixed-scope pilot with:
+- one or two defined workflows;
+- measurable success/acceptance criteria;
+- controlled test window;
+- explicit responsibilities;
+- no automatic right to publish customer name/metrics/quotes;
+- post-pilot cost/support/reuse review.
+
+## Marketing-spend rule
+
+Large research scenarios such as €20k–€100k+ monthly marketing budgets are not a 2026 start recommendation. First prove the offer, sales motion, onboarding and unit economics through direct outreach, demos and referrals; scale paid acquisition only after CAC and contribution margin can be measured.
