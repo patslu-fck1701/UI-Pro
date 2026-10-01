@@ -2,7 +2,7 @@
 
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {
   ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,
   TimeProductionService,TimeApplication
@@ -83,6 +83,27 @@ test('application operations, private evidence and idempotency survive adapter r
     const serialized=JSON.stringify(audit);
     assert.equal(serialized.includes('private-binary-photo'),false);
     assert.equal(serialized.includes('"bytes"'),false);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('multipart-neutral evidence boundary validates binary size and persists private bytes',()=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'werkz-app-'));
+  try{
+    const {build}=fixture(root),app=build();
+    const record=app.execute('device-a',{operation:'time.start',input:{idempotencyKey:'start-upload'}}).data;
+    const bytes=Buffer.from('binary-photo-body'),hash='sha256:'+crypto.createHash('sha256').update(bytes).digest('hex');
+    const uploaded=app.uploadEvidence('device-a',{
+      fields:{timeRecordId:record.id,idempotencyKey:'upload-multipart',size:String(bytes.length),hash},
+      file:{mime:'image/jpeg',size:bytes.length,bytes}
+    });
+    assert.equal(uploaded.ok,true);assert.equal(uploaded.data.size,bytes.length);assert.equal(uploaded.data.hash,hash);
+    assert.equal(Object.hasOwn(uploaded.data,'bytes'),false);
+
+    const mismatch=app.uploadEvidence('device-a',{
+      fields:{timeRecordId:record.id,idempotencyKey:'bad-size',size:String(bytes.length+1),hash},
+      file:{mime:'image/jpeg',bytes}
+    });
+    assert.deepEqual(mismatch,{ok:false,error:{code:'VALIDATION_ERROR',message:'Invalid request',details:{field:'size'}}});
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
 
