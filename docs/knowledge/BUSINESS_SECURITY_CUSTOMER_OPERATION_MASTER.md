@@ -60,6 +60,27 @@ WerkZ protects commercial use primarily through server-side tenant/entitlement e
 Canonical decision: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`  
 Implementation issue: https://github.com/patslu-fck1701/UI-Pro/issues/5
 
+## Product-security lifecycle and compliance rule
+
+WerkZ production readiness now includes a separate product-security lifecycle in addition to licensing/enrollment security.
+
+Canonical detail:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Implementation issue:
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+Mandatory directions:
+- establish vulnerability reporting/triage/remediation;
+- maintain product support/EOL metadata;
+- classify CRA scope per product/deployment instead of blanket claims;
+- retain a CRA reporting decision path for applicable vulnerabilities/incidents;
+- implement AI Act transparency state where AI features require it;
+- keep enterprise identity extensible to OIDC/SAML/SCIM;
+- use controlled/time-limited support access;
+- test backup/restore beyond full-system backup existence;
+- publish only concrete implemented compliance controls.
+
 ## Legal/privacy/security gate
 
 Before a normal paid production customer, align implementation with:
@@ -105,6 +126,7 @@ October–December 2026 is the customer-readiness phase:
 - Pricing/deployment: `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
 - Security/privacy: `docs/security/SECURITY_PRIVACY_FOUNDATION.md`
 - Licensing/IP protection: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
+- Product security lifecycle/compliance: `docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
 - Deployment/connector: `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
 - Integrations: `docs/integrations/INTEGRATION_STRATEGY.md`
 - Product/module boundaries: `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`
