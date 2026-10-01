@@ -1,64 +1,105 @@
 # WerkZ Deployment Topology
 
-**Baseline:** KB-v1.33
-**Date:** 2026-09-30
+**Baseline:** KB-v1.34  
+**Date:** 2026-10-01
 
-## Decision
+## Core decision
 
-WerkZ, DeutschZ and WerkZ Time are not three separate WebsitePublisher products.
+WerkZ has two clearly separated web concerns:
 
-They belong to one core web property:
+1. **Company/public website** — WebsitePublisher project 23947.
+2. **Operational WerkZ product** — built in the local/GitHub codebase and deployed separately as an app/PWA/customer instance.
 
-- **WerkZ** is the main business/product brand.
-- **DeutschZ** remains the technical origin, lab and reference area.
-- **WerkZ Time** is a reusable WerkZ module, not a separate core brand.
-- **WebsitePublisher project 23947** is the canonical live runtime.
-- **WebsitePublisher project 29212** is the most advanced practical Gabriel-specific time-tracking implementation. It is a source for feature/UX harvesting, but not the long-term canonical deployment target.
+WebsitePublisher is not the product database and not the long-term operational runtime for customer modules.
 
-The goal is one active core project so two WebsitePublisher Starter project slots remain available for future real customer or isolated product deployments after project 29212 has been fully harvested, privately archived and only then removed by the owner.
-
-## Planned public domain
-
-The intended main domain is **werkz-digital.eu**.
-
-Current state:
-- reported as purchased by the owner;
-- no existing reference to the exact domain was found in the current public GitHub or Drive knowledge before this update;
-- it is not connected to WebsitePublisher yet;
-- exact spelling/ownership should be confirmed in the registrar account before changing DNS.
-
-The technical fallback remains: https://project23947.websitepublisher.ai/
-
-## WebsitePublisher role
+## Public company website — project 23947
 
 Project 23947 hosts:
+- WerkZ public marketing and explanation;
+- modules/workflows;
+- pricing/scope guidance;
+- pre-check/detail-check;
+- technical/security depth;
+- public reference material;
+- selected private/internal prototypes explicitly retained.
 
-- WerkZ public site;
-- WerkZ functions, technology, security and intake;
-- WerkZ Time module/reference;
-- DeutschZ technical reference pages;
-- shared auth, forms, assets and runtime integrations where appropriate.
+The public site may link to a future app endpoint such as an app subdomain, but the operational application remains a separate deployment boundary.
 
-A new WebsitePublisher project is justified only for a real isolation boundary: a customer-owned runtime, separate product/domain/release lifecycle, security/compliance isolation, or explicit staging requirement.
+## Smartphone-only Solo
 
-A reusable module by itself is not a reason for a new project.
+A customer may own no office PC.
+
+Supported target:
+- hosted responsive web app/PWA;
+- smartphone browser as the only required client;
+- home-screen installation;
+- offline-first buffering where appropriate;
+- sync when connectivity returns / app is reopened.
+
+Do not design the product around localhost or a customer's desktop machine as a mandatory runtime.
+
+## Small team / mid-size / enterprise path
+
+Use the same core:
+- Solo: one organisation, one person, few modules;
+- Team: multiple users and shared jobs;
+- Mid-size: teams, sites, integrations, more granular rights;
+- Enterprise: optional SSO, organisation units, stronger isolation, queues, HA/on-prem only when genuinely needed.
+
+## Recommended early technical shape
+
+Prefer a **modular monolith**:
+- clear internal module contracts;
+- one deployable application initially;
+- persistence abstraction;
+- avoid premature microservices.
+
+Core:
+- organisation/tenant;
+- identity;
+- capability-based permissions;
+- events/history/audit;
+- configuration;
+- offline/sync;
+- persistence;
+- integration adapters.
+
+Optional modules:
+- customers;
+- orders;
+- time;
+- materials;
+- documents;
+- billing preparation;
+- approvals;
+- analytics;
+- simulation.
+
+## DeutschZ
+
+DeutschZ is an **independent active DayZ live server** with real players and ongoing development.
+
+It is also a practical origin/reference for WerkZ engineering, but not merely a lab.
+
+Public web structure:
+- `/server.html` — consolidated live-server hub;
+- `/roadmap.html` — active public roadmap;
+- `/deutschz-story.html` — spoiler-gated full story, noindex.
+
+Changelog, ModZ learning content, support/test feedback, vote, project/server context and archive material are bundled into the server hub to reduce page sprawl without deleting unique content.
+
+## WerkZ Time
+
+The Gabriel-specific/private implementation remains a UX/behaviour reference. The generic production module belongs in the WerkZ core, not as a permanent WebsitePublisher product runtime.
 
 ## System-of-record split
 
-- **GitHub:** public-safe code, architecture, standards, templates and tests.
-- **Google Drive:** private commercial strategy, decisions, knowledge and operational records.
-- **WebsitePublisher:** live pages, runtime configuration, forms, auth, entities and integrations.
-- **Local Codex workspace:** working copy for larger refactors; changes must be reconciled back into GitHub/Drive.
-
-## Time-tracking consolidation
-
-Three time-tracking lines exist:
-1. **Project 29212** — latest and most advanced practical implementation; primary source for proven UX/features and the real mobile workflow.
-2. **Audited single-file/private app in project 23947** — technical/audit reference with additional local-vault/reporting ideas.
-3. **Generic WerkZ Time core/module in project 23947** — the abstraction target and reusable product architecture.
-
-Merge precedence is deliberate: harvest the mature practical behavior from 29212, keep the stronger generic state/backup/error contracts from the WerkZ core, and use the audited single-file build as an evidence/reference source. The target is one generic WerkZ Time module in project 23947. Personal test-specific names and employer data stay in private fixtures only.
+- **GitHub:** source, technical docs, architecture, tests, standards.
+- **Local Codex workspace:** actual working implementation state; original `WerkZ.zip` is the owner-defined baseline.
+- **Google Drive:** human-readable cross-system register, handoff and error/correction records.
+- **WebsitePublisher:** public website, live marketing/reference pages, structured task/history records.
+- **Customer runtime:** separate deployed app/PWA/customer instance.
 
 ## Safety
 
-Do not publish private cost models, customer data, passwords, tokens, or personal test fixtures in this repository or public WebsitePublisher assets.
+Do not publish private cost models, customer data, passwords, tokens or personal test fixtures. Do not delete live/unique web functions merely to save plan slots; merge first and verify preservation.
