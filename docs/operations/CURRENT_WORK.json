@@ -423,5 +423,23 @@
       "HTTPS reachability"
     ],
     "documentation": "docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md"
-  }
+  },
+  "queued_security_issue": {
+    "number": 5,
+    "title": "WerkZ Licensing, Enrollment & Release Security",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/5",
+    "sequencing": "Finish Issue #3 correctness/device-test gates first; then Issue #5 is mandatory before live provider/customer production rollout.",
+    "canonical_foundation": "docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md"
+  },
+  "repository_visibility_guard": {
+    "verified_at": "2026-10-01",
+    "repository": "patslu-fck1701/UI-Pro",
+    "observed_visibility": "public",
+    "requirement": "Resolve private-vs-public split before proprietary production source is treated as confidential; never commit customer/provider/signing secrets."
+  },
+  "mandatory_cross_cutting_reading": [
+    "docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md",
+    "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
+    "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md"
+  ]
 }
