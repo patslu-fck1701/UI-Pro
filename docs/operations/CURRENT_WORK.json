@@ -38,7 +38,7 @@
   "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "40de5a63a3a3186ce882929c649ae610b1e9f412",
+  "last_verified_issue_branch_commit": "08c5aea346b9a7ac04a8670248f9711508d8a016",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
@@ -71,23 +71,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3: build the generic mobile/PWA Time surface on the verified application and IndexedDB queue boundaries, then add provider-neutral integration contracts.",
+  "current_continuation": "Issue #3 completion gates: implement PWA binary evidence transport/queue without Base64, add browser/manual test instructions, verify PR #2 versus PR #4, then final review.",
   "last_verified_ci": {
-    "run_id": 36914906481,
+    "run_id": 36920123116,
     "conclusion": "success",
     "tests": {
-      "total": 40,
-      "passed": 40,
+      "total": 48,
+      "passed": 48,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 19
+      "files": 24
     },
     "typecheck": {
       "status": "passed",
-      "modules": 10
+      "modules": 11
     },
     "npm_vulnerabilities": 0
   },
@@ -102,12 +102,19 @@
     "application-level concurrent-device, cross-tenant and restart tests",
     "OfflineQueuePort with browser IndexedDB driver boundary",
     "persistent queued/syncing/synced/failed/conflict lifecycle",
-    "offline reload, tenant-scoped deduplication and explicit retry tests"
+    "offline reload, tenant-scoped deduplication and explicit retry tests",
+    "installable mobile Time PWA static shell",
+    "mobile start/stop/note/mileage/correction/history and conflict surface",
+    "static-only service worker cache with no API/business response caching",
+    "provider-neutral SecretStore and Connector ports",
+    "tenant-resolved verified/deduplicated WebhookGateway",
+    "IntegrationAccount, IntegrationEvent, SyncJob and versioned MappingProfile contracts"
   ],
   "remaining": [
     "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
-    "generic PWA/mobile Time surface",
-    "provider-neutral integration contracts",
+    "PWA binary evidence upload/offline Blob queue",
+    "real browser/manual PWA verification",
+    "PR #2 versus PR #4 supersession review",
     "review and merge PR #4"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
@@ -206,10 +213,10 @@
     "durable concurrent-device/cross-tenant/restart integration tests"
   ],
   "known_code_gaps": [
-    "generic PWA/mobile production-oriented Time surface not yet implemented",
-    "IndexedDB browser driver is contract-accurate but not yet exercised in a real browser",
-    "no HTTP/network transport tests (application boundary is transport-neutral)",
-    "no live provider integrations"
+    "PWA photo capture is an honest hook only; binary evidence transport is not wired yet",
+    "IndexedDB browser code and service worker are syntax/static tested but not yet exercised in a real browser",
+    "no HTTP/network integration test server",
+    "provider contracts exist but no live provider adapters (intentionally out of scope)"
   ],
   "commercial_migration_gate": {
     "status": "implemented_and_verified",
@@ -304,5 +311,40 @@
       "conflict"
     ],
     "ci_run_id": 36914906481
+  },
+  "time_pwa": {
+    "status": "reference_surface_implemented_static_verified",
+    "path": "apps/time-pwa",
+    "features": [
+      "installable manifest",
+      "offline static shell",
+      "mobile start/stop",
+      "optional customer/order",
+      "mileage",
+      "note/correction",
+      "history",
+      "offline queue status",
+      "visible conflicts"
+    ],
+    "guards": [
+      "no embedded credentials",
+      "no WebsitePublisher runtime",
+      "no API response caching",
+      "no fake photo upload success"
+    ],
+    "ci_run_id": 36919892234
+  },
+  "integration_foundation": {
+    "status": "contracts_implemented_and_verified",
+    "contracts": [
+      "SecretStorePort",
+      "ConnectorPort",
+      "ConnectorRegistry",
+      "IntegrationStore",
+      "WebhookGateway",
+      "MappingEngine"
+    ],
+    "live_provider_adapters": false,
+    "ci_run_id": 36920123116
   }
 }
