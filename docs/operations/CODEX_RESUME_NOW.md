@@ -371,6 +371,30 @@ Required direction:
 
 Issue #5 may be executed before or combined with the Integration Foundation implementation, but its controls are mandatory and must not be omitted.
 
+## 13B. Mandatory product-security lifecycle after Issue #3
+
+Canonical foundation:
+`docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md`
+
+Tracked implementation:
+**Issue #6 — WerkZ Product Security Lifecycle, CRA & AI Transparency**  
+https://github.com/patslu-fck1701/UI-Pro/issues/6
+
+After Issue #3, Issue #5 and Issue #6 are both mandatory before normal paid production rollout.
+
+Required direction:
+- vulnerability intake/remediation and CRA reporting decision path;
+- support/EOL metadata;
+- AI transparency/review state where applicable;
+- enterprise identity extensible to OIDC/SAML/SCIM;
+- standards-based device approval for headless connector enrollment;
+- release channels + rollback/support metadata;
+- time-limited audited support access;
+- tenant-aware recovery testing;
+- no unsupported compliance marketing claims.
+
+Issue #5 and #6 may be implemented together if the branch remains reviewable and verification covers both.
+
 ## 14. Meaning of owner saying only "weiter"
 
 When the owner says `weiter`:
