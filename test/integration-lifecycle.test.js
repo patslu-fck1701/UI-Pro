@@ -1,0 +1,26 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const {InMemorySecretStore,OAuthAccountLifecycle,RetryJobWorker}=require('../src');
+test('OAuth lifecycle stores token references, rotates and revokes without exposing tokens',()=>{
+  const secrets=new InMemorySecretStore(),lifecycle=new OAuthAccountLifecycle({secretStore:secrets});
+  const account=lifecycle.connect({organisationId:'org-a',provider:'example',connectionKey:'primary',accessToken:'access-secret',refreshToken:'refresh-secret'});
+  assert.equal(JSON.stringify(account).includes('access-secret'),false);
+  assert.equal(lifecycle.resolveAccess('org-a','example','primary'),'access-secret');
+  assert.throws(()=>lifecycle.resolveAccess('org-b','example','primary'),error=>error.code==='ACCOUNT_UNAVAILABLE');
+  lifecycle.rotate({organisationId:'org-a',provider:'example',connectionKey:'primary',accessToken:'new-secret'});
+  assert.equal(lifecycle.resolveAccess('org-a','example','primary'),'new-secret');
+  lifecycle.disconnect({organisationId:'org-a',provider:'example',connectionKey:'primary'});
+  assert.throws(()=>lifecycle.resolveAccess('org-a','example','primary'),error=>error.code==='ACCOUNT_UNAVAILABLE');
+});
+test('retry worker deduplicates per tenant, backs off and moves exhausted jobs to dead letter',async()=>{
+  let current=new Date('2026-10-01T00:00:00Z');
+  const worker=new RetryJobWorker({clock:()=>current,maxAttempts:2,baseDelayMs:1000});
+  const job=worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync',payload:{id:1}});
+  assert.equal(worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync'}).id,job.id);
+  assert.notEqual(worker.enqueue({organisationId:'org-b',idempotencyKey:'event-1',kind:'sync'}).id,job.id);
+  await worker.runDue(async entry=>{if(entry.organisationId==='org-a')throw new Error('secret provider detail');return {ok:true}});
+  assert.equal(worker.get(job.id).status,'retry');assert.equal(worker.get(job.id).lastError.message,'Integration operation failed');
+  assert.equal((await worker.runDue(async()=>({ok:true}))).length,0);
+  current=new Date('2026-10-01T00:00:02Z');await worker.runDue(async()=>{throw new Error('again')});
+  assert.equal(worker.get(job.id).status,'dead_letter');assert.equal(worker.health('org-a').deadLetter,1);
+});
