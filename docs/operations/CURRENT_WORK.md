@@ -5,6 +5,12 @@
 **Baseline:** KB-v1.40
 **Last control-plane commit:** `4a0651fb8ecd0ae847f13bd9b11056570ca08483`
 
+## One-time launch order
+
+`docs/operations/CODEX_LAUNCH_ORDER.md`
+
+Use this once to start Codex. Afterward use the persistent `weiter` protocol.
+
 ## Active issue
 
 **#3 — Codex Next: commercial modules, entitlements, pricing catalog & Time productionization**
