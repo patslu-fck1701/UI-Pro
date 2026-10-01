@@ -1,0 +1,181 @@
+'use strict';
+
+(()=>{
+  const apiBase=document.querySelector('meta[name="werkz-api-base"]').content.replace(/\/$/,'');
+  const $=id=>document.getElementById(id);
+  const ui={
+    sync:$('sync-status'),elapsed:$('elapsed'),start:$('start'),stop:$('stop'),customer:$('customer'),
+    order:$('order'),mileageStart:$('mileage-start'),history:$('history'),conflictsCard:$('conflicts-card'),
+    conflicts:$('conflicts'),dialog:$('entry-dialog'),dialogTitle:$('dialog-title'),entryValue:$('entry-value')
+  };
+  let session=null,running=null,timer=null,dialogAction=null;
+
+  const uuid=()=>crypto.randomUUID();
+  const now=()=>new Date().toISOString();
+  const dbPromise=new Promise((resolve,reject)=>{
+    const request=indexedDB.open('werkz-time-pwa',1);
+    request.onupgradeneeded=()=>{
+      const db=request.result;
+      if(!db.objectStoreNames.contains('commands'))db.createObjectStore('commands',{keyPath:'id'});
+      if(!db.objectStoreNames.contains('state'))db.createObjectStore('state',{keyPath:'key'});
+    };
+    request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+  });
+  async function store(name,mode,action){
+    const db=await dbPromise;
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(name,mode),request=action(tx.objectStore(name));
+      request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+    });
+  }
+  const allCommands=()=>store('commands','readonly',value=>value.getAll());
+  const putCommand=value=>store('commands','readwrite',object=>object.put(value));
+  async function getState(key){return store('state','readonly',object=>object.get(key))}
+  async function setState(key,value){return store('state','readwrite',object=>object.put({key,value}))}
+
+  function setConnection(text,kind=''){ui.sync.textContent=text;ui.sync.dataset.kind=kind}
+  function publicError(error){return error?.message||'Aktion konnte nicht gespeichert werden.'}
+  async function loadSession(){
+    try{
+      const response=await fetch(apiBase+'/session',{credentials:'include',headers:{accept:'application/json'}});
+      if(!response.ok)throw new Error('Anmeldung erforderlich');
+      session=await response.json();await setState('session-context',{organisationId:session.organisationId,actorId:session.actorId});
+      setConnection(navigator.onLine?'Online':'Offline');
+    }catch(error){
+      const cached=await getState('session-context');session=cached?.value||null;
+      setConnection(session?'Offline – Änderungen werden vorgemerkt':'Nicht angemeldet','error');
+    }
+  }
+  async function send(entry){
+    const response=await fetch(apiBase+'/time/commands',{
+      method:'POST',credentials:'include',headers:{'content-type':'application/json',accept:'application/json'},
+      body:JSON.stringify({operation:entry.type,input:{...entry.payload,idempotencyKey:entry.idempotencyKey,expectedRevision:entry.expectedRevision}})
+    });
+    const result=await response.json().catch(()=>({ok:false,error:{code:'HTTP_ERROR',message:'Serverantwort nicht lesbar'}}));
+    if(!response.ok||result.ok===false){const error=new Error(result.error?.message||'Server rejected command');error.code=result.error?.code||'HTTP_ERROR';error.details=result.error?.details;throw error;}
+    return result.data;
+  }
+  async function enqueue(type,payload,expectedRevision){
+    if(!session)throw new Error('Bitte zuerst anmelden.');
+    const entry={
+      id:'cmd_'+uuid(),idempotencyKey:'idem_'+uuid(),organisationId:session.organisationId,actorId:session.actorId,
+      createdAtLocal:new Date().toISOString(),type,payload,expectedRevision,status:'queued',attempts:0,lastError:null
+    };
+    await putCommand(entry);await sync();return entry;
+  }
+  async function sync(){
+    const entries=(await allCommands()).filter(entry=>entry.status==='queued'||entry.status==='failed');
+    if(!navigator.onLine){setConnection(entries.length+' offline vorgemerkt');await renderConflicts();return}
+    for(const entry of entries){
+      entry.status='syncing';entry.attempts++;await putCommand(entry);
+      try{entry.result=await send(entry);entry.status='synced';entry.lastError=null;}
+      catch(error){
+        entry.status=error.code==='REVISION_CONFLICT'?'conflict':'failed';
+        entry.lastError={code:error.code||'ERROR',message:publicError(error),details:error.details||null};
+      }
+      await putCommand(entry);
+    }
+    const pending=(await allCommands()).filter(entry=>entry.status!=='synced').length;
+    setConnection(pending?pending+' offen':'Synchronisiert',pending?'warning':'');
+    await renderConflicts();await refresh();
+  }
+  function clock(){
+    clearInterval(timer);
+    if(!running){ui.elapsed.textContent='00:00:00';return}
+    const update=()=>{
+      const seconds=Math.max(0,Math.floor((Date.now()-new Date(running.startedAt).getTime())/1000));
+      const hours=String(Math.floor(seconds/3600)).padStart(2,'0');
+      const minutes=String(Math.floor(seconds%3600/60)).padStart(2,'0');
+      ui.elapsed.textContent=hours+':'+minutes+':'+String(seconds%60).padStart(2,'0');
+    };
+    update();timer=setInterval(update,1000);
+  }
+  function setRunning(record){
+    running=record||null;ui.start.hidden=Boolean(running);ui.stop.hidden=!running;
+    ui.customer.disabled=Boolean(running);ui.order.disabled=Boolean(running);ui.mileageStart.disabled=Boolean(running);clock();
+  }
+  function historyItem(record){
+    const item=document.createElement('li'),title=document.createElement('strong'),details=document.createElement('div');
+    title.textContent=record.customerLabel||record.orderId||'Arbeitszeit';
+    details.textContent=new Date(record.startedAt).toLocaleString('de-DE')+(record.endedAt?' – '+new Date(record.endedAt).toLocaleTimeString('de-DE'):' – läuft');
+    item.append(title,details);item.dataset.id=record.id;return item;
+  }
+  async function executeQuery(operation,input={}){
+    const response=await fetch(apiBase+'/time/commands',{
+      method:'POST',credentials:'include',headers:{'content-type':'application/json',accept:'application/json'},
+      body:JSON.stringify({operation,input})
+    });
+    if(!response.ok)throw new Error('Abfrage fehlgeschlagen');
+    const result=await response.json();if(result.ok===false)throw new Error(result.error?.message);return result.data;
+  }
+  async function refresh(){
+    if(!navigator.onLine||!session)return;
+    try{
+      const records=await executeQuery('time.list');ui.history.replaceChildren();
+      if(!records.length){const empty=document.createElement('li');empty.className='empty';empty.textContent='Heute noch keine Einträge.';ui.history.append(empty);}
+      records.sort((a,b)=>b.startedAt.localeCompare(a.startedAt)).forEach(record=>ui.history.append(historyItem(record)));
+      setRunning(records.find(record=>record.status==='running'&&record.actorId===session.actorId)||null);
+    }catch(error){setConnection('Daten konnten nicht geladen werden','error')}
+  }
+  async function renderConflicts(){
+    const entries=(await allCommands()).filter(entry=>entry.status==='conflict');
+    ui.conflictsCard.hidden=!entries.length;ui.conflicts.replaceChildren();
+    for(const entry of entries){
+      const item=document.createElement('li');
+      item.textContent=entry.type+' · '+new Date(entry.createdAtLocal).toLocaleString('de-DE')+' – manuelle Prüfung nötig';
+      ui.conflicts.append(item);
+    }
+  }
+  function openDialog(title,value,action){
+    dialogAction=action;ui.dialogTitle.textContent=title;ui.entryValue.value=value||'';ui.dialog.showModal();ui.entryValue.focus();
+  }
+
+  ui.start.addEventListener('click',async()=>{
+    ui.start.disabled=true;
+    try{
+      await enqueue('time.start',{
+        customerLabel:ui.customer.value.trim()||null,orderId:ui.order.value.trim()||null,
+        mileageStart:ui.mileageStart.value===''?null:Number(ui.mileageStart.value),startedAt:now()
+      });
+    }catch(error){alert(publicError(error));}
+    finally{ui.start.disabled=false}
+  });
+  ui.stop.addEventListener('click',async()=>{
+    if(!running)return;
+    const value=prompt('Endkilometer (optional)','');
+    try{await enqueue('time.stop',{id:running.id,endedAt:now(),mileageEnd:value===''||value===null?null:Number(value)},running.revision);}
+    catch(error){alert(publicError(error));}
+  });
+  $('note').addEventListener('click',()=>{
+    if(!running)return alert('Bitte zuerst Arbeitszeit starten.');
+    openDialog('Notiz ergänzen',running.note,async value=>enqueue('time.correct',{
+      id:running.id,reason:'Mobile Notizkorrektur',changes:{note:value}
+    },running.revision));
+  });
+  $('mileage').addEventListener('click',()=>{
+    if(!running)return alert('Bitte zuerst Arbeitszeit starten.');
+    openDialog('Kilometerstand korrigieren',String(running.mileageStart??''),async value=>enqueue('time.correct',{
+      id:running.id,reason:'Mobile Kilometerkorrektur',changes:{mileageStart:Number(value)}
+    },running.revision));
+  });
+  $('correction').addEventListener('click',()=>{
+    if(!running)return alert('Bitte einen laufenden Eintrag auswählen.');
+    openDialog('Zeitkorrektur begründen','',async value=>enqueue('time.correct',{
+      id:running.id,reason:value,changes:{}
+    },running.revision));
+  });
+  $('photo').addEventListener('change',async event=>{
+    const file=event.target.files[0];if(!file||!running)return;
+    alert('Foto gewählt. Der binäre Offline-Upload wird erst nach Verbindung mit dem Evidence-Transport aktiviert; es wurde kein Scheinerfolg gespeichert.');
+  });
+  $('dialog-save').addEventListener('click',async event=>{
+    event.preventDefault();
+    try{await dialogAction(ui.entryValue.value);ui.dialog.close();}
+    catch(error){alert(publicError(error));}
+  });
+  $('refresh').addEventListener('click',refresh);
+  addEventListener('online',sync);addEventListener('offline',()=>setConnection('Offline'));
+  if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>setConnection('Offline-Shell nicht verfügbar','error'));
+
+  loadSession().then(()=>Promise.all([renderConflicts(),sync(),refresh()]));
+})();
