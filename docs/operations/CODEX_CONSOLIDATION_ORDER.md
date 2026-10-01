@@ -1,6 +1,6 @@
 # Codex Consolidation Order — WerkZ
 
-**Baseline:** KB-v1.34  
+**Baseline:** KB-v1.39  
 **Date:** 2026-10-01  
 **Scope:** owner's actual local Codex workspace + GitHub technical alignment.
 
