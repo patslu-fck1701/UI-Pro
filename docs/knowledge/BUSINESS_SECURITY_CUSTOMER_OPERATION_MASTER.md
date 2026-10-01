@@ -45,6 +45,21 @@ The local connector must:
 
 Windows enterprise packaging targets signed MSI plus optional bootstrapper and Intune packaging. macOS packaging targets Developer-ID-signed/notarized PKG for local agents. Single-server On-Premise targets Docker Compose first; Kubernetes is only for customers that already operate it.
 
+## Licensing, source-code and copy-protection rule
+
+WerkZ protects commercial use primarily through server-side tenant/entitlement enforcement, controlled connector enrollment and signed releases — not by pretending browser code can be made unreadable.
+
+- PWA/browser code is considered inspectable.
+- A copied frontend has no customer authority without a valid authenticated WerkZ backend context.
+- A copied local Agent is not valid without organisation-bound device enrollment.
+- On-Prem/offline licensing uses signed entitlement documents where required.
+- Obfuscation is optional defence-in-depth only.
+- The working product repository must be private or deliberately split before proprietary production source is treated as confidential.
+- Never place customer/provider/signing secrets in source control.
+
+Canonical decision: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`  
+Implementation issue: https://github.com/patslu-fck1701/UI-Pro/issues/5
+
 ## Legal/privacy/security gate
 
 Before a normal paid production customer, align implementation with:
@@ -89,6 +104,7 @@ October–December 2026 is the customer-readiness phase:
 
 - Pricing/deployment: `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
 - Security/privacy: `docs/security/SECURITY_PRIVACY_FOUNDATION.md`
+- Licensing/IP protection: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`
 - Deployment/connector: `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
 - Integrations: `docs/integrations/INTEGRATION_STRATEGY.md`
 - Product/module boundaries: `docs/architecture/PRODUCT_MODULE_BOUNDARIES.md`
