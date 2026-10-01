@@ -8,6 +8,11 @@ function cookieToken(request,name){
   const cookie=String(request.headers.cookie||'').split(';').map(value=>value.trim()).find(value=>value.startsWith(name+'='));
   return cookie?decodeURIComponent(cookie.slice(name.length+1)):null;
 }
+function sameOrigin(request,origin){
+  if(!origin)return false;
+  try{return new URL(origin).host===String(request.headers.host||'')}
+  catch{return false}
+}
 function send(response,status,payload,origin,allowed){
   if(origin&&allowed.includes(origin)){
     response.setHeader('access-control-allow-origin',origin);
@@ -66,10 +71,10 @@ function requestError(error){
 function createTimeHttpHandler({application,auth,allowedOrigins=[],sessionCookie='werkz_session'}){
   if(!application||!auth)throw new Error('application and auth are required');
   return async function handler(request,response){
-    const origin=request.headers.origin;
-    if(origin&&!allowedOrigins.includes(origin))return send(response,403,{ok:false,error:{code:'FORBIDDEN',message:'Origin not permitted',details:{}}},null,allowedOrigins);
+    const origin=request.headers.origin,originAllowed=!origin||allowedOrigins.includes(origin)||sameOrigin(request,origin);
+    if(!originAllowed)return send(response,403,{ok:false,error:{code:'FORBIDDEN',message:'Origin not permitted',details:{}}},null,allowedOrigins);
     if(request.method==='OPTIONS'){
-      if(origin){response.setHeader('access-control-allow-origin',origin);response.setHeader('access-control-allow-credentials','true');response.setHeader('vary','Origin');}
+      if(origin&&allowedOrigins.includes(origin)){response.setHeader('access-control-allow-origin',origin);response.setHeader('access-control-allow-credentials','true');response.setHeader('vary','Origin');}
       response.writeHead(204,{'access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'content-type, accept'});return response.end();
     }
     const url=new URL(request.url,'http://werkz.invalid'),token=cookieToken(request,sessionCookie);
