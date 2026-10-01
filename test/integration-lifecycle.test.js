@@ -18,8 +18,9 @@ test('retry worker deduplicates per tenant, backs off and moves exhausted jobs t
   const job=worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync',payload:{id:1}});
   assert.equal(worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync',payload:{id:1}}).id,job.id);
   assert.throws(()=>worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'sync',payload:{id:2}}),error=>error.code==='IDEMPOTENCY_CONFLICT');
-  const ordered=worker.enqueue({organisationId:'org-a',idempotencyKey:'event-ordered',kind:'sync',payload:{a:1,b:2}});
-  assert.equal(worker.enqueue({organisationId:'org-a',idempotencyKey:'event-ordered',kind:'sync',payload:{b:2,a:1}}).id,ordered.id);
+  const reorderedWorker=new RetryJobWorker();
+  const ordered=reorderedWorker.enqueue({organisationId:'org-a',idempotencyKey:'event-ordered',kind:'sync',payload:{a:1,b:2}});
+  assert.equal(reorderedWorker.enqueue({organisationId:'org-a',idempotencyKey:'event-ordered',kind:'sync',payload:{b:2,a:1}}).id,ordered.id);
   assert.throws(()=>worker.enqueue({organisationId:'org-a',idempotencyKey:'event-1',kind:'notify',payload:{id:1}}),error=>error.code==='IDEMPOTENCY_CONFLICT');
   assert.notEqual(worker.enqueue({organisationId:'org-b',idempotencyKey:'event-1',kind:'sync'}).id,job.id);
   await worker.runDue(async entry=>{if(entry.organisationId==='org-a')throw new Error('secret provider detail');return {ok:true}});
