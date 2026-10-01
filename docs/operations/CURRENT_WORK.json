@@ -528,22 +528,22 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "60f02980100da9b9b38373056231fb818c4fc562",
+    "latest_verified_commit": "c105a32e8c1d4f4641bc4eadd71f7c043fc542fb",
     "latest_verified_ci": {
-      "run_id": 36941862033,
+      "run_id": 36942044195,
       "conclusion": "success",
       "tests": {
-        "total": 74,
-        "passed": 74,
+        "total": 75,
+        "passed": 75,
         "failed": 0
       },
       "lint": {
         "status": "passed",
-        "files": 42
+        "files": 43
       },
       "typecheck": {
         "status": "passed",
-        "modules": 17
+        "modules": 18
       },
       "oss_check": "passed",
       "npm_vulnerabilities": 0
@@ -564,7 +564,8 @@
       "backup-mutation-restore and tamper tests",
       "atomic file-backed enrollment state with restart-persistent token replay denial and device revocation",
       "external-key release manifest sign/verify CLI with artifact hashes and tamper test",
-      "retry worker rejects cross-payload/kind idempotency-key reuse while allowing equivalent reordered JSON replay"
+      "retry worker rejects cross-payload/kind idempotency-key reuse while allowing equivalent reordered JSON replay",
+      "atomic file-backed retry job state with restart-persistent idempotency keys and interrupted-running recovery"
     ],
     "blockers": [
       "Issue #3 persistent HTTPS host/iPhone test",
@@ -572,7 +573,7 @@
       "production signing infrastructure and device persistence",
       "security operations and restore drill",
       "contributor rights/brand/insurance human decisions",
-      "durable production job storage and multi-worker coordination"
+      "production multi-worker leases/transactional outbox and provider-side idempotency contract"
     ],
     "stacked_base_sync": "0 behind codex/issue-3-commercial after merge commit 3d450c8e4817bd2c8a15878d2aec08519c797484"
   },
