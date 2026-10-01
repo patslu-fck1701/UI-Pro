@@ -1,6 +1,6 @@
 # 2026-10-01 Correction — Website cleanup, DeutschZ role and governance
 
-**Baseline:** KB-v1.34  
+**Baseline:** KB-v1.39  
 **Status:** corrected and persisted
 
 ## What went wrong
