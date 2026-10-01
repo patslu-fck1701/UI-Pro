@@ -1,0 +1,16 @@
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#10243a;background:#eef3f7;color-scheme:light;--primary:#17324d;--accent:#ffb000;--danger:#a51d2d}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;gap:1rem;background:var(--primary);color:#fff;padding:max(1rem,env(safe-area-inset-top)) 1rem 1rem}
+h1,h2,p{margin:.2rem 0}.eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em}.status{font-size:.82rem;padding:.45rem .65rem;border-radius:999px;background:#ffffff1f}
+main{max-width:44rem;margin:auto;padding:1rem 1rem calc(2rem + env(safe-area-inset-bottom))}
+.card{background:#fff;border-radius:1rem;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 12px #17324d12}
+.timer strong{display:block;font-variant-numeric:tabular-nums;font-size:clamp(2.5rem,14vw,4.5rem);margin:.5rem 0 1rem}
+label{display:block;font-weight:650;margin:.8rem 0}input,textarea{display:block;width:100%;font:inherit;padding:.85rem;border:1px solid #b6c3cf;border-radius:.65rem;margin-top:.35rem}
+button,.button{min-height:3.25rem;border:0;border-radius:.75rem;padding:.8rem 1rem;font:inherit;font-weight:750;background:#dce6ed;color:#10243a;text-align:center;cursor:pointer}
+button:disabled{opacity:.55;cursor:not-allowed}.primary{width:100%;background:var(--accent);color:#241900}.danger{width:100%;background:var(--danger);color:#fff;margin-top:.6rem}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}.quick-grid .button{display:grid;place-items:center;margin:0}
+.section-title{display:flex;align-items:center;justify-content:space-between}.quiet{min-height:2.5rem;padding:.45rem .7rem}
+ul{padding:0;list-style:none}li{padding:.75rem 0;border-bottom:1px solid #e1e8ed}.empty{color:#637485}.warning{border:2px solid #d47d00}
+dialog{border:0;border-radius:1rem;width:min(92vw,36rem);padding:1rem}dialog::backdrop{background:#10243aaa}.dialog-actions{display:flex;gap:.75rem;justify-content:flex-end}.dialog-actions .primary{width:auto}
+@media(min-width:42rem){.quick-grid{grid-template-columns:repeat(4,1fr)}}
