@@ -92,6 +92,26 @@ Provider choice must remain replaceable at the adapter layer.
 
 A customer-side WerkZ Agent/Connector must run with only required privileges, prefer outbound TLS connections, never expose a generic remote shell, never accept arbitrary cloud-triggered CMD/PowerShell execution, use device-bound identity/enrollment, store local secrets securely, produce auditable operational logs without secret leakage, accept only trusted/signed updates, support clean uninstall/revocation and have documented supported versions/update lifetime.
 
+## Software licensing and IP-protection boundary
+
+WerkZ does not treat browser-delivered code secrecy or obfuscation as a security boundary.
+
+- Browser/PWA code is assumed inspectable and copyable.
+- Protected authority remains server-side: authenticated identity -> server-derived organisation -> entitlements/capabilities -> resource authorisation.
+- Copying a frontend must not create a valid second customer deployment.
+- Local Agents use device-bound enrollment and revocable device credentials; copying Agent files is not enrollment.
+- Full On-Prem/offline deployments use asymmetrically signed licence/entitlement documents where continuous cloud verification is inappropriate.
+- Private licence-signing/signing keys are never shipped to customers.
+- Obfuscation/anti-tamper is defence-in-depth only.
+- Mandatory statutory software rights remain unaffected by contractual licence restrictions.
+
+Canonical detail: `docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md`  
+Implementation tracking: https://github.com/patslu-fck1701/UI-Pro/issues/5
+
+### Repository visibility guard
+
+At the 2026-10-01 audit, `patslu-fck1701/UI-Pro` is public. Before proprietary production source, signing internals or other confidential implementation is treated as secret, the owner must resolve repository visibility or deliberately split public-safe and private repositories. No customer/provider/signing secret may be committed regardless of repository visibility.
+
 ## Release and software supply chain
 
 Before distributing local software, WerkZ must support signed release artifacts, checksums, versioned release manifests, SBOM/third-party notices, dependency/vulnerability scanning, controlled update/rollback channels and separation of build, signing and release credentials.
@@ -130,3 +150,4 @@ This foundation must be read together with:
 - docs/integrations/INTEGRATION_STRATEGY.md
 - docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md
 - docs/architecture/DEPLOYMENT_TOPOLOGY.md
+- docs/security/LICENSING_IP_PROTECTION_FOUNDATION.md
