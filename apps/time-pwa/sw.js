@@ -17,7 +17,7 @@ self.addEventListener('activate',event=>event.waitUntil(
 self.addEventListener('fetch',event=>{
   if(!staticShellRequest(event.request))return;
   event.respondWith(fetch(event.request).then(response=>{
-    if(response.ok&&response.type!=='opaque'){
+    if(response.ok&&response.type!=='opaque'&&!/\b(private|no-store)\b/i.test(response.headers.get('cache-control')||'')&&!response.headers.has('set-cookie')){
       const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));
     }
     return response;
