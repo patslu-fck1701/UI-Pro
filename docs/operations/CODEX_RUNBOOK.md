@@ -228,3 +228,20 @@ Required operating rules:
 
 Do not mark production-ready solely because feature tests pass.
 
+## Mandatory IP/OSS/brand foundation
+
+For work touching dependencies, fonts/assets, contributors/contractors, AI-assisted code, packaging/distribution, trademark/brand decisions or commercial handover, also read:
+
+- `docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+- `docs/legal/IP_PROVENANCE_REGISTER.md`
+- `THIRD_PARTY_NOTICES.md`
+- Issue #7: https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+Rules:
+- no unreviewed third-party component enters production;
+- no blanket proprietary notice may overwrite third-party licences;
+- no freelancer/agency contribution is accepted without an adequate rights basis;
+- public source must not be treated as a trade secret;
+- AI-assisted code still requires human, security and licence review;
+- brand filing requires documented clearance first.
+
