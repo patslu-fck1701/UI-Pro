@@ -15,5 +15,6 @@ module.exports = {
   ...require('./time/http'),
   ...require('./time/offline'),
   ...require('./security/licensing'),
+  ...require('./security/durable'),
   ...require('./security/lifecycle')
 };
