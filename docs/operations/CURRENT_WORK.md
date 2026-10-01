@@ -2,7 +2,7 @@
 
 **State:** BLOCKED  
 **Updated:** 2026-10-01  
-**Baseline:** KB-v1.40
+**Baseline:** KB-v1.41
 **Last verified Issue #3 branch commit:** `82b465626d3e87dc4405acbde032ad675262d360`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
@@ -196,3 +196,24 @@ Active Issue #3 branch also contains:
 `config/catalog/werkz-v0.2.json`
 
 **Merge guard:** PR #4 must not ship the v0.1 €9/€19/€29 module price seed as the canonical public/commercial model. Codex must migrate quote/catalog behavior to v0.2 while preserving module entitlements and versioned quote snapshots.
+
+
+## KB-v1.41 commercial/security/customer-operation consolidation
+
+Before continuing or merging Issue #3, also read:
+- `docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md`
+- `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
+- `docs/security/SECURITY_PRIVACY_FOUNDATION.md`
+- `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
+- `docs/integrations/INTEGRATION_STRATEGY.md`
+
+Additional guards:
+- no permanent free/basic production tier;
+- v0.1 small module prices are historical seed values only and must not become public/canonical again;
+- pricing v0.2 must preserve setup + managed-operation + deployment/infrastructure logic;
+- implementation must support cloud-first and optional connector/local/on-prem paths without coupling Solo/Team/Business to a deployment type;
+- first regular paid production customer remains blocked until auth/persistence/private storage/tenant isolation/backup-recovery and contract/privacy readiness are demonstrably in place;
+- public compliance wording must describe actual controls, not blanket GDPR/NIS2/C5 certification claims.
+
+2026 priority:
+October–December is a controlled customer-readiness phase: finish production foundations, legal/privacy package, demo/onboarding/acceptance/support flow, then run end-to-end dry-runs and only sell scopes that can actually be supported.
