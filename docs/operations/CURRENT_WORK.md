@@ -612,3 +612,11 @@ CI run: `36939896731` — success; 59/59 tests, syntax/lint/typecheck passed, np
 A browser/process interruption can leave an IndexedDB entry in `syncing`. The PWA, the project-29212 test client and the shared queue now reprocess such entries with the original idempotency key after reload. Concurrent sync triggers are serialized. The service worker also declines to cache private/no-store or Set-Cookie shell responses.
 
 External HTTPS hosting and physical iPhone acceptance remain open, so Issue #3 is still `IN_PROGRESS` and PR #4 remains Draft.
+
+
+## Persistent HTTPS test deployment prepared
+
+Verified implementation/deployment commit: `ec7c9284d5cf2034f96fe5c64b65ff853a45e854`  
+CI run: `36941514632` — success; existing 59-test verification retained.
+
+`deploy/time-test/render.yaml` now defines an owner-controlled Render Docker service with TLS, a persistent `/data` disk, health check and secret runtime environment variables. `deploy/time-test/README.md` contains the exact deployment, health/API, project-29212 binding and iPhone acceptance steps. The Render paid plan/account and secret entry cannot be provisioned through the connected tools. No HTTPS URL exists yet; project 29212 `apiBase` remains null. Cross-site Safari cookie behavior needs the physical device check; a verified multipart-capable same-origin proxy or same-site host may be needed. PR #4 remains Draft and Issue #3 IN_PROGRESS.
