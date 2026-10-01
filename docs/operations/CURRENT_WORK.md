@@ -3,7 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.41
-**Last verified Issue #3 branch commit:** `08c5aea346b9a7ac04a8670248f9711508d8a016`  
+**Last verified Issue #3 branch commit:** `953a625e312bd3e6b60653c2a065eac857cb57c4`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
@@ -342,3 +342,25 @@ Completed:
 Verification: syntax passed; lint 24 JavaScript files passed; runtime contract/type check 11 CommonJS modules passed; tests 48/48 passed; npm audit reported 0 vulnerabilities.
 
 State remains `IN_PROGRESS`. Remaining completion gates: queue binary photo Blobs without Base64, run/manual-test the PWA in a real browser, review PR #2 versus PR #4, and review/merge PR #4. The Library ZIP remains blocked by the unavailable ready execution workspace.
+
+
+## Continuation result — binary offline evidence and PR supersession
+
+Verified branch commit: `953a625e312bd3e6b60653c2a065eac857cb57c4`  
+CI run: `36920881329` — success
+
+Completed:
+
+- stores captured photos as binary IndexedDB Blobs, never Base64/data URLs;
+- computes SHA-256 and queues tenant/actor/idempotency metadata;
+- uploads via multipart only when connected and removes Blob bytes from the completed queue entry;
+- added a multipart-neutral server application boundary with size/hash/private-storage validation;
+- added stable client-generated Time IDs so offline start, correction, photo and stop form one synchronizable chain;
+- added collision protection to memory and durable repositories;
+- added dependency-free Windows PWA serving and exact smartphone/manual test instructions;
+- proved PR #4 contains PR #2 completely: 87 commits ahead, 0 behind, with PR #2 head as merge base;
+- closed draft PR #2 as superseded, without deleting its branch or code.
+
+Verification: syntax passed; lint 25 JavaScript files passed; runtime contract/type check 11 CommonJS modules passed; tests 52/52 passed; npm audit reported 0 vulnerabilities.
+
+State remains `IN_PROGRESS` because camera/install/service-worker/IndexedDB behavior still needs a real browser/device plus HTTPS test API. PR #4 remains draft pending that result and final review.
