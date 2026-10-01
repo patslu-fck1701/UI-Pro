@@ -38,7 +38,7 @@
   "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "6c7cba206720c44b266fe94359c6df760039fb17",
+  "last_verified_issue_branch_commit": "40de5a63a3a3186ce882929c649ae610b1e9f412",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
@@ -71,23 +71,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3: add OfflineQueuePort with IndexedDB driver boundary and generic mobile/PWA Time surface, then provider-neutral integration contracts.",
+  "current_continuation": "Issue #3: build the generic mobile/PWA Time surface on the verified application and IndexedDB queue boundaries, then add provider-neutral integration contracts.",
   "last_verified_ci": {
-    "run_id": 36914579975,
+    "run_id": 36914906481,
     "conclusion": "success",
     "tests": {
-      "total": 35,
-      "passed": 35,
+      "total": 40,
+      "passed": 40,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 17
+      "files": 19
     },
     "typecheck": {
       "status": "passed",
-      "modules": 9
+      "modules": 10
     },
     "npm_vulnerabilities": 0
   },
@@ -99,11 +99,13 @@
     "durable restart/idempotency adapters",
     "transport-neutral Time application boundary",
     "complete Time success/conflict audit events",
-    "application-level concurrent-device, cross-tenant and restart tests"
+    "application-level concurrent-device, cross-tenant and restart tests",
+    "OfflineQueuePort with browser IndexedDB driver boundary",
+    "persistent queued/syncing/synced/failed/conflict lifecycle",
+    "offline reload, tenant-scoped deduplication and explicit retry tests"
   ],
   "remaining": [
     "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
-    "OfflineQueuePort and IndexedDB driver boundary",
     "generic PWA/mobile Time surface",
     "provider-neutral integration contracts",
     "review and merge PR #4"
@@ -204,8 +206,8 @@
     "durable concurrent-device/cross-tenant/restart integration tests"
   ],
   "known_code_gaps": [
-    "Offline queue is still in-memory; no IndexedDB adapter",
-    "no generic PWA/mobile production-oriented Time surface yet",
+    "generic PWA/mobile production-oriented Time surface not yet implemented",
+    "IndexedDB browser driver is contract-accurate but not yet exercised in a real browser",
     "no HTTP/network transport tests (application boundary is transport-neutral)",
     "no live provider integrations"
   ],
@@ -280,5 +282,27 @@
       "time.conflict"
     ],
     "ci_run_id": 36914579975
+  },
+  "offline_queue": {
+    "status": "implemented_and_verified",
+    "port": "OfflineQueuePort",
+    "browser_driver": "IndexedDbOfflineQueueDriver",
+    "deterministic_test_driver": "MemoryOfflineQueueDriver",
+    "persisted_fields": [
+      "command envelope",
+      "payload",
+      "status",
+      "attempts",
+      "lastError",
+      "result"
+    ],
+    "statuses": [
+      "queued",
+      "syncing",
+      "synced",
+      "failed",
+      "conflict"
+    ],
+    "ci_run_id": 36914906481
   }
 }
