@@ -79,6 +79,16 @@ Do not continue from the stale branch control-plane files without this synchroni
 
 Do not force-push or rewrite verified history unnecessarily. Prefer a safe merge if rebasing would make recovery/review harder.
 
+### Synchronization conflict policy
+
+When main/branch conflicts occur:
+- **latest main wins** for control-plane/governance documents: `docs/operations/CODEX_RUNBOOK.md`, `CURRENT_WORK.md/json`, `CODEX_RESUME_NOW.md`, KB-v1.41 knowledge docs, pricing v2 decisions, security/privacy foundation, deployment/connector foundation and integration strategy;
+- **preserve/merge the Issue #3 branch implementation** for `src/`, `test/`, workflow/package changes and verified domain contracts;
+- `docs/architecture/TIME_TRACKING_MODULE.md` and other shared architecture docs must be merged additively: keep newer main constraints plus verified branch implementation facts;
+- keep `config/catalog/werkz-v0.2.json`; keep v0.1 only as explicitly historical/migration fixture;
+- after conflict resolution, inspect the diff before committing and run `npm run verify`;
+- never resolve a conflict by blindly choosing all of one side across the repository.
+
 ## 3. Commercial migration gate — before PR #4 can merge
 
 The old v0.1 catalog is now historical seed data only.
