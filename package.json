@@ -1,0 +1,13 @@
+{
+  "name": "werkz-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WerkZ modular-monolith core proof for KB-v1.40",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/core/werkz-core.js && node --check test/werkz-core.test.js",
+    "verify": "npm run check && npm test"
+  },
+  "engines": { "node": ">=20" }
+}
