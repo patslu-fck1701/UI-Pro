@@ -1,6 +1,6 @@
 # Cross-system links
 
-**Baseline:** KB-v1.33
+**Baseline:** KB-v1.41
 
 ## GitHub
 Current physical repository: `patslu-fck1701/UI-Pro`  
@@ -59,3 +59,22 @@ Do not mirror all content between systems. Persist each fact in its responsible 
 - WebsitePublisher 23947 manifest: `docs/operations/WEBSITEPUBLISHER_23947_MANIFEST.md`
 
 - WerkZ Time consolidation/source precedence: `docs/architecture/TIME_TRACKING_CONSOLIDATION.md`
+
+
+## Business / pricing / security / customer-operation master
+
+- Public-safe repository anchor: `docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md`
+- Pricing/deployment v2: `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
+- Security/privacy foundation: `docs/security/SECURITY_PRIVACY_FOUNDATION.md`
+- Deployment/connector foundation: `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
+- Integration strategy: `docs/integrations/INTEGRATION_STRATEGY.md`
+- Private Google Drive master title: `WerkZ – Masterplan Geschäftsmodell, Preise, Sicherheit, Vertrieb & Kundenbetrieb`
+- Private Google Drive price document title: `WerkZ – Preisstrategie & Betriebsmodelle v2`
+- Private Google Drive knowledge register title: `WerkZ – Wissensregister`
+
+Commercial guardrails:
+- no permanent free/basic production tier;
+- no return to the old €9/€19/€29 public module-price seed;
+- solution scope and deployment remain separate price axes;
+- existing customer infrastructure is assessed before new hardware is proposed;
+- WebsitePublisher remains public marketing/intake, not customer production runtime.
