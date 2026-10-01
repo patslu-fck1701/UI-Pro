@@ -35,7 +35,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
+  "next_trigger": "Owner says 'weiter': read latest main control plane and Issue #3. First fix PWA-SW-CACHE-BOUNDARY and PWA-OFFLINE-ORDER-REVISION from validation_audit, add tests, run full verification, then perform/record real HTTPS browser/device PWA test and final PR #4 review.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "953a625e312bd3e6b60653c2a065eac857cb57c4",
@@ -71,7 +71,7 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 final review gate: perform/record real browser PWA verification when an HTTPS test runtime is available, review PR #4, then set the appropriate completion state.",
+  "current_continuation": "Issue #3 final PWA correctness gate: fix service-worker API caching risk and deterministic offline command ordering/revision chaining, rerun CI, then perform real HTTPS browser/device verification and final PR #4 review.",
   "last_verified_ci": {
     "run_id": 36920881329,
     "conclusion": "success",
@@ -119,7 +119,10 @@
   "remaining": [
     "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
     "real browser/manual PWA verification with HTTPS test API",
-    "final PR #4 review and merge decision"
+    "final PR #4 review and merge decision",
+    "fix service-worker static-shell-only cache boundary",
+    "make real PWA offline command ordering and revision chaining deterministic",
+    "automated complete offline start/edit/photo/stop reconnect tests"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -371,5 +374,23 @@
       "behind_by": 0,
       "merge_base_is_pr2_head": true
     }
+  },
+  "validation_audit": {
+    "status": "release_gaps_found",
+    "reviewed_at_local": "2026-10-01T22:40:00+02:00",
+    "findings": [
+      {
+        "id": "PWA-SW-CACHE-BOUNDARY",
+        "severity": "release_critical",
+        "finding": "Service worker currently caches all successful GET requests; /api/session is GET, so authenticated/API responses may be cached despite static-shell-only claim.",
+        "required_fix": "Use explicit static-shell allowlist and bypass /api/*, authenticated and operational responses."
+      },
+      {
+        "id": "PWA-OFFLINE-ORDER-REVISION",
+        "severity": "release_critical",
+        "finding": "Real PWA sync uses IndexedDB getAll on random UUID-keyed commands without deterministic business ordering; offline start/edit/photo/stop chains can replay out of order and share stale expected revisions.",
+        "required_fix": "Persist explicit sequence/causation order and deterministic revision propagation/conflict handling; add complete offline-chain tests."
+      }
+    ]
   }
 }
