@@ -44,7 +44,7 @@
       "purpose": "connector/API architecture and provider preparation research"
     }
   ],
-  "current_continuation": "Continue Issue #3 with durable repository/storage adapters and HTTP-neutral integration tests.",
+  "current_continuation": "Issue #3 Block 3A/3B: durable Time repository + private object storage + HTTP-neutral application boundary + concurrent-device tests, then IndexedDB/PWA mobile Time surface. Provider-neutral integration contracts only.",
   "last_verified_ci": {
     "run_id": 36894530431,
     "conclusion": "success",
@@ -78,5 +78,6 @@
     "private object upload adapter",
     "HTTP and multi-device integration tests",
     "review and merge PR #4"
-  ]
+  ],
+  "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business."
 }
