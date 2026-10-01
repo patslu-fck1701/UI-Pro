@@ -395,6 +395,28 @@ Required direction:
 
 Issue #5 and #6 may be implemented together if the branch remains reviewable and verification covers both.
 
+## 13C. Mandatory IP/OSS/brand package after Issue #3
+
+Canonical foundation:
+`docs/legal/IP_OSS_BRAND_FOUNDATION.md`
+
+Tracked implementation:
+**Issue #7 — WerkZ IP Ownership, OSS Compliance & Brand Protection**  
+https://github.com/patslu-fck1701/UI-Pro/issues/7
+
+After Issue #3, Issues #5, #6 and #7 are mandatory before normal paid production rollout.
+
+Required direction:
+- contributor/contractor rights provenance;
+- AI-assisted development provenance and human review;
+- OSS/font/media licence inventory;
+- SBOM + third-party notices;
+- trade-secret controls/private repository decision;
+- trademark/brand clearance;
+- insurance readiness decision.
+
+Do not add dependencies or bundled assets without recording their licence/provenance.
+
 ## 14. Meaning of owner saying only "weiter"
 
 When the owner says `weiter`:
