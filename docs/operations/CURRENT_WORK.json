@@ -31,7 +31,7 @@
   "next_trigger": "Owner says 'weiter': follow CODEX_RUNBOOK.md and CURRENT_WORK without asking where to look.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "81a6da094d47ffe166b90b6d005536bd268a60f4",
+  "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
@@ -44,5 +44,39 @@
       "purpose": "connector/API architecture and provider preparation research"
     }
   ],
-  "current_continuation": "Finish Issue #3 Time production ports/offline/private storage/correction/cross-tenant tests; add provider-neutral integration contracts only. Real provider adapters are next package after Issue #3 completion."
+  "current_continuation": "Continue Issue #3 with durable repository/storage adapters and HTTP-neutral integration tests.",
+  "last_verified_ci": {
+    "run_id": 36894530431,
+    "conclusion": "success",
+    "tests": {
+      "total": 27,
+      "passed": 27,
+      "failed": 0
+    },
+    "syntax_check": "passed",
+    "lint": {
+      "status": "passed",
+      "files": 13
+    },
+    "typecheck": {
+      "status": "passed",
+      "modules": 7
+    },
+    "npm_vulnerabilities": 0
+  },
+  "completed_this_continuation": [
+    "Time Auth/repository/storage ports",
+    "tenant isolation and optimistic revisions",
+    "correction history and mileage",
+    "private photo metadata and gallery",
+    "offline idempotency and visible conflict state"
+  ],
+  "remaining": [
+    "Library ZIP reconciliation",
+    "durable SQLite/server adapter",
+    "PWA IndexedDB/mobile surfaces",
+    "private object upload adapter",
+    "HTTP and multi-device integration tests",
+    "review and merge PR #4"
+  ]
 }
