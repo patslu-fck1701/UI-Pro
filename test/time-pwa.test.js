@@ -40,8 +40,21 @@ test('PWA client uses server session and command boundaries without embedded cre
   }
 });
 
-test('offline shell does not claim unsupported binary photo success',()=>{
+test('photo evidence remains binary in IndexedDB and uses multipart transport',()=>{
   const source=read('app.js');
-  assert.match(source,/kein Scheinerfolg gespeichert/);
+  assert.match(source,/payload\.blob/);
+  assert.match(source,/new FormData/);
+  assert.match(source,/\/time\/evidence/);
+  assert.match(source,/crypto\.subtle\.digest\('SHA-256'/);
+  assert.match(source,/form\.append\('file',payload\.blob/);
+  assert.match(source,/entry\.payload=\{timeRecordId,mime,size,hash,fileName\}/);
   assert.doesNotMatch(source,/readAsDataURL|base64/);
+});
+
+test('photo validation caps size and reports success only after queue or server acceptance',()=>{
+  const source=read('app.js');
+  assert.match(source,/20\*1024\*1024/);
+  assert.match(source,/Foto offline vorgemerkt/);
+  assert.match(source,/Foto sicher übertragen/);
+  assert.doesNotMatch(source,/data:image/);
 });
