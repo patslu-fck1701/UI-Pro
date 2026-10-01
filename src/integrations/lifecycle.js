@@ -50,9 +50,14 @@ class OAuthAccountLifecycle {
   }
 }
 class RetryJobWorker {
-  constructor({clock=()=>new Date(),maxAttempts=5,baseDelayMs=1000,audit=()=>{}}={}){
-    this.clock=clock;this.maxAttempts=maxAttempts;this.baseDelayMs=baseDelayMs;this.audit=audit;this.jobs=new Map();this.keys=new Map();
+  constructor({clock=()=>new Date(),maxAttempts=5,baseDelayMs=1000,audit=()=>{},stateStore=null}={}){
+    this.clock=clock;this.maxAttempts=maxAttempts;this.baseDelayMs=baseDelayMs;this.audit=audit;this.stateStore=stateStore;
+    const saved=stateStore?.load()?.jobs||[];
+    this.jobs=new Map(saved.map(job=>[job.id,job]));this.keys=new Map(saved.map(job=>[job.organisationId+':'+job.idempotencyKey,job.id]));
+    for(const job of this.jobs.values())if(job.status==='running'){job.status='retry';job.nextRetryAt=this.clock().toISOString();}
+    this.persist();
   }
+  persist(){if(this.stateStore)this.stateStore.save({jobs:[...this.jobs.values()]})}
   enqueue({organisationId,idempotencyKey,kind,payload}){
     if(!organisationId||!idempotencyKey||!kind)throw error('VALIDATION_ERROR','Job incomplete');
     const key=organisationId+':'+idempotencyKey;
@@ -63,13 +68,13 @@ class RetryJobWorker {
     }
     const id='job_'+(this.jobs.size+1),value={id,organisationId,idempotencyKey,kind,payload:structuredClone(payload||{}),
       status:'queued',attempts:0,nextRetryAt:this.clock().toISOString(),lastError:null,result:null};
-    this.jobs.set(id,value);this.keys.set(key,id);return structuredClone(value);
+    this.jobs.set(id,value);this.keys.set(key,id);this.persist();return structuredClone(value);
   }
   async runDue(processor){
     const results=[];
     for(const job of this.jobs.values()){
       if(!['queued','retry'].includes(job.status)||new Date(job.nextRetryAt)>this.clock())continue;
-      job.status='running';job.attempts++;
+      job.status='running';job.attempts++;this.persist();
       try{job.result=structuredClone(await processor(structuredClone(job)));job.status='completed';job.nextRetryAt=null;job.lastError=null;
         this.audit({organisationId:job.organisationId,eventType:'integration.job.completed',entityType:'sync-job',entityId:job.id,payload:{kind:job.kind,attempts:job.attempts}});
       }catch(cause){
@@ -78,7 +83,7 @@ class RetryJobWorker {
         job.nextRetryAt=job.status==='retry'?new Date(this.clock().getTime()+this.baseDelayMs*2**(job.attempts-1)).toISOString():null;
         this.audit({organisationId:job.organisationId,eventType:'integration.job.failed',entityType:'sync-job',entityId:job.id,payload:{kind:job.kind,attempts:job.attempts,status:job.status}});
       }
-      results.push(structuredClone(job));
+      this.persist();results.push(structuredClone(job));
     }
     return results;
   }
