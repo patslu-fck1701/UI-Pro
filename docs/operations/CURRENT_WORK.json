@@ -28,5 +28,6 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "When owner says 'weiter', read current state and continue/derive next issue without asking where to look."
+  "next_trigger": "When owner says 'weiter', read current state and continue/derive next issue without asking where to look.",
+  "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483"
 }
