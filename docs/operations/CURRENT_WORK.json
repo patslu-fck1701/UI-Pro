@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "updated_at": "2026-10-01",
-  "baseline": "KB-v1.40",
+  "baseline": "KB-v1.41",
   "state": "BLOCKED",
   "repository": "patslu-fck1701/UI-Pro",
   "active_issue": {
@@ -16,7 +16,12 @@
   "start_here": [
     "docs/operations/CODEX_RUNBOOK.md",
     "docs/operations/CURRENT_WORK.md",
-    "docs/operations/CURRENT_WORK.json"
+    "docs/operations/CURRENT_WORK.json",
+    "docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md",
+    "docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md",
+    "docs/security/SECURITY_PRIVACY_FOUNDATION.md",
+    "docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md",
+    "docs/integrations/INTEGRATION_STRATEGY.md"
   ],
   "completion_required": [
     "tests",
@@ -28,7 +33,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "When Codex usage is available again and owner says 'weiter', read RUNBOOK + CURRENT_WORK + mandatory foundation docs + pricing/deployment v2, then resume Issue #3 and migrate the active commercial catalog before PR #4 merge.",
+  "next_trigger": "When Codex usage is available again and owner says 'weiter', read the KB-v1.41 start_here set, then resume Issue #3. Migrate catalog/quote behavior to v0.2 and keep the no-free-tier, two-axis pricing, security/privacy and customer-readiness guards intact.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
@@ -154,6 +159,21 @@
       "assess existing customer infrastructure before proposing new hardware",
       "WerkZ-supplied hardware is procured only after order and separated from provisioning/management",
       "PR #4 must migrate quote/catalog behavior to v0.2 before merge"
+    ],
+    "permanent_free_tier": false,
+    "free_tier_note": "No permanent Free/Basic production tier. A future time-limited demo/sandbox may be considered separately."
+  },
+  "customer_readiness_2026": {
+    "phase": "October-December 2026",
+    "objective": "controlled first-customer readiness, not broad launch",
+    "gates": [
+      "durable server persistence and private object storage",
+      "production auth/recovery and tenant isolation tests",
+      "backup/restore and exit validation",
+      "incident-response and support path",
+      "contract/service-description/AVV-if-applicable/TOM/subprocessor package",
+      "connector enrollment/signing/update foundation where local software is used",
+      "demo, quote, onboarding, acceptance and support flow dry-run"
     ]
   }
 }
