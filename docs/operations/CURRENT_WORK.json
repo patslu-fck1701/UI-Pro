@@ -2,7 +2,7 @@
   "schema_version": 1,
   "updated_at": "2026-10-01",
   "baseline": "KB-v1.41",
-  "state": "BLOCKED",
+  "state": "IN_PROGRESS",
   "repository": "patslu-fck1701/UI-Pro",
   "active_issue": {
     "number": 3,
@@ -33,7 +33,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "When Codex usage is available again and owner says 'weiter', read the KB-v1.41 start_here set, then resume Issue #3. Migrate catalog/quote behavior to v0.2 and keep the no-free-tier, two-axis pricing, security/privacy and customer-readiness guards intact.",
+  "next_trigger": "Owner says 'weiter': read latest main control plane plus CODEX_RESUME_NOW.md, synchronize the active branch, then execute the first incomplete resume_sequence item automatically. Do not ask the owner to restate the plan.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
@@ -106,12 +106,6 @@
     "migrate commercial quote/catalog behavior from v0.1 seed pricing to v0.2 before PR #4 merge"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
-  "blocker": {
-    "type": "USAGE_LIMIT",
-    "system": "Codex",
-    "temporary": true,
-    "note": "Current Codex usage limit reached. Resume Issue #3 when usage is available again; no product/technical redesign required."
-  },
   "foundation_sync": {
     "status": "linked",
     "commit": "0462de80760b61164050d0f382e7c7576d4584b3",
@@ -175,5 +169,72 @@
       "connector enrollment/signing/update foundation where local software is used",
       "demo, quote, onboarding, acceptance and support flow dry-run"
     ]
-  }
+  },
+  "usage_limit": {
+    "status": "resolved",
+    "resolved_at_local": "2026-10-01T20:55:00+02:00",
+    "owner_confirmed": true
+  },
+  "resume_document": "docs/operations/CODEX_RESUME_NOW.md",
+  "branch_sync": {
+    "active_branch": "codex/issue-3-commercial",
+    "audit_snapshot": {
+      "main_commit": "a9747f71957e5bcc980a5c7b7f55889332440f81",
+      "ahead_by": 12,
+      "behind_by": 35,
+      "status": "diverged"
+    },
+    "rule": "Freshly compare current main vs active branch at resume time, then safely synchronize before new implementation. Main control-plane decisions win; preserve verified Issue #3 code."
+  },
+  "verified_implementation": [
+    "module manifests and organisation entitlements",
+    "quote price snapshots and contract-to-entitlement mapping",
+    "optional management projection",
+    "generic local approval/notification adapters",
+    "Time AuthPort / TimeRepositoryPort / EvidenceStoragePort",
+    "tenant isolation",
+    "optimistic revisions and explicit conflict state",
+    "correction history",
+    "optional mileage",
+    "private photo metadata and tenant gallery",
+    "offline command idempotency/retry/conflict state",
+    "WebsitePublisher runtime-token decoupling test"
+  ],
+  "known_code_gaps": [
+    "Time repository is still in-memory",
+    "Evidence storage is still in-memory metadata only; no durable object bytes",
+    "Offline queue is still in-memory; no IndexedDB adapter",
+    "no transport-neutral application/use-case layer yet",
+    "audit coverage incomplete for stop/correction/evidence/conflict",
+    "no generic PWA/mobile production-oriented Time surface yet",
+    "no durable restart tests",
+    "no HTTP/network transport tests",
+    "no live provider integrations"
+  ],
+  "commercial_migration_gate": {
+    "canonical_catalog": "config/catalog/werkz-v0.2.json",
+    "historical_catalog": "config/catalog/werkz-v0.1.json",
+    "current_gap": "CommercialCatalog and commercial tests still use v0.1 items/presets behavior; v0.2 exists but is not active.",
+    "required": [
+      "make v0.2 loadable by active catalog/quote code",
+      "preserve historical quote snapshots",
+      "separate priceable offer lines from module entitlements",
+      "test setup + managed operation + deployment quote composition",
+      "test no permanent Free/Basic tier",
+      "prevent v0.1 small per-module prices from becoming canonical/public behavior"
+    ]
+  },
+  "resume_sequence": [
+    "read latest main CODEX_RUNBOOK/CURRENT_WORK/CODEX_RESUME_NOW and Issue #3 newest comments",
+    "fresh compare main vs codex/issue-3-commercial",
+    "safely synchronize active branch with main and rerun existing verify suite",
+    "migrate commercial catalog/quotes/tests to v0.2",
+    "implement durable Time repository with restart/idempotency persistence",
+    "implement durable tenant-scoped private evidence/object storage",
+    "add transport-neutral application boundary and complete audit events",
+    "add concurrent-device/cross-tenant/restart integration tests",
+    "add OfflineQueuePort with IndexedDB boundary and generic PWA Time surface",
+    "add provider-neutral integration contracts only",
+    "rerun full verification and update PR #4, CURRENT_WORK and Issue #3"
+  ]
 }
