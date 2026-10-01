@@ -1,0 +1,16 @@
+{
+  "name": "WerkZ Zeit",
+  "short_name": "WerkZ Zeit",
+  "description": "Mobile, offline-fähige Arbeitszeiterfassung für WerkZ.",
+  "id": "/time/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3f7",
+  "theme_color": "#17324d",
+  "lang": "de",
+  "orientation": "portrait-primary",
+  "icons": [
+    {"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
