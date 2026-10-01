@@ -1,48 +1,56 @@
-# Codex / WebsitePublisher Merge Rule
+# Codex / WebsitePublisher Relationship
 
-**Baseline:** KB-v1.33  
-**Date:** 2026-09-29
+**Baseline:** KB-v1.34  
+**Corrected:** 2026-10-01
 
-## Finding
+## Correction
 
-The current Codex package and WebsitePublisher live state are not competing whole-system versions.
+The earlier idea of merging Codex and WebsitePublisher into one common operational WerkZ runtime is superseded.
 
-### Codex is currently stronger for
+They have different responsibilities.
 
-- engineering and governance structure;
-- business/project templates;
-- scope/change/handover process;
-- testing, security, backup, restore and rollback rules;
-- generator/validator and internal tooling;
-- capability evidence and demo structure.
+## Local Codex / GitHub product side
 
-### WebsitePublisher is currently stronger for
+Owns:
+- actual WerkZ product implementation;
+- module/core architecture;
+- business/data contracts;
+- tests;
+- deployment profiles;
+- security/permission model;
+- offline/sync;
+- analytics/simulation;
+- production app/PWA development.
 
-- the live public WerkZ information architecture;
-- product/function/technology/security explanations;
-- pre-check and detail-check flows;
-- current visual presentation and public pricing/scope communication;
-- the current structured reflection/operational data layer.
+The owner's actual local baseline is the real `WerkZ.zip` / local Codex workspace.
 
-## Canonical rule
+## WebsitePublisher side
 
-Project 23947 remains the canonical WebsitePublisher runtime. Merge both sources into that common WerkZ/DeutschZ/WerkZ-Time system. Do not blindly replace the live public structure with the Codex website, and do not discard the stronger Codex governance/engineering model.
+Owns:
+- public WerkZ website;
+- customer-friendly information architecture;
+- price/scope communication;
+- pre-check/detail-check;
+- technical/security explanation;
+- public/practice references;
+- private prototypes that are deliberately retained as references.
 
-## Exclusions
+WebsitePublisher prototypes may inform Codex, but they are not the production product database/runtime.
 
-Do not migrate:
+## Migration rule
 
-- temporary audit/vendor directories;
-- private cost or margin assumptions;
-- customer/private test data;
-- outdated NOT_SET pricing rules;
-- historical test claims as current production evidence;
-- DeutschZ-specific public assets into the separate WerkZ product unless deliberately used as a technical reference.
+For each useful WebsitePublisher prototype:
+1. identify reusable UX/logic;
+2. document it;
+3. implement/test it in the local WerkZ product;
+4. only then archive/remove the prototype if desired.
 
-## Time tracking
+## DeutschZ
 
-Three related time-tracking lines currently exist and must not be treated as one identical codebase until deliberately consolidated. Project 29212 is the latest and most advanced practical implementation and therefore leads on proven UX/behavior; the reusable WerkZ Time core leads on generic product architecture/state contracts; the Codex-audited single-file asset remains an additional technical/evidence source.
+DeutschZ is a live DayZ server, not a WerkZ product module.
 
-## Founding-package boundary
+Its public web pages remain because players and ongoing development need them. Reusable engineering lessons may inform WerkZ; DeutschZ operational code/settings remain in their own repositories/workspaces.
 
-The private founding-package artifact is a separate document lifecycle. Shared architecture and positioning knowledge can inform future revisions, but deployment metadata alone does not automatically create a new funding-package revision.
+## Error prevention
+
+Do not infer that “not part of WerkZ production” means “safe to delete from the website”. A page can be essential for another live purpose such as DeutschZ players, roadmap, changelog, support or story.
