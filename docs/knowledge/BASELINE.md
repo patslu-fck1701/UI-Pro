@@ -1,6 +1,6 @@
 # WerkZ Knowledge Baseline
 
-**Current baseline:** KB-v1.34  
+**Current baseline:** KB-v1.39  
 **Date:** 2026-10-01
 
 ## Canonical responsibilities
