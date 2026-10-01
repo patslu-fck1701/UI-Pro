@@ -37,15 +37,18 @@ class EntitlementAuthority {
 }
 
 class DeviceEnrollmentAuthority {
-  constructor({clock=()=>new Date(),random=crypto.randomBytes,audit=()=>{}}={}){
-    this.clock=clock;this.random=random;this.audit=audit;this.tokens=new Map();this.devices=new Map();this.challenges=new Map();
+  constructor({clock=()=>new Date(),random=crypto.randomBytes,audit=()=>{},stateStore=null}={}){
+    this.clock=clock;this.random=random;this.audit=audit;this.stateStore=stateStore;
+    const state=stateStore?.load()||{tokens:[],devices:[],challenges:[]};
+    this.tokens=new Map(state.tokens);this.devices=new Map(state.devices);this.challenges=new Map(state.challenges);
   }
+  persist(){if(this.stateStore)this.stateStore.save({tokens:[...this.tokens],devices:[...this.devices],challenges:[...this.challenges]})}
   issue({organisationId,requestedBy,ttlMs=10*60*1000}){
     required(organisationId,'organisationId');required(requestedBy,'requestedBy');
     if(!Number.isSafeInteger(ttlMs)||ttlMs<1000||ttlMs>60*60*1000)throw securityError('VALIDATION_ERROR','Invalid enrollment lifetime');
     const token=b64(this.random(32)),id='enroll_'+b64(this.random(12));
     this.tokens.set(digest(token),{id,organisationId,requestedBy,expiresAt:new Date(this.clock().getTime()+ttlMs).toISOString(),usedAt:null});
-    this.audit({organisationId,actorId:requestedBy,eventType:'device.enrollment.issued',entityType:'device-enrollment',entityId:id,payload:{expiresAt:this.tokens.get(digest(token)).expiresAt}});
+    this.persist();this.audit({organisationId,actorId:requestedBy,eventType:'device.enrollment.issued',entityType:'device-enrollment',entityId:id,payload:{expiresAt:this.tokens.get(digest(token)).expiresAt}});
     return {id,token,expiresAt:this.tokens.get(digest(token)).expiresAt};
   }
   enroll({token,devicePublicKey,label='WerkZ Agent'}){
@@ -58,7 +61,7 @@ class DeviceEnrollmentAuthority {
     request.usedAt=this.clock().toISOString();
     const device={id:'device_'+b64(this.random(12)),organisationId:request.organisationId,label,status:'active',
       publicKey:publicKey.export({type:'spki',format:'pem'}),enrolledAt:request.usedAt,revokedAt:null,enrollmentId:request.id};
-    this.devices.set(device.id,device);
+    this.devices.set(device.id,device);this.persist();
     this.audit({organisationId:device.organisationId,actorId:request.requestedBy,eventType:'device.enrolled',entityType:'device',entityId:device.id,payload:{label}});
     return clone(device);
   }
@@ -66,7 +69,7 @@ class DeviceEnrollmentAuthority {
     const device=this.devices.get(required(deviceId,'deviceId'));
     if(!device||device.status!=='active')throw securityError('DEVICE_DENIED','Device unavailable');
     const nonce=b64(this.random(32)),value={deviceId,nonceHash:digest(nonce),expiresAt:new Date(this.clock().getTime()+ttlMs).toISOString(),used:false};
-    this.challenges.set(deviceId+':'+value.nonceHash,value);return {deviceId,nonce,expiresAt:value.expiresAt};
+    this.challenges.set(deviceId+':'+value.nonceHash,value);this.persist();return {deviceId,nonce,expiresAt:value.expiresAt};
   }
   authenticate({deviceId,nonce,signature}){
     const device=this.devices.get(required(deviceId,'deviceId'));
@@ -74,12 +77,12 @@ class DeviceEnrollmentAuthority {
     const challenge=this.challenges.get(deviceId+':'+digest(required(nonce,'nonce')));
     if(!challenge||challenge.used||new Date(challenge.expiresAt)<=this.clock())throw securityError('CHALLENGE_DENIED','Device challenge invalid');
     if(!crypto.verify(null,Buffer.from(nonce),device.publicKey,unb64(required(signature,'signature'))))throw securityError('DEVICE_DENIED','Device proof invalid');
-    challenge.used=true;
+    challenge.used=true;this.persist();
     return {deviceId:device.id,organisationId:device.organisationId,authenticatedAt:this.clock().toISOString()};
   }
   revoke({deviceId,actorId,reason}){
     const device=this.devices.get(required(deviceId,'deviceId'));if(!device)throw securityError('NOT_FOUND','Device not found');
-    device.status='revoked';device.revokedAt=this.clock().toISOString();
+    device.status='revoked';device.revokedAt=this.clock().toISOString();this.persist();
     this.audit({organisationId:device.organisationId,actorId,eventType:'device.revoked',entityType:'device',entityId:device.id,payload:{reason:required(reason,'reason')}});
     return clone(device);
   }
