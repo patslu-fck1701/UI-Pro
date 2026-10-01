@@ -1,6 +1,6 @@
 # WerkZ Current Work
 
-**State:** BLOCKED  
+**State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.41
 **Last verified Issue #3 branch commit:** `82b465626d3e87dc4405acbde032ad675262d360`  
@@ -147,14 +147,25 @@ Codex should continue Issue #3 from branch commit `82b465626d3e87dc4405acbde032a
 
 Do not start real provider APIs until Issue #3 is complete.
 
-## Temporary blocker — Codex usage limit
+## Codex usage restored — resume authorized
 
-Development is temporarily paused because the current Codex usage limit has been reached. This is **not** a technical/product blocker and does not change the implementation plan.
+The owner confirmed on 2026-10-01 that Codex usage is available again.
 
-Resume rule:
-- when Codex usage becomes available again and the owner says `weiter`, read RUNBOOK + CURRENT_WORK and continue Issue #3 from the last verified branch commit;
-- do not create a new issue merely because of this temporary quota pause;
-- do not mark Issue #3 done.
+The prior USAGE_LIMIT blocker is resolved. Issue #3 remains IN_PROGRESS.
+
+Immediate resume document:
+`docs/operations/CODEX_RESUME_NOW.md`
+
+Last CI-verified implementation commit remains:
+`82b465626d3e87dc4405acbde032ad675262d360`
+
+CI evidence remains:
+- GitHub Actions run `36894530431` — success;
+- 27/27 tests passed;
+- syntax/lint/typecheck passed;
+- npm audit reported 0 vulnerabilities.
+
+Important: `82b4656` is the last verified implementation checkpoint, not a claim that it is still the current branch head. Later commercial/control-plane files exist and must be reconciled.
 
 ## Cross-cutting foundations added from 2026-10-01 research
 
@@ -217,3 +228,35 @@ Additional guards:
 
 2026 priority:
 October–December is a controlled customer-readiness phase: finish production foundations, legal/privacy package, demo/onboarding/acceptance/support flow, then run end-to-end dry-runs and only sell scopes that can actually be supported.
+
+
+## Official resume audit — 2026-10-01
+
+Direct GitHub audit confirmed:
+- Issue #3 is open and IN_PROGRESS;
+- PR #4 is open and draft;
+- PR #2 is also still open;
+- the verified Time-production continuation is commit `82b4656`;
+- the active branch contains 27-test Time production contracts but no durable adapter/application/PWA implementation yet;
+- `src/time/production.js` currently uses in-memory repository/storage/queue implementations;
+- `src/commercial/catalog.js` still consumes the old `items + presets` catalog shape;
+- `test/commercial-modules.test.js` still imports `werkz-v0.1.json`;
+- `config/catalog/werkz-v0.2.json` exists, but active quote/catalog behavior has not yet been migrated to it.
+
+At the audit checkpoint, `codex/issue-3-commercial` was 12 commits ahead and 35 commits behind `main`. Main has since received further control-plane commits, so Codex MUST make a fresh comparison before work.
+
+First continuation order:
+1. read latest main control plane and `CODEX_RESUME_NOW.md`;
+2. synchronize active branch with current main without losing verified Issue #3 code;
+3. run existing verification;
+4. migrate commercial catalog/quotes/tests to v0.2;
+5. build durable Time repository and durable private evidence storage;
+6. add transport-neutral application boundary and complete audit events;
+7. add restart/concurrent-device/cross-tenant integration tests;
+8. add browser OfflineQueuePort/IndexedDB boundary and generic PWA Time surface;
+9. add provider-neutral integration contracts only;
+10. rerun full verification and update PR #4/current work/Issue #3.
+
+Do not start live Microsoft/Google/WhatsApp/DATEV adapters inside Issue #3.
+Do not mark Issue #3 complete merely because architecture docs are present.
+Do not merge PR #4 while active commercial behavior still depends on the v0.1 price seed.
