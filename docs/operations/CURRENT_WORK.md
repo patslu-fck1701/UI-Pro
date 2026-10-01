@@ -155,3 +155,20 @@ Resume rule:
 - when Codex usage becomes available again and the owner says `weiter`, read RUNBOOK + CURRENT_WORK and continue Issue #3 from the last verified branch commit;
 - do not create a new issue merely because of this temporary quota pause;
 - do not mark Issue #3 done.
+
+## Cross-cutting foundations added from 2026-10-01 research
+
+These requirements now apply to the active Issue #3 continuation and every later work package:
+
+- `docs/security/SECURITY_PRIVACY_FOUNDATION.md`
+- `docs/architecture/DEPLOYMENT_CONNECTOR_FOUNDATION.md`
+- `docs/integrations/INTEGRATION_STRATEGY.md`
+
+Important consequence for the remaining Issue #3 work:
+- durable Time persistence/storage must preserve tenant isolation, revision/idempotency semantics, backup/restore and secret-safe logging;
+- PWA/offline work must not make browser storage the production system of record;
+- any new local connector/agent code must follow outbound-only/least-privilege/no-remote-shell constraints and use device enrollment rather than embedded customer secrets;
+- provider-specific APIs remain out of scope until generic SecretStore/OAuth/webhook/queue/mapping primitives exist;
+- production-readiness claims remain blocked until the security/privacy/commercial-readiness gates are satisfied.
+
+Source research is stored in the connected Files Library and mirrored through the repository foundation docs; chat is not the only record.
