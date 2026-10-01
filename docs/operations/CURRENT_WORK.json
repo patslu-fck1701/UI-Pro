@@ -28,7 +28,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "When Codex usage is available again and owner says 'weiter', read RUNBOOK + CURRENT_WORK + the mandatory foundation docs, then resume active Issue #3 from the last verified branch commit and current continuation.",
+  "next_trigger": "When Codex usage is available again and owner says 'weiter', read RUNBOOK + CURRENT_WORK + mandatory foundation docs + pricing/deployment v2, then resume Issue #3 and migrate the active commercial catalog before PR #4 merge.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "82b465626d3e87dc4405acbde032ad675262d360",
@@ -97,7 +97,8 @@
     "PWA IndexedDB/mobile surfaces",
     "private object upload adapter",
     "HTTP and multi-device integration tests",
-    "review and merge PR #4"
+    "review and merge PR #4",
+    "migrate commercial quote/catalog behavior from v0.1 seed pricing to v0.2 before PR #4 merge"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "blocker": {
@@ -124,5 +125,35 @@
     "critical actions remain audited and approvals are core state, not messenger state",
     "provider APIs stay behind provider-neutral connector/OAuth/webhook/queue/mapping contracts",
     "production release requires backup/restore, retention/exit, incident-response and provider/subprocessor data-flow readiness"
-  ]
+  ],
+  "commercial_pricing_v2": {
+    "status": "canonical_direction",
+    "doc": "docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md",
+    "active_branch_catalog": "config/catalog/werkz-v0.2.json",
+    "supersedes": "v0.1 small per-module monthly price seed as commercial source of truth",
+    "setup_from_eur": {
+      "solo": 490,
+      "team": 1490,
+      "business": 2490
+    },
+    "managed_operation_from_eur_per_month": {
+      "solo": 79,
+      "team": 179,
+      "business": 349
+    },
+    "deployment_modes": [
+      "managed_cloud",
+      "dedicated_cloud",
+      "hybrid_connector",
+      "existing_customer_hardware",
+      "werkz_box",
+      "dedicated_on_prem"
+    ],
+    "rules": [
+      "modules remain technical entitlements and are included/scoped in offers unless later explicitly line-priced",
+      "assess existing customer infrastructure before proposing new hardware",
+      "WerkZ-supplied hardware is procured only after order and separated from provisioning/management",
+      "PR #4 must migrate quote/catalog behavior to v0.2 before merge"
+    ]
+  }
 }
