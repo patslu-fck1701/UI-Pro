@@ -514,5 +514,44 @@
       "binary multipart evidence",
       "idempotent replay"
     ]
+  },
+  "parallel_public_safe_work": {
+    "branch": "codex/issue-5-security",
+    "pull_request": 8,
+    "issues": [
+      5,
+      6,
+      7
+    ],
+    "state": "IN_PROGRESS_DRAFT",
+    "latest_verified_commit": "024b2e0ffcf3493d265ff6f23158c84e24ac1a53",
+    "latest_verified_ci": {
+      "run_id": 36939485259,
+      "conclusion": "success",
+      "tests": {
+        "total": 67,
+        "passed": 67,
+        "failed": 0
+      },
+      "npm_vulnerabilities": 0
+    },
+    "implemented": [
+      "server-derived entitlement authority",
+      "one-time Ed25519 device enrollment and revocation",
+      "signed offline licence and release verification",
+      "support/EOL/channel metadata",
+      "vulnerability triage and CRA assessment state",
+      "temporary scoped support grants",
+      "AI transparency state",
+      "SECURITY.md",
+      "SPDX SBOM and npm licence gate"
+    ],
+    "blockers": [
+      "Issue #3 persistent HTTPS host/iPhone test",
+      "public repository visibility decision",
+      "production signing infrastructure and device persistence",
+      "security operations and restore drill",
+      "contributor rights/brand/insurance human decisions"
+    ]
   }
 }

@@ -602,3 +602,18 @@ State remains `IN_PROGRESS` only for external acceptance:
 - perform the physical iPhone camera/install/offline/reconnect run.
 
 Until then the WebsitePublisher runtime config intentionally remains `apiBase: null` and PR #4 remains Draft.
+
+
+## Parallel public-safe security/legal work — Issues #5, #6, #7
+
+While Issue #3 awaits an external HTTPS host and physical iPhone acceptance, branch `codex/issue-5-security` and Draft PR #8 implement independent public-safe work. This does not change the active Issue #3 state or make PR #4 ready.
+
+Implemented on PR #8:
+- server-derived entitlement authority, one-time device enrollment, Ed25519 device proof and revocation;
+- signed offline licence and release manifest verifier with tamper tests;
+- support/EOL/release-channel metadata, vulnerability triage/CRA assessment state, temporary support grants and AI transparency metadata;
+- `SECURITY.md` and reproducible SPDX SBOM/licence gate.
+
+Combined branch CI checkpoint `36939485259`: 67/67 tests, syntax/lint/typecheck/SBOM check passed, npm audit 0. Latest small SBOM correction requires a fresh final CI check.
+
+Open external/human gates: persistent test HTTPS host and iPhone run (#3); repository visibility decision, signing infrastructure, production device persistence (#5); operating security process/restore drill/legal classification (#6); contributor rights, brand clearance, font packaging and insurance (#7).
