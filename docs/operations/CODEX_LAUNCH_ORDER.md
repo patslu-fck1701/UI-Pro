@@ -1,9 +1,9 @@
 # WerkZ Codex Launch Order — one-time start prompt
 
 **Date:** 2026-10-01  
-**Baseline:** KB-v1.40  
+**Baseline:** KB-v1.41  
 **Active work package:** GitHub Issue #3  
-**Purpose:** This is the ONE prompt the owner gives Codex now. After that, the owner should normally only need to say **"weiter"**.
+**Purpose:** Historical one-time bootstrap. For all current/future continuation sessions, the owner should normally only need to say **"weiter"** and Codex must follow `CODEX_RUNBOOK.md` + `CURRENT_WORK.md/json` + `CODEX_RESUME_NOW.md`.
 
 ---
 
@@ -19,13 +19,15 @@ Repository:
 
 `patslu-fck1701/UI-Pro`
 
-Read in this exact order:
+Read the **latest versions from `main`** in this exact order:
 
 1. `docs/operations/CODEX_RUNBOOK.md`
 2. `docs/operations/CURRENT_WORK.json`
 3. `docs/operations/CURRENT_WORK.md`
-4. active GitHub issue referenced there
-5. recent commits after the recorded last verified/control-plane commit
+4. `docs/operations/CODEX_RESUME_NOW.md` when present
+5. active GitHub issue referenced there, including newest comments
+6. compare latest `main` with the active implementation branch
+7. recent commits after the recorded last verified implementation commit
 
 Current active issue is expected to be:
 
@@ -71,7 +73,9 @@ At minimum read:
 - `docs/operations/WEBSITEPUBLISHER_23947_MANIFEST.md`
 - `docs/operations/CODEX_LOCAL_SNAPSHOT.md`
 - `docs/operations/CODEX_CONSOLIDATION_ORDER.md`
-- `docs/commercial/COMMERCIAL_MODEL_v0.1.md`
+- `docs/commercial/PRICING_DEPLOYMENT_MODEL_v2.md`
+- `docs/knowledge/BUSINESS_SECURITY_CUSTOMER_OPERATION_MASTER.md`
+- `docs/commercial/COMMERCIAL_MODEL_v0.1.md` — historical seed only; never current price authority
 - `docs/architecture/TIME_TRACKING_CONSOLIDATION.md`
 - `docs/testing/TIME_TRACKING_FEATURE_PARITY.md`
 - `docs/architecture/TIME_TRACKING_MODULE.md`
@@ -219,9 +223,9 @@ Support:
 - custom project work;
 - support/service levels.
 
-Use `docs/commercial/COMMERCIAL_MODEL_v0.1.md` as configurable seed data only.
+Do **not** use `COMMERCIAL_MODEL_v0.1.md` as current pricing. It is historical seed/test material only.
 
-Do not publish the recurring module prices to the public website yet.
+Canonical commercial behavior must follow `PRICING_DEPLOYMENT_MODEL_v2.md` and `config/catalog/werkz-v0.2.json`: setup + managed operation + deployment/infrastructure, no permanent Free tier, and modules remain technical entitlements rather than a public small-module price menu.
 
 ### E. Package presets
 
@@ -393,16 +397,16 @@ and the next Codex/agent session must:
 
 ## 9. Start action
 
-Start now by:
+Start/resume now by:
 
-1. reading RUNBOOK + CURRENT_WORK;
-2. materializing `/WerkZ/Baseline/WerkZ.zip`;
-3. inventorying the actual code;
-4. reconciling it with the repository-visible Time/module work;
-5. posting a short implementation plan to Issue #3;
-6. implementing the first safe slice;
+1. reading latest main RUNBOOK + CURRENT_WORK + `CODEX_RESUME_NOW.md`;
+2. reading Issue #3 newest comments;
+3. comparing latest main vs active branch and synchronizing safely;
+4. running the current verify suite;
+5. attempting Library baseline materialization once if available;
+6. executing the first incomplete block in `CODEX_RESUME_NOW.md`;
 7. running tests;
 8. committing;
-9. updating CURRENT_WORK before stopping.
+9. updating CURRENT_WORK and Issue #3 before stopping.
 
 Do not wait for another owner message to begin the active work package.
