@@ -8,13 +8,14 @@
     "test": "node --test",
     "lint": "node tools/lint.js",
     "typecheck": "node tools/typecheck.js",
-    "check": "node --check src/core/werkz-core.js && node --check src/modules/module-registry.js && node --check src/modules/management.js && node --check src/commercial/catalog.js && node --check src/integrations/approval-channel.js && node --check src/integrations/foundation.js && node --check src/integrations/lifecycle.js && node --check src/integrations/durable.js && node --check src/integrations/oauth-flow.js && node --check src/integrations/device-authorization.js && node --check src/time/production.js && node --check src/time/durable.js && node --check src/time/recovery.js && node --check src/time/application.js && node --check src/time/http.js && node --check src/security/licensing.js && node --check src/security/identity.js && node --check src/security/durable.js && node --check src/security/lifecycle.js && node --check src/time/offline.js && node --check apps/time-pwa/app.js && node --check apps/time-pwa/sw.js && node --check tools/serve-pwa.js && node --check tools/time-test-server.js && node --check deploy/websitepublisher-29212/app.js && node --check tools/oss-audit.js && node --check tools/time-backup.js && node --check tools/release-manifest.js && node --check tools/device-enrollment.js",
-    "verify": "npm run check && npm run lint && npm run typecheck && npm test && npm run oss:check",
+    "check": "node --check src/core/werkz-core.js && node --check src/modules/module-registry.js && node --check src/modules/management.js && node --check src/commercial/catalog.js && node --check src/integrations/approval-channel.js && node --check src/integrations/foundation.js && node --check src/integrations/lifecycle.js && node --check src/integrations/durable.js && node --check src/integrations/oauth-flow.js && node --check src/integrations/device-authorization.js && node --check src/time/production.js && node --check src/time/durable.js && node --check src/time/recovery.js && node --check src/time/application.js && node --check src/time/http.js && node --check src/security/licensing.js && node --check src/security/identity.js && node --check src/security/durable.js && node --check src/security/lifecycle.js && node --check src/time/offline.js && node --check apps/time-pwa/app.js && node --check apps/time-pwa/sw.js && node --check tools/serve-pwa.js && node --check tools/time-test-server.js && node --check deploy/websitepublisher-29212/app.js && node --check tools/oss-audit.js && node --check tools/time-backup.js && node --check tools/release-manifest.js && node --check tools/device-enrollment.js && node --check tools/secret-audit.js",
+    "verify": "npm run check && npm run lint && npm run typecheck && npm test && npm run oss:check && npm run security:secrets",
     "pwa:serve": "node tools/serve-pwa.js",
     "time:test-server": "node tools/time-test-server.js",
     "sbom": "node tools/oss-audit.js --write",
     "oss:check": "node tools/oss-audit.js --check",
-    "security:device-drill": "node tools/device-enrollment.js drill"
+    "security:device-drill": "node tools/device-enrollment.js drill",
+    "security:secrets": "node tools/secret-audit.js"
   },
   "engines": {
     "node": ">=20"
