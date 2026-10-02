@@ -666,3 +666,47 @@ The next active workstream is PR #8 / Issues #5–#7:
 licensing/enrollment/release security, product-security lifecycle/CRA/AI transparency, and IP/OSS/brand protection.
 
 PR #8 must now use the merged `main` baseline; stale text claiming Issue #3 still needs hosting/iPhone acceptance is superseded.
+
+
+## Active security/product-readiness continuation — PR #8 / Issues #5–#7
+
+Issue #3 is merged, closed and physically accepted. Its old hosting/iPhone blockers are no longer valid.
+
+The next active branch is `codex/issue-5-security` / PR #8, covering Issues #5, #6 and #7.
+
+Latest verified pre-sync security checkpoint from that branch:
+- commit `c105a32e8c1d4f4641bc4eadd71f7c043fc542fb`;
+- CI `36942044195`: success;
+- 75/75 tests passed;
+- lint 43 JavaScript files;
+- runtime contract/typecheck 18 modules;
+- SPDX/OSS gate passed;
+- npm audit 0 known vulnerabilities.
+
+Implemented there:
+- server-derived entitlement authority;
+- one-time Ed25519 device enrollment and revocation;
+- restart-persistent enrollment/revocation state;
+- signed offline licence verification;
+- signed release manifests using an external private-key file;
+- support/EOL/release-channel metadata;
+- vulnerability triage and CRA assessment state;
+- scoped/time-limited support grants;
+- AI transparency state;
+- SPDX SBOM and npm licence gate;
+- OAuth account lifecycle with secret references/revocation;
+- bounded retry/dead-letter integration worker;
+- idempotency conflict guard;
+- durable file-backed retry job state with interrupted-running recovery;
+- Time/private-evidence backup, verification and staged restore.
+
+Remaining gates after synchronization:
+- choose production signing-key custody/managed secret approach;
+- resolve public repository vs public/private split before confidential product code or signing internals are treated as secret;
+- define live enrollment/revocation operating process;
+- complete operational security/restore evidence;
+- complete contributor-rights, brand-clearance and insurance decisions;
+- add production multi-worker locking/outbox semantics where a deployed provider flow requires them;
+- only then add real provider credentials/adapters.
+
+No customer data, provider tokens, signing private keys or production credentials may be committed.

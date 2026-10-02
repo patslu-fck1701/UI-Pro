@@ -35,7 +35,7 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Synchronise PR #8 with current main, rerun its verification suite, remove stale Issue #3 blocker text, then continue remaining licensing/product-security/IP gates and Integration Foundation work.",
+  "next_trigger": "Continue PR #8 directly: verify the post-merge branch, then implement the remaining public-safe licensing, product-security, OSS/IP and integration-foundation gates without waiting for another owner order.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "3dce13fd67367ef0cdfcc834d7906cdf7365b529",
@@ -44,6 +44,7 @@
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/8",
     "draft": true,
     "base": "main",
+    "head": "codex/issue-5-security",
     "scope": "Issues #5–#7"
   },
   "research_sources": [
@@ -73,7 +74,7 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 is merged and closed. Continue stacked PR #8 / Issues #5–#7 from the new main baseline, preserving public-safe security/licensing/IP work and keeping secrets/signing keys out of the public repository.",
+  "current_continuation": "PR #8 / Issues #5–#7 are the active workstream after completed Issue #3. The security branch is being synchronized to current main; then verification and remaining licensing/security/IP gates continue.",
   "last_verified_ci": {
     "run_id": 36947417545,
     "conclusion": "success",
@@ -125,7 +126,16 @@
     "anthracite/neon-green UI polish",
     "WerkZ header logo and black logo_ich Home Screen icon"
   ],
-  "remaining": [],
+  "remaining": [
+    "synchronize and verify PR #8 against current main",
+    "production signing-key custody / managed secret decision",
+    "repository visibility or public/private source split",
+    "production enrollment/revocation operating process",
+    "security operations / restore drill evidence",
+    "contributor rights / brand clearance / insurance owner decisions",
+    "production multi-worker leases or transactional outbox where required",
+    "real provider credentials/adapters only after security gates"
+  ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
     "status": "linked",
@@ -580,5 +590,63 @@
     "acceptance_host": "https://werkz-time-device-test.onrender.com",
     "final_ci_run": 36947613734,
     "tests": "59/59"
+  },
+  "parallel_public_safe_work": {
+    "branch": "codex/issue-5-security",
+    "pull_request": 8,
+    "issues": [
+      5,
+      6,
+      7
+    ],
+    "state": "IN_PROGRESS_DRAFT",
+    "latest_verified_commit": "c105a32e8c1d4f4641bc4eadd71f7c043fc542fb",
+    "latest_verified_ci": {
+      "run_id": 36942044195,
+      "conclusion": "success",
+      "tests": {
+        "total": 75,
+        "passed": 75,
+        "failed": 0
+      },
+      "lint": {
+        "status": "passed",
+        "files": 43
+      },
+      "typecheck": {
+        "status": "passed",
+        "modules": 18
+      },
+      "oss_check": "passed",
+      "npm_vulnerabilities": 0
+    },
+    "implemented": [
+      "server-derived entitlement authority",
+      "one-time Ed25519 device enrollment and revocation",
+      "signed offline licence and release verification",
+      "support/EOL/channel metadata",
+      "vulnerability triage and CRA assessment state",
+      "temporary scoped support grants",
+      "AI transparency state",
+      "SECURITY.md",
+      "SPDX SBOM and npm licence gate",
+      "OAuth account lifecycle with secret references and revocation",
+      "idempotent integration worker with backoff/dead-letter/health",
+      "Time and private evidence backup/verify/restore CLI with hash and tenant-link checks",
+      "backup-mutation-restore and tamper tests",
+      "atomic file-backed enrollment state with restart-persistent token replay denial and device revocation",
+      "external-key release manifest sign/verify CLI with artifact hashes and tamper test",
+      "retry worker rejects cross-payload/kind idempotency-key reuse while allowing equivalent reordered JSON replay",
+      "atomic file-backed retry job state with restart-persistent idempotency keys and interrupted-running recovery"
+    ],
+    "blockers": [
+      "public repository visibility decision",
+      "production signing-key custody/infrastructure and deployment persistence",
+      "security operations and restore drill",
+      "contributor rights/brand/insurance human decisions",
+      "production multi-worker leases/transactional outbox and provider-side idempotency contract"
+    ],
+    "stacked_base_sync": "syncing to current main after Issue #3 merge and post-acceptance mobile fixes",
+    "issue3_dependency": "resolved"
   }
 }
