@@ -250,6 +250,7 @@ li:last-child{border-bottom:0}
   background:rgba(31,39,34,.88);
   box-shadow:var(--toxic-glow)
 }
+dialog:not([open]){display:none!important}
 dialog{
   width:min(92vw,36rem);
   padding:1.1rem;
