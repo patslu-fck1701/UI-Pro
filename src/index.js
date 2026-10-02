@@ -10,6 +10,7 @@ module.exports = {
   ...require('./integrations/lifecycle'),
   ...require('./integrations/durable'),
   ...require('./integrations/oauth-flow'),
+  ...require('./integrations/device-authorization'),
   ...require('./time/production'),
   ...require('./time/durable'),
   ...require('./time/recovery'),
@@ -17,6 +18,7 @@ module.exports = {
   ...require('./time/http'),
   ...require('./time/offline'),
   ...require('./security/licensing'),
+  ...require('./security/identity'),
   ...require('./security/durable'),
   ...require('./security/lifecycle')
 };
