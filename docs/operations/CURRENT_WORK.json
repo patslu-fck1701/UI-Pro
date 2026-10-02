@@ -35,10 +35,10 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Continue PR #8 with only remaining technically executable security/readiness work. Do not wait for another owner order; stop only on genuine owner/infrastructure/legal decisions such as repository visibility, production signing-key custody, trademark/insurance decisions or provider credentials.",
+  "next_trigger": "After PR #8 foundation merge, continue from main. Keep Issues #5–#7 open for production signing-key custody, repository visibility/public-private split, live production restore evidence, contributor rights, brand clearance, insurance and real provider credentials.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "4ded7a86bdfe3656129ff42018cfb2b2053670d4",
+  "last_verified_issue_branch_commit": "3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf",
   "active_pull_request": {
     "number": 8,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/8",
@@ -74,13 +74,13 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "PR #8 is synchronized with current main and verified. Public-safe work now includes operational device enrollment/revocation, headless device approval, enterprise identity contracts, full vulnerability remediation/reporting lifecycle, OSS/SBOM gates and removal of remote Google Fonts from Time prototypes.",
+  "current_continuation": "PR #8 public-safe security/readiness foundation is technically verified: 86/86 tests, durable multi-worker lease coordination, device enrollment/revocation, headless approval, enterprise identity, vulnerability lifecycle, OSS/SBOM and font-runtime cleanup. Foundation is ready to merge; owner/production/legal gates remain open in Issues #5–#7.",
   "last_verified_ci": {
-    "run_id": 36955861549,
+    "run_id": 36956316494,
     "conclusion": "success",
     "tests": {
-      "total": 85,
-      "passed": 85,
+      "total": 86,
+      "passed": 86,
       "failed": 0
     },
     "syntax_check": "passed",
@@ -128,10 +128,9 @@
   "remaining": [
     "production signing-key custody / managed secret decision",
     "repository visibility or public/private source split",
-    "production deployment durability / multi-worker coordination where required",
-    "operational restore drill evidence in the final production environment",
+    "live production restore drill evidence",
     "contributor rights / brand clearance / insurance owner decisions",
-    "real provider credentials/adapters only after security gates"
+    "real provider credentials/adapters after security gates"
   ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
@@ -366,13 +365,14 @@
       "MappingEngine"
     ],
     "live_provider_adapters": false,
-    "ci_run_id": 36955861549,
+    "ci_run_id": 36956316494,
     "enterprise_identity": [
       "OIDC",
       "SAML",
       "SCIM"
     ],
-    "device_authorization": "browser-approved short-code flow producing one-time organisation-bound enrollment material"
+    "device_authorization": "browser-approved short-code flow producing one-time organisation-bound enrollment material",
+    "multi_worker_leases": "implemented_and_verified_reference"
   },
   "pull_request_review": {
     "pr2": {
@@ -606,13 +606,13 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "4ded7a86bdfe3656129ff42018cfb2b2053670d4",
+    "latest_verified_commit": "3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf",
     "latest_verified_ci": {
-      "run_id": 36955861549,
+      "run_id": 36956316494,
       "conclusion": "success",
       "tests": {
-        "total": 85,
-        "passed": 85,
+        "total": 86,
+        "passed": 86,
         "failed": 0
       },
       "oss_check": "passed",
@@ -635,7 +635,9 @@
       "OAuth account lifecycle with secret references and revocation",
       "durable retry/dead-letter integration worker with idempotency conflict guard",
       "Time/private-evidence backup, verification and staged restore",
-      "remote Google Fonts removed from repository Time prototype runtime with regression test"
+      "remote Google Fonts removed from repository Time prototype runtime with regression test",
+      "atomic file-backed retry job state with restart-persistent idempotency keys and interrupted-running recovery",
+      "renewable file-backed multi-worker job leases preventing parallel duplicate execution with stale-lease takeover"
     ],
     "blockers": [
       "public repository visibility decision",
