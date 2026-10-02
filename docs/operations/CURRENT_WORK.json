@@ -2,7 +2,7 @@
   "schema_version": 1,
   "updated_at": "2026-10-02",
   "baseline": "KB-v1.41",
-  "state": "IN_PROGRESS",
+  "state": "WAITING_OWNER_PRODUCTION_GATES",
   "repository": "patslu-fck1701/UI-Pro",
   "active_issue": {
     "number": 5,
@@ -35,18 +35,11 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "After PR #8 foundation merge, continue from main. Keep Issues #5–#7 open for production signing-key custody, repository visibility/public-private split, live production restore evidence, contributor rights, brand clearance, insurance and real provider credentials.",
+  "next_trigger": "Resolve owner/production gates: repository visibility/public-private split, production signing-key custody, live production restore evidence, contributor-rights/brand/insurance decisions. After those decisions, continue real provider adapters and customer-production rollout work from main.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf",
-  "active_pull_request": {
-    "number": 8,
-    "url": "https://github.com/patslu-fck1701/UI-Pro/pull/8",
-    "draft": true,
-    "base": "main",
-    "head": "codex/issue-5-security",
-    "scope": "Issues #5–#7"
-  },
+  "last_verified_issue_branch_commit": "22204bfdc1e2ead74c68b1497221062126095ba9",
+  "active_pull_request": null,
   "research_sources": [
     {
       "path": "/WerkZ/Research/Werk_Z_Integrationsbericht_Oktober_2026.txt",
@@ -74,9 +67,9 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "PR #8 public-safe security/readiness foundation is technically verified: 86/86 tests, durable multi-worker lease coordination, device enrollment/revocation, headless approval, enterprise identity, vulnerability lifecycle, OSS/SBOM and font-runtime cleanup. Foundation is ready to merge; owner/production/legal gates remain open in Issues #5–#7.",
+  "current_continuation": "PR #8 public-safe foundation for Issues #5–#7 is merged into main. Technical foundation is verified; remaining gates require owner/production/legal decisions or real production infrastructure before live provider/customer rollout.",
   "last_verified_ci": {
-    "run_id": 36956316494,
+    "run_id": 36956404058,
     "conclusion": "success",
     "tests": {
       "total": 86,
@@ -605,10 +598,10 @@
       6,
       7
     ],
-    "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf",
+    "state": "MERGED_FOUNDATION",
+    "latest_verified_commit": "22204bfdc1e2ead74c68b1497221062126095ba9",
     "latest_verified_ci": {
-      "run_id": 36956316494,
+      "run_id": 36956404058,
       "conclusion": "success",
       "tests": {
         "total": 86,
@@ -648,6 +641,20 @@
       "real provider credentials and customer-specific adapters"
     ],
     "stacked_base_sync": "0 behind current main",
-    "issue3_dependency": "resolved"
+    "issue3_dependency": "resolved",
+    "merge_commit": "67bbe98d4221391d548b65bdcfa1f5015614bd07"
+  },
+  "merged_security_foundation": {
+    "pull_request": 8,
+    "merge_commit": "67bbe98d4221391d548b65bdcfa1f5015614bd07",
+    "verified_head": "22204bfdc1e2ead74c68b1497221062126095ba9",
+    "verified_ci_run": 36956404058,
+    "tests": "86/86",
+    "issues_remaining_open": [
+      5,
+      6,
+      7
+    ],
+    "production_readiness_claim": false
   }
 }
