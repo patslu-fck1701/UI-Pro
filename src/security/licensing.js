@@ -87,6 +87,12 @@ class DeviceEnrollmentAuthority {
     return clone(device);
   }
   get(deviceId){const value=this.devices.get(deviceId);return value?clone(value):null}
+  list({organisationId=null,status=null}={}){
+    return [...this.devices.values()]
+      .filter(value=>(!organisationId||value.organisationId===organisationId)&&(!status||value.status===status))
+      .sort((a,b)=>a.enrolledAt.localeCompare(b.enrolledAt)||a.id.localeCompare(b.id))
+      .map(clone);
+  }
 }
 
 class SignedDocumentVerifier {
