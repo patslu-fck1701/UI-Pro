@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE='werkz-time-shell-v2';
+const CACHE='werkz-time-shell-v3';
 const SHELL=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.svg'];
 const STATIC_URLS=new Set(SHELL.map(path=>new URL(path,self.registration.scope).href));
 
@@ -10,7 +10,9 @@ function staticShellRequest(request){
   return STATIC_URLS.has(url.href);
 }
 
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL))));
+self.addEventListener('install',event=>event.waitUntil(
+  caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())
+));
 self.addEventListener('activate',event=>event.waitUntil(
   caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())
 ));
