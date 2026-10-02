@@ -745,3 +745,32 @@ Remaining non-completed gates are now mainly production/owner/environment decisi
 - real provider credentials/adapters after those gates.
 
 No customer/provider/signing secrets or private production keys were committed.
+
+
+## PR #8 final public-safe foundation checkpoint — 86 tests
+
+Verified code commit: `3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf`  
+CI run: `36956316494` — SUCCESS
+
+Verification:
+- 86/86 tests passed;
+- syntax/lint/typecheck passed;
+- SPDX/OSS gate passed;
+- npm audit 0 known vulnerabilities.
+
+Final technical addition before foundation merge:
+- file-backed renewable worker leases;
+- only one worker may execute a due integration job at a time;
+- active leases prevent duplicate execution;
+- heartbeat renewal keeps long-running jobs owned;
+- expired/stale leases can be safely taken over after a crashed worker;
+- persistent state is reloaded before execution to avoid later duplicate replay.
+
+PR #8 can be merged as a **public-safe foundation** without claiming Issues #5–#7 are fully production-complete.
+
+Issues #5–#7 remain open for non-code/production gates:
+- production signing-key custody;
+- repository visibility/public-private split;
+- live production restore evidence;
+- contributor-rights/brand/insurance decisions;
+- real provider credentials/adapters after approval.
