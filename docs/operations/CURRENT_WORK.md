@@ -620,3 +620,33 @@ Verified implementation/deployment commit: `ec7c9284d5cf2034f96fe5c64b65ff853a45
 CI run: `36941514632` — success; existing 59-test verification retained.
 
 `deploy/time-test/render.yaml` now defines an owner-controlled Render Docker service with TLS, a persistent `/data` disk, health check and secret runtime environment variables. `deploy/time-test/README.md` contains the exact deployment, health/API, project-29212 binding and iPhone acceptance steps. The Render paid plan/account and secret entry cannot be provisioned through the connected tools. No HTTPS URL exists yet; project 29212 `apiBase` remains null. Cross-site Safari cookie behavior needs the physical device check; a verified multipart-capable same-origin proxy or same-site host may be needed. PR #4 remains Draft and Issue #3 IN_PROGRESS.
+
+
+## Issue #3 completion — physical iPhone acceptance passed
+
+Date: 2026-10-02
+
+Final verified implementation checkpoint before merge:
+
+- branch: `codex/issue-3-commercial`;
+- live acceptance host: `https://werkz-time-device-test.onrender.com`;
+- GitHub Actions run `36947417545`: SUCCESS;
+- tests: 59/59 passed;
+- lint/typecheck/syntax checks passed;
+- npm audit: 0 known vulnerabilities;
+- Render deployment for `3dce13fd67367ef0cdfcc834d7906cdf7365b529`: live.
+
+Physical iPhone acceptance was completed and explicitly confirmed by the owner as fully working. The tested flow included start/running timer, offline state/queue, mobile interaction, reconnect/sync, history, camera/file path and Add to Home Screen.
+
+Final UI polish completed during acceptance:
+
+- anthracite/black interface with translucent anthracite cards;
+- toxic/neon-green accents;
+- running timer turns neon green;
+- normal WerkZ `logo.png` replaces the small “WerkZ Zeit” text in the header;
+- “Mein Arbeitstag” reduced in size;
+- `logo_ich` is used as the Home Screen icon with a black background.
+
+Issue #3 completion gates are satisfied. PR #4 may be marked Ready and merged. After merge, continue with stacked PR #8 / Issues #5–#7, retargeting/synchronising it to `main` as needed.
+
+Render Free remains test-only acceptance infrastructure and is not production durability.
