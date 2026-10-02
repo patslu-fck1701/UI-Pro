@@ -710,3 +710,38 @@ Remaining gates after synchronization:
 - only then add real provider credentials/adapters.
 
 No customer data, provider tokens, signing private keys or production credentials may be committed.
+
+
+## PR #8 verified security/readiness checkpoint — 85 tests
+
+Date: 2026-10-02
+
+PR #8 / `codex/issue-5-security` is synchronized with current `main` (0 behind) and mergeable as a Draft.
+
+Verified code checkpoint:
+- commit `4ded7a86bdfe3656129ff42018cfb2b2053670d4`;
+- GitHub Actions `36955861549`: SUCCESS;
+- 85/85 tests passed;
+- syntax/lint/typecheck passed;
+- SPDX/OSS gate passed;
+- npm audit: 0 known vulnerabilities.
+
+Newly completed in this continuation:
+- operational device enrollment/revocation CLI and automated issue→enroll→authenticate→revoke→deny drill;
+- tenant/device listing without private-key persistence;
+- browser-approved headless connector device-authorisation flow with short-lived user code, poll throttling and one-time organisation-bound enrollment token;
+- provider-neutral enterprise identity contracts for OIDC/SAML plus optional SCIM provisioning and group→role mapping;
+- vulnerability lifecycle extended through remediation planning, tested fix/release reference, final reporting decision and controlled closure;
+- device enrollment and vulnerability response runbooks;
+- external Google Fonts/Manrope runtime requests removed from the three repository Time prototype pages;
+- regression test prevents the remote Google Fonts dependency from returning.
+
+Remaining non-completed gates are now mainly production/owner/environment decisions:
+- production signing-key custody/managed-secret/HSM choice;
+- public-vs-private repository/source split;
+- production multi-worker/deployment durability where actually needed;
+- live production restore drill evidence;
+- contributor-rights, trademark/brand-clearance and insurance decisions;
+- real provider credentials/adapters after those gates.
+
+No customer/provider/signing secrets or private production keys were committed.
