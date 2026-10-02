@@ -156,7 +156,8 @@
   }
   function setRunning(record){
     running=record||null;ui.start.hidden=Boolean(running);ui.stop.hidden=!running;
-    ui.customer.disabled=Boolean(running);ui.order.disabled=Boolean(running);ui.mileageStart.disabled=Boolean(running);clock();
+    ui.customer.disabled=Boolean(running);ui.order.disabled=Boolean(running);ui.mileageStart.disabled=Boolean(running);
+    ui.elapsed.classList.toggle('running',Boolean(running));clock();
   }
   function historyItem(record){
     const item=document.createElement('li'),title=document.createElement('strong'),details=document.createElement('div');
