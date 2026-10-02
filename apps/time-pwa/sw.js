@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE='werkz-time-shell-v6';
+const CACHE='werkz-time-shell-v7';
 const SHELL=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.svg','./logo_ich_black.png'];
 const STATIC_URLS=new Set(SHELL.map(path=>new URL(path,self.registration.scope).href));
 
