@@ -3,7 +3,7 @@
 **State:** IN_PROGRESS  
 **Updated:** 2026-10-01  
 **Baseline:** KB-v1.41
-**Last verified Issue #3 branch commit:** `953a625e312bd3e6b60653c2a065eac857cb57c4`  
+**Last verified Issue #3 branch commit:** `d61d185db991f469aad8a470c156421d49d5963b`  
 **Draft PR:** #4 — https://github.com/patslu-fck1701/UI-Pro/pull/4
 
 ## One-time launch order
@@ -576,3 +576,77 @@ Latest concerns added from the 2026-10-02 research:
 
 Issue #7 remains the implementation umbrella for the IP/OSS/brand/legal-readiness concerns.
 
+
+
+## Continuation result — deterministic PWA replay and real HTTP test boundary
+
+Verified implementation commit: `cb2d882d10165995cb380afcbf1dae280f2e8f02`  
+CI run: `36938296872` — success
+
+Implemented:
+- synchronized `codex/issue-3-commercial` with main; branch is 0 commits behind;
+- explicit service-worker static-shell allowlist; session, API, Time and evidence requests are bypassed;
+- monotonic offline sequence, causation links, deterministic replay, confirmed-revision chaining and explicit descendant conflict blocking;
+- complete automated offline start -> note -> binary photo -> stop -> reload -> reconnect -> exactly-once regression;
+- real HTTP transport for server-derived session, Time commands and multipart evidence;
+- durable, deployable non-production test server with private volume and temporary HttpOnly test login;
+- WebsitePublisher project 29212 test client upgraded for the real command/evidence contract and mirrored under `deploy/websitepublisher-29212`;
+- API Proxy inspected: available, currently no endpoints, and cannot replace the missing external HTTPS target;
+- PR #4 updated, main-synchronized and mergeable.
+
+Verification: syntax passed; lint passed; runtime contract/typecheck passed; tests 58/58 passed; npm audit 0 known vulnerabilities.
+
+State remains `IN_PROGRESS` only for external acceptance:
+- provision a persistent public non-production HTTPS host and set runtime-only test secrets;
+- connect `apiBase` after health/HTTP verification;
+- perform the physical iPhone camera/install/offline/reconnect run.
+
+Until then the WebsitePublisher runtime config intentionally remains `apiBase: null` and PR #4 remains Draft.
+
+
+## Follow-up correctness fix — interrupted offline sync
+
+Verified code commit: `d61d185db991f469aad8a470c156421d49d5963b`  
+CI run: `36939896731` — success; 59/59 tests, syntax/lint/typecheck passed, npm audit 0.
+
+A browser/process interruption can leave an IndexedDB entry in `syncing`. The PWA, the project-29212 test client and the shared queue now reprocess such entries with the original idempotency key after reload. Concurrent sync triggers are serialized. The service worker also declines to cache private/no-store or Set-Cookie shell responses.
+
+External HTTPS hosting and physical iPhone acceptance remain open, so Issue #3 is still `IN_PROGRESS` and PR #4 remains Draft.
+
+
+## Persistent HTTPS test deployment prepared
+
+Verified implementation/deployment commit: `ec7c9284d5cf2034f96fe5c64b65ff853a45e854`  
+CI run: `36941514632` — success; existing 59-test verification retained.
+
+`deploy/time-test/render.yaml` now defines an owner-controlled Render Docker service with TLS, a persistent `/data` disk, health check and secret runtime environment variables. `deploy/time-test/README.md` contains the exact deployment, health/API, project-29212 binding and iPhone acceptance steps. The Render paid plan/account and secret entry cannot be provisioned through the connected tools. No HTTPS URL exists yet; project 29212 `apiBase` remains null. Cross-site Safari cookie behavior needs the physical device check; a verified multipart-capable same-origin proxy or same-site host may be needed. PR #4 remains Draft and Issue #3 IN_PROGRESS.
+
+
+## Issue #3 completion — physical iPhone acceptance passed
+
+Date: 2026-10-02
+
+Final verified implementation checkpoint before merge:
+
+- branch: `codex/issue-3-commercial`;
+- live acceptance host: `https://werkz-time-device-test.onrender.com`;
+- GitHub Actions run `36947417545`: SUCCESS;
+- tests: 59/59 passed;
+- lint/typecheck/syntax checks passed;
+- npm audit: 0 known vulnerabilities;
+- Render deployment for `3dce13fd67367ef0cdfcc834d7906cdf7365b529`: live.
+
+Physical iPhone acceptance was completed and explicitly confirmed by the owner as fully working. The tested flow included start/running timer, offline state/queue, mobile interaction, reconnect/sync, history, camera/file path and Add to Home Screen.
+
+Final UI polish completed during acceptance:
+
+- anthracite/black interface with translucent anthracite cards;
+- toxic/neon-green accents;
+- running timer turns neon green;
+- normal WerkZ `logo.png` replaces the small “WerkZ Zeit” text in the header;
+- “Mein Arbeitstag” reduced in size;
+- `logo_ich` is used as the Home Screen icon with a black background.
+
+Issue #3 completion gates are satisfied. PR #4 may be marked Ready and merged. After merge, continue with stacked PR #8 / Issues #5–#7, retargeting/synchronising it to `main` as needed.
+
+Render Free remains test-only acceptance infrastructure and is not production durability.

@@ -193,3 +193,45 @@ WebsitePublisher remains:
 - intake/pre-check tooling.
 
 It is NOT the production WerkZ data store or authoritative backend.
+
+
+## Implemented backend/client checkpoint — 2026-10-01
+
+Repository commit `cb2d882d10165995cb380afcbf1dae280f2e8f02` now provides:
+- real server-derived `GET /session`;
+- real `POST /time/commands`;
+- real multipart `POST /time/evidence`;
+- durable Time/evidence adapters;
+- explicit CORS allowlist;
+- a container-ready non-production server under `deploy/time-test`;
+- automated HTTP, tenant-isolation, multipart, service-worker and complete offline-chain tests;
+- a repository snapshot of the live 29212 sync client under `deploy/websitepublisher-29212`.
+
+The live project-29212 client was upgraded in place to perform ordered command sync, revision propagation, explicit conflicts and binary multipart upload when `apiBase` is present. It remains safely disconnected while `apiBase` is null.
+
+Live API Proxy inspection found zero registered endpoints. A proxy cannot be registered safely until an external HTTPS target exists. Multipart support is not assumed; the prepared direct API supports controlled CORS.
+
+External infrastructure blocker: the connected tools cannot provision a persistent public Node HTTPS runtime or its runtime-only secrets. Do not place those values in GitHub or the WebsitePublisher browser config.
+
+
+## Physical iPhone acceptance — PASSED
+
+Accepted by the owner on a real iPhone on 2026-10-02.
+
+Verified on the live non-production acceptance host:
+
+- Render HTTPS host: `https://werkz-time-device-test.onrender.com`
+- same-origin session/login flow works in Safari;
+- Time entry can be started and the live timer runs;
+- offline state is shown and queued changes are retained;
+- note/photo/mileage/stop workflow is usable on the device;
+- reconnect/synchronisation completes successfully;
+- history renders the running/completed entries;
+- camera/file picker path is usable;
+- Add to Home Screen works;
+- WerkZ Home Screen icon is installed successfully;
+- final UI theme uses anthracite/translucent panels with neon-green accents.
+
+Owner acceptance statement: the tested flow works completely. Issue #3's physical-device acceptance gate is therefore satisfied.
+
+The Render service remains non-production acceptance infrastructure. This result does not convert the free filesystem into production durability or authorize real customer data.

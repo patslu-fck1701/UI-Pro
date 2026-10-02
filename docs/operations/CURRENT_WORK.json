@@ -2,7 +2,7 @@
   "schema_version": 1,
   "updated_at": "2026-10-02",
   "baseline": "KB-v1.41",
-  "state": "IN_PROGRESS",
+  "state": "DONE_NEEDS_NEXT_ORDER",
   "repository": "patslu-fck1701/UI-Pro",
   "active_issue": {
     "number": 3,
@@ -35,14 +35,17 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Owner says 'weiter': read latest main control plane, validation_audit and docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md. First fix service-worker cache boundary and deterministic offline revision/order behavior, then expose verified HTTPS test API, connect WebsitePublisher project 29212 test config, run CI, and perform/record physical iPhone/browser acceptance.",
+  "next_trigger": "Issue #3 is accepted and ready to merge. After merge, retarget/synchronise PR #8 to main and continue Issues #5–#7 public-safe implementation; do not commit secrets or production signing keys.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "953a625e312bd3e6b60653c2a065eac857cb57c4",
+  "last_verified_issue_branch_commit": "3dce13fd67367ef0cdfcc834d7906cdf7365b529",
   "active_pull_request": {
     "number": 4,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
-    "draft": true
+    "draft": false,
+    "mergeable": true,
+    "head": "3dce13fd67367ef0cdfcc834d7906cdf7365b529",
+    "completion_status": "accepted_ready_to_merge"
   },
   "research_sources": [
     {
@@ -71,23 +74,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 final PWA correctness gate: fix service-worker API caching risk and deterministic offline command ordering/revision chaining, rerun CI, then perform real HTTPS browser/device verification and final PR #4 review.",
+  "current_continuation": "Issue #3 implementation and physical iPhone acceptance are complete. Live non-production HTTPS host is connected and the owner confirmed the tested mobile flow works completely.",
   "last_verified_ci": {
-    "run_id": 36920881329,
+    "run_id": 36947417545,
     "conclusion": "success",
     "tests": {
-      "total": 52,
-      "passed": 52,
+      "total": 59,
+      "passed": 59,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
       "status": "passed",
-      "files": 25
+      "files": 28
     },
     "typecheck": {
       "status": "passed",
-      "modules": 11
+      "modules": 12
     },
     "npm_vulnerabilities": 0
   },
@@ -114,19 +117,16 @@
     "stable client-generated Time IDs for complete offline command chains",
     "server-side client ID collision protection",
     "Windows PWA start and smartphone test guide",
-    "PR #2 confirmed fully contained in PR #4 and closed as superseded"
+    "PR #2 confirmed fully contained in PR #4 and closed as superseded",
+    "persistent non-production Render HTTPS acceptance host",
+    "project 29212 API binding to Render Time API",
+    "physical iPhone Safari acceptance",
+    "offline/reconnect mobile acceptance",
+    "Add to Home Screen acceptance",
+    "anthracite/neon-green UI polish",
+    "WerkZ header logo and black logo_ich Home Screen icon"
   ],
-  "remaining": [
-    "Library ZIP materialization (tool blocker: ready execution workspace unavailable)",
-    "real browser/manual PWA verification with HTTPS test API",
-    "final PR #4 review and merge decision",
-    "fix service-worker static-shell-only cache boundary",
-    "make real PWA offline command ordering and revision chaining deterministic",
-    "automated complete offline start/edit/photo/stop reconnect tests",
-    "finish WebsitePublisher test-host API connection after PWA correctness fixes",
-    "provide HTTPS non-production Time API and connect project 29212 test config",
-    "physical iPhone/browser acceptance run"
-  ],
+  "remaining": [],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
     "status": "linked",
@@ -200,9 +200,9 @@
   "resume_document": "docs/operations/CODEX_RESUME_NOW.md",
   "branch_sync": {
     "active_branch": "codex/issue-3-commercial",
-    "merge_commit": "e5304454c5a66a4cd02d786d4930ab9a8d061334",
-    "synced_main_commit": "6b7aea3d356d588826ab9364f58cbb7aee09db58",
-    "status": "synchronized_and_verified"
+    "merge_commit": "9d49a9df216b5f8b94f7d14ab0162ab8580f23b7",
+    "synced_main_commit": "aca2bdb02c2613c258509e77b9e9df0ff1a4c152",
+    "status": "synchronized_and_verified_0_behind"
   },
   "verified_implementation": [
     "module manifests and organisation entitlements",
@@ -223,9 +223,9 @@
     "durable concurrent-device/cross-tenant/restart integration tests"
   ],
   "known_code_gaps": [
-    "IndexedDB, service worker, camera and install behavior are not yet exercised in a real browser/device",
-    "no deployed HTTPS HTTP adapter/test environment is available in this tool session",
-    "provider contracts exist but no live provider adapters (intentionally out of scope)"
+    "physical browser camera/install behavior is not automatable in this tool environment",
+    "no persistent external HTTPS runtime can be provisioned with the connected tools",
+    "provider contracts exist but no live provider adapters (intentional)"
   ],
   "commercial_migration_gate": {
     "status": "implemented_and_verified",
@@ -322,7 +322,7 @@
     "ci_run_id": 36914906481
   },
   "time_pwa": {
-    "status": "implemented_automated_verified_manual_browser_pending",
+    "status": "implemented_automated_verified_physical_iphone_accepted",
     "path": "apps/time-pwa",
     "features": [
       "installable manifest",
@@ -347,7 +347,7 @@
       "server-side size/hash validation",
       "Blob removed from completed queue entry"
     ],
-    "ci_run_id": 36920881329
+    "ci_run_id": 36947417545
   },
   "integration_foundation": {
     "status": "contracts_implemented_and_verified",
@@ -369,8 +369,8 @@
       "head": "39c5ae225078a90180814ae395b516499c2b311c"
     },
     "pr4": {
-      "state": "open_draft",
-      "head": "953a625e312bd3e6b60653c2a065eac857cb57c4"
+      "state": "accepted_ready_to_merge",
+      "head": "3dce13fd67367ef0cdfcc834d7906cdf7365b529"
     },
     "comparison": {
       "ahead_by": 87,
@@ -379,29 +379,25 @@
     }
   },
   "validation_audit": {
-    "status": "release_gaps_found",
-    "reviewed_at_local": "2026-10-01T22:40:00+02:00",
-    "findings": [
-      {
-        "id": "PWA-SW-CACHE-BOUNDARY",
-        "severity": "release_critical",
-        "finding": "Service worker currently caches all successful GET requests; /api/session is GET, so authenticated/API responses may be cached despite static-shell-only claim.",
-        "required_fix": "Use explicit static-shell allowlist and bypass /api/*, authenticated and operational responses."
-      },
-      {
-        "id": "PWA-OFFLINE-ORDER-REVISION",
-        "severity": "release_critical",
-        "finding": "Real PWA sync uses IndexedDB getAll on random UUID-keyed commands without deterministic business ordering; offline start/edit/photo/stop chains can replay out of order and share stale expected revisions.",
-        "required_fix": "Persist explicit sequence/causation order and deterministic revision propagation/conflict handling; add complete offline-chain tests."
-      }
-    ]
+    "status": "release_critical_findings_fixed_and_verified",
+    "fixed_at_commit": "cb2d882d10165995cb380afcbf1dae280f2e8f02",
+    "verified": [
+      "static-shell-only service worker regression",
+      "monotonic causal replay",
+      "revision propagation",
+      "explicit conflict blocking",
+      "complete offline Blob chain after reload",
+      "exactly-once replay"
+    ],
+    "interrupted_sync_recovery": "implemented_and_tested",
+    "service_worker_private_response_guard": "implemented"
   },
   "websitepublisher_time_test": {
-    "status": "live_frontend_local_device_test",
+    "status": "https_backend_connected_physical_iphone_accepted",
     "project_id": 29212,
     "url": "https://project29212.websitepublisher.ai/werkz-time-test.html",
     "config_url": "https://cdn.websitepublisher.ai/custom/wid29212/config/werkz-time-test.json",
-    "api_base": null,
+    "api_base": "https://werkz-time-device-test.onrender.com",
     "purpose": "HTTPS/iPhone/browser test host only; not production runtime",
     "implemented": [
       "IndexedDB",
@@ -422,7 +418,15 @@
       "POST /time/evidence multipart",
       "HTTPS reachability"
     ],
-    "documentation": "docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md"
+    "documentation": "docs/testing/WEBSITEPUBLISHER_TIME_TEST_HOST.md",
+    "api_proxy": {
+      "available": true,
+      "registered_endpoints": 0,
+      "multipart": "not assumed"
+    },
+    "repository_snapshot": "deploy/websitepublisher-29212/app.js",
+    "acceptance": "passed",
+    "accepted_at_local": "2026-10-02"
   },
   "queued_security_issue": {
     "number": 5,
@@ -497,6 +501,65 @@
     "ip_supporting_gates": [
       "docs/legal/PATENT_DESIGN_DATABASE_RIGHTS_DECISION_GATE.md",
       "docs/legal/DATA_RIGHTS_WORDING_GUIDE.md"
+    ]
+  },
+  "time_http": {
+    "status": "implemented_and_automated_verified",
+    "routes": [
+      "GET /session",
+      "POST /time/commands",
+      "POST /time/evidence multipart"
+    ],
+    "identity": "server-derived session",
+    "deployment": "deploy/time-test",
+    "verified": [
+      "CORS allowlist",
+      "tenant spoof ignored",
+      "cross-tenant denial",
+      "durable commands",
+      "binary multipart evidence",
+      "idempotent replay"
+    ]
+  },
+  "time_test_deployment": {
+    "status": "deployable_external_host_pending",
+    "target": "Render Docker web service with persistent disk and HTTPS",
+    "manifest": "deploy/time-test/render.yaml",
+    "guide": "deploy/time-test/README.md",
+    "verified_commit": "ec7c9284d5cf2034f96fe5c64b65ff853a45e854",
+    "verified_ci_run": 36941514632,
+    "external_actions": [
+      "owner-controlled Render account and paid persistent-disk plan",
+      "runtime secret entry",
+      "deployed HTTPS URL verification",
+      "physical iPhone acceptance"
+    ],
+    "api_base": null,
+    "safari_cross_site_cookie": "requires physical verification; use verified same-origin multipart proxy or same-site hosting if blocked"
+  },
+  "manual_acceptance": {
+    "status": "passed",
+    "accepted_at_local": "2026-10-02",
+    "device": "physical iPhone",
+    "owner_confirmed": true,
+    "acceptance_host": "https://werkz-time-device-test.onrender.com",
+    "verified": [
+      "same-origin Safari session",
+      "time start and running timer",
+      "offline state and queued changes",
+      "mobile note/photo/mileage/stop interaction",
+      "reconnect and sync",
+      "history rendering",
+      "camera/file path",
+      "Add to Home Screen"
+    ],
+    "ui_polish": [
+      "anthracite/black translucent UI",
+      "toxic/neon-green accents",
+      "running timer neon green",
+      "WerkZ logo.png in header",
+      "smaller Mein Arbeitstag heading",
+      "logo_ich Home Screen icon with black background"
     ]
   }
 }

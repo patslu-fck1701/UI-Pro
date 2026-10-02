@@ -1,0 +1,21 @@
+services:
+  werkz-time-test:
+    build:
+      context: ../..
+      dockerfile: deploy/time-test/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      WERKZ_TIME_DATA_DIR: /data
+      WERKZ_TEST_ALLOWED_ORIGIN: https://project29212.websitepublisher.ai
+      WERKZ_TEST_SESSION_TOKEN: ${WERKZ_TEST_SESSION_TOKEN:?set a random session token}
+      WERKZ_TEST_LOGIN_CODE: ${WERKZ_TEST_LOGIN_CODE:?set a temporary login code}
+    volumes:
+      - werkz-time-test-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  werkz-time-test-data:
