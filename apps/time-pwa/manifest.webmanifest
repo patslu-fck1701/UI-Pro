@@ -6,11 +6,15 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#eef3f7",
-  "theme_color": "#17324d",
+  "background_color": "#0d0f0f",
+  "theme_color": "#0d0f0f",
   "lang": "de",
   "orientation": "portrait-primary",
   "icons": [
-    {"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+    {
+      "src": "https://cdn.websitepublisher.ai/custom/wid29212/werkz-test/logo_ich.png",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
