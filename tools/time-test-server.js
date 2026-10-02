@@ -102,6 +102,11 @@ const server=http.createServer(async(request,response)=>{
     return response.end();
   }
   if(request.method==='GET'&&serveStatic(url,response))return;
+  if(process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1'&&request.method==='GET'&&(url.pathname==='/api/session'||url.pathname==='/session')){
+    const existing=String(request.headers.cookie||'').replace(/(?:^|;\\s*)werkz_session=[^;]*/g,'').replace(/^;\\s*|;\\s*$/g,'');
+    request.headers.cookie=(existing?existing+'; ':'')+'werkz_session='+encodeURIComponent(sessionToken);
+    response.setHeader('set-cookie','werkz_session='+encodeURIComponent(sessionToken)+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800');
+  }
   if(url.pathname.startsWith('/api/'))request.url=request.url.slice(4);
   return timeHandler(request,response);
 });
