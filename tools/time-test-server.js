@@ -77,7 +77,17 @@ const server=http.createServer(async(request,response)=>{
     response.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
     return response.end('{"ok":true}');
   }
-  if(url.pathname==='/test-login'&&request.method==='GET')return form(response);
+  if(url.pathname==='/test-login'&&request.method==='GET'){
+    if(process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1'){
+      response.writeHead(303,{
+        location:'/',
+        'set-cookie':'werkz_session='+encodeURIComponent(sessionToken)+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800',
+        'cache-control':'no-store'
+      });
+      return response.end();
+    }
+    return form(response);
+  }
   if(url.pathname==='/test-login'&&request.method==='POST'){
     const chunks=[];for await(const chunk of request)chunks.push(chunk);
     const code=new URLSearchParams(Buffer.concat(chunks).toString('utf8')).get('code');
