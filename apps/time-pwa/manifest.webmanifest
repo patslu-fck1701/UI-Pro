@@ -12,7 +12,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "./logo_ich_black.png",
+      "src": "./logo_ich_black.png?v=2",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
