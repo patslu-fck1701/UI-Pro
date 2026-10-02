@@ -10,7 +10,7 @@ This file records the rights/provenance basis for WerkZ-authored and AI-assisted
 | OpenAI-assisted output | Code/docs/research assistance | ChatGPT/Codex | Provider terms currently allocate Output to user/customer as between parties, subject to law; output may not be unique | REVIEWED BASELINE | Keep human review + third-party/IP scanning |
 | WebsitePublisher-generated/public web material | Pages/assets/config | Connected platform/tooling | Provider/platform terms + owner inputs; generated artifacts must be reviewed before proprietary redistribution | OPEN | Record export/reuse terms for any bundled proprietary artifact |
 | Issue #3 Node package | Code | WerkZ repository | `package.json` is `private:true`; currently no declared npm dependencies | VERIFIED 2026-10-01 | Re-scan after branch changes/merge |
-| Manrope font reference | Font/CSS runtime dependency | Google Fonts remote reference in prototype pages | Upstream font distributed under SIL OFL 1.1 | IDENTIFIED | Self-host approved production copy + preserve OFL provenance |
+| Manrope font reference | Historical font/CSS runtime dependency | Former Google Fonts remote reference in prototype pages | Upstream font distributed under SIL OFL 1.1 | REMOVED FROM PROTOTYPE RUNTIME 2026-10-02 | Keep prototype on system fonts; if Manrope is reintroduced, self-host/review and preserve OFL provenance |
 | Future employees | Code/docs/design | Employment/service | §69b UrhG where conditions apply + employment confidentiality/IP clauses | FUTURE | Verify contract before access |
 | Future freelancers/agencies | Code/docs/design | Contractor | Explicit written usage-rights/IP grant required | BLOCKING BEFORE WORK | Use approved contractor template |
 

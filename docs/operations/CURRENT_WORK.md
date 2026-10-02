@@ -666,3 +666,111 @@ The next active workstream is PR #8 / Issues #5–#7:
 licensing/enrollment/release security, product-security lifecycle/CRA/AI transparency, and IP/OSS/brand protection.
 
 PR #8 must now use the merged `main` baseline; stale text claiming Issue #3 still needs hosting/iPhone acceptance is superseded.
+
+
+## Active security/product-readiness continuation — PR #8 / Issues #5–#7
+
+Issue #3 is merged, closed and physically accepted. Its old hosting/iPhone blockers are no longer valid.
+
+The next active branch is `codex/issue-5-security` / PR #8, covering Issues #5, #6 and #7.
+
+Latest verified pre-sync security checkpoint from that branch:
+- commit `c105a32e8c1d4f4641bc4eadd71f7c043fc542fb`;
+- CI `36942044195`: success;
+- 75/75 tests passed;
+- lint 43 JavaScript files;
+- runtime contract/typecheck 18 modules;
+- SPDX/OSS gate passed;
+- npm audit 0 known vulnerabilities.
+
+Implemented there:
+- server-derived entitlement authority;
+- one-time Ed25519 device enrollment and revocation;
+- restart-persistent enrollment/revocation state;
+- signed offline licence verification;
+- signed release manifests using an external private-key file;
+- support/EOL/release-channel metadata;
+- vulnerability triage and CRA assessment state;
+- scoped/time-limited support grants;
+- AI transparency state;
+- SPDX SBOM and npm licence gate;
+- OAuth account lifecycle with secret references/revocation;
+- bounded retry/dead-letter integration worker;
+- idempotency conflict guard;
+- durable file-backed retry job state with interrupted-running recovery;
+- Time/private-evidence backup, verification and staged restore.
+
+Remaining gates after synchronization:
+- choose production signing-key custody/managed secret approach;
+- resolve public repository vs public/private split before confidential product code or signing internals are treated as secret;
+- define live enrollment/revocation operating process;
+- complete operational security/restore evidence;
+- complete contributor-rights, brand-clearance and insurance decisions;
+- add production multi-worker locking/outbox semantics where a deployed provider flow requires them;
+- only then add real provider credentials/adapters.
+
+No customer data, provider tokens, signing private keys or production credentials may be committed.
+
+
+## PR #8 verified security/readiness checkpoint — 85 tests
+
+Date: 2026-10-02
+
+PR #8 / `codex/issue-5-security` is synchronized with current `main` (0 behind) and mergeable as a Draft.
+
+Verified code checkpoint:
+- commit `4ded7a86bdfe3656129ff42018cfb2b2053670d4`;
+- GitHub Actions `36955861549`: SUCCESS;
+- 85/85 tests passed;
+- syntax/lint/typecheck passed;
+- SPDX/OSS gate passed;
+- npm audit: 0 known vulnerabilities.
+
+Newly completed in this continuation:
+- operational device enrollment/revocation CLI and automated issue→enroll→authenticate→revoke→deny drill;
+- tenant/device listing without private-key persistence;
+- browser-approved headless connector device-authorisation flow with short-lived user code, poll throttling and one-time organisation-bound enrollment token;
+- provider-neutral enterprise identity contracts for OIDC/SAML plus optional SCIM provisioning and group→role mapping;
+- vulnerability lifecycle extended through remediation planning, tested fix/release reference, final reporting decision and controlled closure;
+- device enrollment and vulnerability response runbooks;
+- external Google Fonts/Manrope runtime requests removed from the three repository Time prototype pages;
+- regression test prevents the remote Google Fonts dependency from returning.
+
+Remaining non-completed gates are now mainly production/owner/environment decisions:
+- production signing-key custody/managed-secret/HSM choice;
+- public-vs-private repository/source split;
+- production multi-worker/deployment durability where actually needed;
+- live production restore drill evidence;
+- contributor-rights, trademark/brand-clearance and insurance decisions;
+- real provider credentials/adapters after those gates.
+
+No customer/provider/signing secrets or private production keys were committed.
+
+
+## PR #8 final public-safe foundation checkpoint — 86 tests
+
+Verified code commit: `3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf`  
+CI run: `36956316494` — SUCCESS
+
+Verification:
+- 86/86 tests passed;
+- syntax/lint/typecheck passed;
+- SPDX/OSS gate passed;
+- npm audit 0 known vulnerabilities.
+
+Final technical addition before foundation merge:
+- file-backed renewable worker leases;
+- only one worker may execute a due integration job at a time;
+- active leases prevent duplicate execution;
+- heartbeat renewal keeps long-running jobs owned;
+- expired/stale leases can be safely taken over after a crashed worker;
+- persistent state is reloaded before execution to avoid later duplicate replay.
+
+PR #8 can be merged as a **public-safe foundation** without claiming Issues #5–#7 are fully production-complete.
+
+Issues #5–#7 remain open for non-code/production gates:
+- production signing-key custody;
+- repository visibility/public-private split;
+- live production restore evidence;
+- contributor-rights/brand/insurance decisions;
+- real provider credentials/adapters after approval.

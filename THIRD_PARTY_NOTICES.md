@@ -7,10 +7,11 @@
 ### Manrope
 
 - Type: font
-- Current use: referenced remotely by prototype WerkZ Time HTML pages via Google Fonts
+- Current use: **not loaded by the repository WerkZ Time prototype pages as of 2026-10-02**
+- Historical use: the prototype pages previously referenced Manrope remotely via Google Fonts; those runtime requests were removed
 - Upstream licence: SIL Open Font License 1.1
-- Production direction: self-host approved version where practical and ship/store the applicable OFL text/provenance
-- Modification status: no local bundled font file is recorded in the current repository baseline
+- Production direction: use system fonts unless a reviewed/self-hosted font asset is deliberately added; preserve the applicable OFL text/provenance if Manrope is ever redistributed
+- Modification status: no local bundled Manrope font file is recorded in the current repository baseline
 - References:
   - https://openfontlicense.org/
   - https://googlefonts.github.io/gf-guide/license-file.html

@@ -35,15 +35,16 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Synchronise PR #8 with current main, rerun its verification suite, remove stale Issue #3 blocker text, then continue remaining licensing/product-security/IP gates and Integration Foundation work.",
+  "next_trigger": "After PR #8 foundation merge, continue from main. Keep Issues #5–#7 open for production signing-key custody, repository visibility/public-private split, live production restore evidence, contributor rights, brand clearance, insurance and real provider credentials.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
-  "last_verified_issue_branch_commit": "3dce13fd67367ef0cdfcc834d7906cdf7365b529",
+  "last_verified_issue_branch_commit": "3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf",
   "active_pull_request": {
     "number": 8,
     "url": "https://github.com/patslu-fck1701/UI-Pro/pull/8",
     "draft": true,
     "base": "main",
+    "head": "codex/issue-5-security",
     "scope": "Issues #5–#7"
   },
   "research_sources": [
@@ -73,24 +74,23 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 is merged and closed. Continue stacked PR #8 / Issues #5–#7 from the new main baseline, preserving public-safe security/licensing/IP work and keeping secrets/signing keys out of the public repository.",
+  "current_continuation": "PR #8 public-safe security/readiness foundation is technically verified: 86/86 tests, durable multi-worker lease coordination, device enrollment/revocation, headless approval, enterprise identity, vulnerability lifecycle, OSS/SBOM and font-runtime cleanup. Foundation is ready to merge; owner/production/legal gates remain open in Issues #5–#7.",
   "last_verified_ci": {
-    "run_id": 36947417545,
+    "run_id": 36956316494,
     "conclusion": "success",
     "tests": {
-      "total": 59,
-      "passed": 59,
+      "total": 86,
+      "passed": 86,
       "failed": 0
     },
     "syntax_check": "passed",
     "lint": {
-      "status": "passed",
-      "files": 28
+      "status": "passed"
     },
     "typecheck": {
-      "status": "passed",
-      "modules": 12
+      "status": "passed"
     },
+    "oss_check": "passed",
     "npm_vulnerabilities": 0
   },
   "completed_this_continuation": [
@@ -125,7 +125,13 @@
     "anthracite/neon-green UI polish",
     "WerkZ header logo and black logo_ich Home Screen icon"
   ],
-  "remaining": [],
+  "remaining": [
+    "production signing-key custody / managed secret decision",
+    "repository visibility or public/private source split",
+    "live production restore drill evidence",
+    "contributor rights / brand clearance / insurance owner decisions",
+    "real provider credentials/adapters after security gates"
+  ],
   "next_recommended_issue": "WerkZ Integration Foundation v1 — SecretStore, OAuth connection model, webhook gateway, queue/retry/idempotency worker, mapping engine, then Microsoft 365 + Google Workspace + WhatsApp Business.",
   "foundation_sync": {
     "status": "linked",
@@ -349,7 +355,7 @@
     "ci_run_id": 36947417545
   },
   "integration_foundation": {
-    "status": "contracts_implemented_and_verified",
+    "status": "contracts_plus_oauth_device_authorization_and_durable_retry_verified",
     "contracts": [
       "SecretStorePort",
       "ConnectorPort",
@@ -359,7 +365,14 @@
       "MappingEngine"
     ],
     "live_provider_adapters": false,
-    "ci_run_id": 36920123116
+    "ci_run_id": 36956316494,
+    "enterprise_identity": [
+      "OIDC",
+      "SAML",
+      "SCIM"
+    ],
+    "device_authorization": "browser-approved short-code flow producing one-time organisation-bound enrollment material",
+    "multi_worker_leases": "implemented_and_verified_reference"
   },
   "pull_request_review": {
     "pr2": {
@@ -459,7 +472,7 @@
     "canonical_foundation": "docs/security/PRODUCT_SECURITY_LIFECYCLE_COMPLIANCE_FOUNDATION.md"
   },
   "product_security_lifecycle": {
-    "vulnerability_management": "required",
+    "vulnerability_management": "implemented intake->triage->remediation->fix->reporting assessment->closure",
     "support_eol_metadata": "required",
     "cra_reporting_assessment": "required_when_applicable",
     "ai_transparency_state": "required_when_applicable",
@@ -475,7 +488,10 @@
       "LTS_optional"
     ],
     "support_access": "time_limited_scoped_audited",
-    "restore_testing": "tenant_aware"
+    "restore_testing": "tenant_aware",
+    "device_authorization": "implemented",
+    "enterprise_identity_contracts": "implemented",
+    "remote_google_fonts": "removed_from_time_prototypes"
   },
   "queued_ip_oss_brand_issue": {
     "number": 7,
@@ -580,5 +596,58 @@
     "acceptance_host": "https://werkz-time-device-test.onrender.com",
     "final_ci_run": 36947613734,
     "tests": "59/59"
+  },
+  "parallel_public_safe_work": {
+    "branch": "codex/issue-5-security",
+    "pull_request": 8,
+    "issues": [
+      5,
+      6,
+      7
+    ],
+    "state": "IN_PROGRESS_DRAFT",
+    "latest_verified_commit": "3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf",
+    "latest_verified_ci": {
+      "run_id": 36956316494,
+      "conclusion": "success",
+      "tests": {
+        "total": 86,
+        "passed": 86,
+        "failed": 0
+      },
+      "oss_check": "passed",
+      "npm_vulnerabilities": 0
+    },
+    "implemented": [
+      "server-derived entitlement authority",
+      "one-time Ed25519 device enrollment and revocation",
+      "restart-persistent enrollment/revocation state",
+      "device enrollment/revocation operations CLI and automated drill",
+      "browser-approved headless device authorization flow with short-lived user code, poll throttling and one-time enrollment material",
+      "signed offline licence verification",
+      "external-key signed release manifests and tamper verification",
+      "support/EOL/release-channel metadata",
+      "vulnerability intake, triage, remediation planning, fix recording, final reporting assessment and closure",
+      "temporary scoped support grants",
+      "AI transparency state",
+      "enterprise identity contracts for OIDC/SAML with optional SCIM provisioning and role mapping",
+      "SPDX SBOM and npm licence gate",
+      "OAuth account lifecycle with secret references and revocation",
+      "durable retry/dead-letter integration worker with idempotency conflict guard",
+      "Time/private-evidence backup, verification and staged restore",
+      "remote Google Fonts removed from repository Time prototype runtime with regression test",
+      "atomic file-backed retry job state with restart-persistent idempotency keys and interrupted-running recovery",
+      "renewable file-backed multi-worker job leases preventing parallel duplicate execution with stale-lease takeover"
+    ],
+    "blockers": [
+      "public repository visibility decision",
+      "production signing-key custody/infrastructure",
+      "production deployment durability / multi-worker coordination where required",
+      "live production restore drill",
+      "contributor rights / brand clearance / insurance human decisions",
+      "real provider credentials and customer-specific adapters"
+    ],
+    "stacked_base_sync": "0 behind current main",
+    "issue3_dependency": "resolved"
   }
 }
