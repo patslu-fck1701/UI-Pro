@@ -52,9 +52,9 @@ const timeHandler=createTimeHttpHandler({application,auth,allowedOrigins:[allowe
 
 const staticFiles=new Map([
   ['/','index.html'],['/index.html','index.html'],['/styles.css','styles.css'],['/app.js','app.js'],
-  ['/manifest.webmanifest','manifest.webmanifest'],['/icon.svg','icon.svg'],['/sw.js','sw.js']
+  ['/manifest.webmanifest','manifest.webmanifest'],['/icon.svg','icon.svg'],['/logo_ich_black.png','logo_ich_black.png'],['/sw.js','sw.js']
 ]);
-const contentTypes={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.webmanifest':'application/manifest+json; charset=utf-8','.svg':'image/svg+xml'};
+const contentTypes={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.webmanifest':'application/manifest+json; charset=utf-8','.svg':'image/svg+xml','.png':'image/png'};
 
 function serveStatic(url,response){
   const file=staticFiles.get(url.pathname);
