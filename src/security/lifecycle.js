@@ -28,16 +28,54 @@ class VulnerabilityRegister {
   intake({productId,source,summary,privateReference}){
     if(!productId||!source||!summary||!privateReference)fail('VALIDATION_ERROR','Private intake metadata required');
     const id='vuln_'+uid(),value={id,productId,source,summary,privateReference,status:'intake',receivedAt:this.clock().toISOString(),
-      severity:null,affectedVersions:[],knownExploitation:null,craAssessment:'not_assessed',owner:null,fixVersion:null,disclosureState:'private'};
+      severity:null,affectedVersions:[],knownExploitation:null,craAssessment:'not_assessed',owner:null,fixVersion:null,fixReleaseRef:null,
+      remediationRef:null,targetFixAt:null,fixedAt:null,reportingDecisionAt:null,reportingDecidedBy:null,reportingReference:null,
+      closedAt:null,closedBy:null,resolution:null,disclosureState:'private'};
     this.records.set(id,value);this.audit({eventType:'vulnerability.received',entityType:'vulnerability',entityId:id,payload:{productId}});
     return structuredClone(value);
   }
+  require(id){const value=this.records.get(id);if(!value)fail('NOT_FOUND','Vulnerability not found');return value}
   triage(id,{severity,affectedVersions,knownExploitation,craAssessment,owner}){
-    const value=this.records.get(id);if(!value)fail('NOT_FOUND','Vulnerability not found');
-    if(!['low','medium','high','critical'].includes(severity)||!Array.isArray(affectedVersions)||!owner)fail('VALIDATION_ERROR','Triage incomplete');
+    const value=this.require(id);
+    if(value.status!=='intake')fail('INVALID_STATE','Vulnerability already triaged');
+    if(!['low','medium','high','critical'].includes(severity)||!Array.isArray(affectedVersions)||!affectedVersions.length||!owner)fail('VALIDATION_ERROR','Triage incomplete');
     if(!['not_applicable','needs_legal_review','reporting_required','not_reportable'].includes(craAssessment))fail('VALIDATION_ERROR','CRA decision state invalid');
     Object.assign(value,{status:'triaged',severity,affectedVersions:[...affectedVersions],knownExploitation:Boolean(knownExploitation),craAssessment,owner,triagedAt:this.clock().toISOString()});
     this.audit({eventType:'vulnerability.triaged',entityType:'vulnerability',entityId:id,payload:{severity,craAssessment}});
+    return structuredClone(value);
+  }
+  planRemediation(id,{targetFixAt,remediationRef}){
+    const value=this.require(id);
+    if(!['triaged','remediation'].includes(value.status))fail('INVALID_STATE','Triage required before remediation');
+    if(!remediationRef)fail('VALIDATION_ERROR','remediationRef required');
+    if(targetFixAt&&time(targetFixAt,'targetFixAt')<=this.clock())fail('VALIDATION_ERROR','targetFixAt must be in the future');
+    Object.assign(value,{status:'remediation',targetFixAt:targetFixAt||null,remediationRef,remediationPlannedAt:this.clock().toISOString()});
+    this.audit({eventType:'vulnerability.remediation.planned',entityType:'vulnerability',entityId:id,payload:{targetFixAt:value.targetFixAt}});
+    return structuredClone(value);
+  }
+  recordFix(id,{fixVersion,releaseRef}){
+    const value=this.require(id);
+    if(!['triaged','remediation'].includes(value.status))fail('INVALID_STATE','Triage required before fix');
+    if(!fixVersion||!releaseRef)fail('VALIDATION_ERROR','fixVersion and releaseRef required');
+    Object.assign(value,{status:'fixed',fixVersion,fixReleaseRef:releaseRef,fixedAt:this.clock().toISOString()});
+    this.audit({eventType:'vulnerability.fixed',entityType:'vulnerability',entityId:id,payload:{fixVersion,releaseRef}});
+    return structuredClone(value);
+  }
+  decideReporting(id,{craAssessment,decidedBy,reference}){
+    const value=this.require(id);
+    if(!['not_applicable','needs_legal_review','reporting_required','not_reportable'].includes(craAssessment)||!decidedBy||!reference)
+      fail('VALIDATION_ERROR','Reporting decision incomplete');
+    Object.assign(value,{craAssessment,reportingDecisionAt:this.clock().toISOString(),reportingDecidedBy:decidedBy,reportingReference:reference});
+    this.audit({eventType:'vulnerability.reporting.assessed',entityType:'vulnerability',entityId:id,payload:{craAssessment,reference}});
+    return structuredClone(value);
+  }
+  close(id,{closedBy,resolution,advisoryRef=null}){
+    const value=this.require(id);
+    if(value.status!=='fixed')fail('INVALID_STATE','Fixed vulnerability required before closure');
+    if(['not_assessed','needs_legal_review'].includes(value.craAssessment)||!value.reportingDecisionAt)fail('INVALID_STATE','Final reporting assessment required before closure');
+    if(!closedBy||!resolution)fail('VALIDATION_ERROR','Closure metadata required');
+    Object.assign(value,{status:'closed',closedAt:this.clock().toISOString(),closedBy,resolution,disclosureState:advisoryRef?'advisory_published':'private',advisoryRef});
+    this.audit({eventType:'vulnerability.closed',entityType:'vulnerability',entityId:id,payload:{resolution,advisoryRef}});
     return structuredClone(value);
   }
   get(id){const value=this.records.get(id);return value?structuredClone(value):null}
