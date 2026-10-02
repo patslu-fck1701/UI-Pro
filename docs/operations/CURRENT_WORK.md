@@ -774,3 +774,41 @@ Issues #5–#7 remain open for non-code/production gates:
 - live production restore evidence;
 - contributor-rights/brand/insurance decisions;
 - real provider credentials/adapters after approval.
+
+
+## PR #8 merged — public-safe security foundation
+
+Date: 2026-10-02
+
+PR #8 is merged into `main`.
+
+- merge commit: `67bbe98d4221391d548b65bdcfa1f5015614bd07`;
+- verified PR head: `22204bfdc1e2ead74c68b1497221062126095ba9`;
+- CI `36956404058`: SUCCESS;
+- 86/86 tests passed;
+- syntax/lint/typecheck passed;
+- SPDX/OSS gate passed;
+- npm audit 0 known vulnerabilities.
+
+Merged foundation includes:
+- device enrollment/revocation + operational drill;
+- Ed25519 device proof and one-time organisation-bound enrollment;
+- browser-approved headless device authorization;
+- signed offline licences and external-key release manifests;
+- OIDC/SAML/SCIM enterprise identity contracts;
+- complete vulnerability remediation/reporting lifecycle primitives;
+- temporary audited support grants and AI transparency state;
+- OAuth lifecycle;
+- durable retry/dead-letter state and renewable multi-worker leases;
+- Time/private-evidence backup/verify/staged restore;
+- SPDX/SBOM/licence gate;
+- removal and regression blocking of remote Google Fonts in Time prototypes.
+
+This merge is **not** a production-readiness claim.
+
+Issues #5, #6 and #7 remain open for:
+- production signing-key custody;
+- repository visibility/public-private split;
+- live production restore evidence;
+- contributor-rights/brand/insurance decisions;
+- real provider/customer credentials and adapters after those gates.
