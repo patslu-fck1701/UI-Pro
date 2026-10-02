@@ -1,7 +1,0 @@
-{
-  "mode": "local-device-test",
-  "apiBase": null,
-  "projectId": 29212,
-  "maxPhotoBytes": 20971520,
-  "note": "Set apiBase only after the persistent HTTPS backend and device login have passed automated verification."
-}
