@@ -650,3 +650,19 @@ Final UI polish completed during acceptance:
 Issue #3 completion gates are satisfied. PR #4 may be marked Ready and merged. After merge, continue with stacked PR #8 / Issues #5–#7, retargeting/synchronising it to `main` as needed.
 
 Render Free remains test-only acceptance infrastructure and is not production durability.
+
+
+## Post-merge handoff — Issue #3 closed
+
+Issue #3 is complete and closed.
+
+- PR #4 merged into `main`;
+- merge commit: `a1d53608a8c4d217d22b214770f079d9e66a546a`;
+- physical iPhone acceptance: PASSED;
+- final Issue #3 CI: `36947613734` SUCCESS, 59/59 tests;
+- live non-production acceptance host: `https://werkz-time-device-test.onrender.com`.
+
+The next active workstream is PR #8 / Issues #5–#7:
+licensing/enrollment/release security, product-security lifecycle/CRA/AI transparency, and IP/OSS/brand protection.
+
+PR #8 must now use the merged `main` baseline; stale text claiming Issue #3 still needs hosting/iPhone acceptance is superseded.
