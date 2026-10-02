@@ -2,12 +2,12 @@
   "schema_version": 1,
   "updated_at": "2026-10-02",
   "baseline": "KB-v1.41",
-  "state": "DONE_NEEDS_NEXT_ORDER",
+  "state": "IN_PROGRESS",
   "repository": "patslu-fck1701/UI-Pro",
   "active_issue": {
-    "number": 3,
-    "title": "Codex Next: commercial modules, entitlements, pricing catalog & Time productionization",
-    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/3"
+    "number": 5,
+    "title": "WerkZ Licensing, Enrollment & Release Security",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/5"
   },
   "canonical_phone_baseline": {
     "files_library_path": "/WerkZ/Baseline/WerkZ.zip",
@@ -35,17 +35,16 @@
     "update_CURRENT_WORK_json",
     "completion_comment_on_active_issue"
   ],
-  "next_trigger": "Issue #3 is accepted and ready to merge. After merge, retarget/synchronise PR #8 to main and continue Issues #5–#7 public-safe implementation; do not commit secrets or production signing keys.",
+  "next_trigger": "Synchronise PR #8 with current main, rerun its verification suite, remove stale Issue #3 blocker text, then continue remaining licensing/product-security/IP gates and Integration Foundation work.",
   "last_verified_control_plane_commit": "4a0651fb8ecd0ae847f13bd9b11056570ca08483",
   "launch_order": "docs/operations/CODEX_LAUNCH_ORDER.md",
   "last_verified_issue_branch_commit": "3dce13fd67367ef0cdfcc834d7906cdf7365b529",
   "active_pull_request": {
-    "number": 4,
-    "url": "https://github.com/patslu-fck1701/UI-Pro/pull/4",
-    "draft": false,
-    "mergeable": true,
-    "head": "3dce13fd67367ef0cdfcc834d7906cdf7365b529",
-    "completion_status": "accepted_ready_to_merge"
+    "number": 8,
+    "url": "https://github.com/patslu-fck1701/UI-Pro/pull/8",
+    "draft": true,
+    "base": "main",
+    "scope": "Issues #5–#7"
   },
   "research_sources": [
     {
@@ -74,7 +73,7 @@
       "purpose": "current integration/API research copy"
     }
   ],
-  "current_continuation": "Issue #3 implementation and physical iPhone acceptance are complete. Live non-production HTTPS host is connected and the owner confirmed the tested mobile flow works completely.",
+  "current_continuation": "Issue #3 is merged and closed. Continue stacked PR #8 / Issues #5–#7 from the new main baseline, preserving public-safe security/licensing/IP work and keeping secrets/signing keys out of the public repository.",
   "last_verified_ci": {
     "run_id": 36947417545,
     "conclusion": "success",
@@ -369,8 +368,9 @@
       "head": "39c5ae225078a90180814ae395b516499c2b311c"
     },
     "pr4": {
-      "state": "accepted_ready_to_merge",
-      "head": "3dce13fd67367ef0cdfcc834d7906cdf7365b529"
+      "state": "merged",
+      "head": "5a0fb94accdbc0e982ddda527cb3a80edc994571",
+      "merge_commit": "a1d53608a8c4d217d22b214770f079d9e66a546a"
     },
     "comparison": {
       "ahead_by": 87,
@@ -561,5 +561,24 @@
       "smaller Mein Arbeitstag heading",
       "logo_ich Home Screen icon with black background"
     ]
+  },
+  "completed_issue": {
+    "number": 3,
+    "title": "Codex Next: commercial modules, entitlements, pricing catalog & Time productionization",
+    "url": "https://github.com/patslu-fck1701/UI-Pro/issues/3",
+    "state": "closed",
+    "merge_commit": "a1d53608a8c4d217d22b214770f079d9e66a546a",
+    "merged_pr": 4,
+    "physical_iphone_acceptance": "passed"
+  },
+  "issue3_completion": {
+    "status": "merged_closed",
+    "pr": 4,
+    "merge_commit": "a1d53608a8c4d217d22b214770f079d9e66a546a",
+    "issue_state": "closed",
+    "physical_iphone_acceptance": "passed",
+    "acceptance_host": "https://werkz-time-device-test.onrender.com",
+    "final_ci_run": 36947613734,
+    "tests": "59/59"
   }
 }
