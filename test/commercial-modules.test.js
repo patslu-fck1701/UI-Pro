@@ -18,8 +18,16 @@ function harness(){
 }
 
 test('all business modules expose complete production contracts',()=>{
-  const {registry}=harness();assert.equal(registry.list().length,12);
+  const {registry}=harness();assert.equal(registry.list().length,16);
   for(const module of registry.list()){assert.ok(module.id.startsWith('werkz.'));assert.ok(module.sku.startsWith('WZ-'));assert.deepEqual(module.websitePublisherDependencies,[]);assert.ok(module.compatibility.core);}
+});
+
+test('WerkZ Einfach remains modular and optional',()=>{
+  const {registry}=harness();
+  const simple=registry.get('werkz.simple'),crypto=registry.get('werkz.crypto-monitor');
+  assert.deepEqual(simple.hardDependencies,[]);
+  assert.ok(simple.optionalIntegrations.includes('werkz.channel.gmail'));
+  assert.deepEqual(crypto.capabilities,['market.read']);
 });
 
 test('time-only organisation works and orders can be entitled later',()=>{
