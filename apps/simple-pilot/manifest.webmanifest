@@ -1,0 +1,18 @@
+{
+  "name": "WerkZ Einfach",
+  "short_name": "WerkZ",
+  "start_url": "/pilot/",
+  "scope": "/pilot/",
+  "display": "standalone",
+  "background_color": "#e9e6de",
+  "theme_color": "#303638",
+  "description": "WerkZ Einfach – mobiler Arbeitshelfer",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
