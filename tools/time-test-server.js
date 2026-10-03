@@ -158,16 +158,18 @@ function servePilotReference(url,response){
 function servePilotHtml(url,response){
   if(url.pathname==='/pilot'){response.writeHead(308,{location:'/pilot/'});response.end();return true}
   if(url.pathname==='/pilot/site'){response.writeHead(308,{location:'/pilot/site/'});response.end();return true}
-  let file=null;
+  let file=null,cache='no-store';
   if(url.pathname==='/pilot/'||url.pathname==='/pilot/index.html')file=path.join(pilotPwaDir,'index.html');
+  if(url.pathname==='/pilot/sw.js'){file=path.join(pilotPwaDir,'sw.js');cache='no-cache'}
+  if(url.pathname==='/pilot/manifest.webmanifest'){file=path.join(pilotPwaDir,'manifest.webmanifest');cache='public, max-age=300'}
   if(url.pathname==='/pilot/site/'||url.pathname==='/pilot/site/index.html')file=path.join(pilotSiteDir,'index.html');
   if(!file)return false;
   if(!fs.existsSync(file)||!fs.statSync(file).isFile())return false;
-  response.setHeader('content-security-policy',"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+  response.setHeader('content-security-policy',"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
   response.setHeader('x-content-type-options','nosniff');
   response.setHeader('referrer-policy','no-referrer');
-  response.setHeader('cache-control','no-store');
-  response.writeHead(200,{'content-type':'text/html; charset=utf-8'});
+  response.setHeader('cache-control',cache);
+  response.writeHead(200,{'content-type':contentTypes[path.extname(file)]||'application/octet-stream'});
   response.end(fs.readFileSync(file));return true;
 }
 function html(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
