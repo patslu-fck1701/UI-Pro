@@ -9,7 +9,7 @@
   "description": "WerkZ Einfach – mobiler Arbeitshelfer",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/pilot/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
