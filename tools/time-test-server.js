@@ -98,7 +98,7 @@ const contentTypes={
 };
 const assistantFiles=new Map([
   ['/','index.html'],['/index.html','index.html'],['/assistant/','index.html'],['/assistant/index.html','index.html'],
-  ['/assistant/styles.css','styles.css'],['/assistant/app.js','app.js'],['/assistant/manifest.webmanifest','manifest.webmanifest'],['/assistant/sw.js','sw.js']
+  ['/assistant/styles.css','styles.css'],['/assistant/app.js','app.js'],['/assistant/manifest.webmanifest','manifest.webmanifest'],['/assistant/sw.js','sw.js'],['/assistant/apple-touch-icon.png','apple-touch-icon.png']
 ]);
 const timeFiles=new Map([
   ['/time/','index.html'],['/time/index.html','index.html'],['/time/styles.css','styles.css'],['/time/app.js','app.js'],
