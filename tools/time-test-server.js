@@ -240,7 +240,7 @@ const server=http.createServer(async(request,response)=>{
   }
   if(request.method==='GET'&&serveDemoHub(url,response))return;
   if(request.method==='GET'&&serveStatic(url,response))return;
-  if(ephemeralMode&&request.method==='GET'&&(url.pathname==='/api/session'||url.pathname==='/session')&&!cookieTokenFromHeader(request.headers.cookie)){
+  const sessionToken=cookieTokenFromHeader(request.headers.cookie);\n  if(ephemeralMode&&request.method==='GET'&&(url.pathname==='/api/session'||url.pathname==='/session')&&(!sessionToken||!authSessions[sessionToken])){
     const manager=selectedProfile('manager');
     const existing=String(request.headers.cookie||'').replace(/(?:^|;\\s*)werkz_session=[^;]*/g,'').replace(/^;\\s*|;\\s*$/g,'');
     request.headers.cookie=(existing?existing+'; ':'')+'werkz_session='+encodeURIComponent(manager.token);
