@@ -17,6 +17,7 @@ class DocumentExtractionPort{async extract(){throw new Error('DocumentExtraction
 class OutboundMailPort{async send(){throw new Error('OutboundMailPort.send must be implemented')}}
 class MarketDataPort{async snapshot(){throw new Error('MarketDataPort.snapshot must be implemented')}}
 class PortfolioReadPort{async portfolio(){throw new Error('PortfolioReadPort.portfolio must be implemented')}}
+class ScrapPricePort{async snapshot(){throw new Error('ScrapPricePort.snapshot must be implemented')}}
 
 class FilePilotRepository{
   constructor(file){this.file=path.resolve(file);this.state={calls:[],documents:[],notes:[],exports:[]};this.load()}
@@ -54,9 +55,22 @@ class DraftMailProvider extends OutboundMailPort{
 }
 class StaticMarketProvider extends MarketDataPort{constructor(value=null){super();this.value=value}async snapshot(){return this.value||{source:'demo',live:false,symbol:'BTC/EUR',price:null,change24h:null,change30d:null,note:'Read-only Live-Verbindung ist vorbereitet.'}}}
 class StaticPortfolioProvider extends PortfolioReadPort{constructor(value=null){super();this.value=value}async portfolio(){return this.value||{source:'demo',live:false,asset:'BTC',quantity:null,marketValueEur:null,costBasisEur:null,pnlEur:null,note:'Demo-Portfolio noch nicht serverseitig verbunden.'}}}
+class StaticScrapPriceProvider extends ScrapPricePort{constructor(value=null){super();this.value=value}async snapshot(){return this.value||{source:'demo',asOf:null,items:[
+  {key:'mixed-scrap',label:'Mischschrott',unit:'EUR/t',price:null},
+  {key:'grade-3',label:'Sorte 3',unit:'EUR/t',price:null},
+  {key:'shredder-feed',label:'Schreddervormaterial',unit:'EUR/t',price:null},
+  {key:'copper',label:'Kupfer',unit:'EUR/kg',price:null},
+  {key:'brass',label:'Messing',unit:'EUR/kg',price:null},
+  {key:'lead',label:'Blei',unit:'EUR/kg',price:null},
+  {key:'zinc',label:'Zink',unit:'EUR/kg',price:null},
+  {key:'aluminium',label:'Aluminium',unit:'EUR/kg',price:null},
+  {key:'cable',label:'Kabel',unit:'EUR/kg',price:null},
+  {key:'motors',label:'Elektromotoren',unit:'EUR/kg',price:null},
+  {key:'batteries',label:'Bleibatterien',unit:'EUR/kg',price:null}
+],note:'Tagespreise / Richtwerte. Händlerpreis kann abweichen.'}}}
 
 class WerkZSimplePilotService{
-  constructor({auth,entitlements,repository,storage,voice,mail,extractor,outbound,market,portfolio,clock=()=>new Date(),audit=()=>{}}){Object.assign(this,{auth,entitlements,repository,storage,voice,mail,extractor,outbound,market,portfolio,clock,audit})}
+  constructor({auth,entitlements,repository,storage,voice,mail,extractor,outbound,market,portfolio,scrapPrices,clock=()=>new Date(),audit=()=>{}}){Object.assign(this,{auth,entitlements,repository,storage,voice,mail,extractor,outbound,market,portfolio,scrapPrices,clock,audit})}
   session(token,cap='pilot.read'){const s=this.auth.resolveSession(req(token,'session'));this.entitlements.require(s.organisationId,'werkz.simple');if(!s.capabilities.includes(cap)&&!s.capabilities.includes('pilot.admin'))throw Object.assign(new Error('forbidden'),{code:'FORBIDDEN'});return s}
   event(s,type,id,payload={}){this.audit({organisationId:s.organisationId,actorId:s.actorId,eventType:type,entityType:'pilot',entityId:id,source:'werkz.simple',payload})}
   summary(token){const s=this.session(token),calls=this.repository.list(s.organisationId,'calls'),docs=this.repository.list(s.organisationId,'documents');const m=this.clock().toISOString().slice(0,7);return {open:calls.filter(x=>x.status!=='erledigt').length,callbacks:calls.filter(x=>x.status==='neu'||x.status==='Rückruf').length,documentsThisMonth:docs.filter(x=>x.receivedAt.slice(0,7)===m).length}}
@@ -71,6 +85,7 @@ class WerkZSimplePilotService{
   prepareExport(token,m){const s=this.session(token,'pilot.write');this.entitlements.require(s.organisationId,'werkz.billing-prep');const selected=month(m),docs=this.repository.list(s.organisationId,'documents').filter(x=>x.receivedAt.slice(0,7)===selected),row={id:uid('export'),organisationId:s.organisationId,month:selected,createdAt:this.clock().toISOString(),status:'prepared',documentIds:docs.map(x=>x.id),count:docs.length,totalAmount:Math.round(docs.reduce((n,x)=>n+(Number(x.amount)||0),0)*100)/100};return this.repository.add('exports',row)}
   async sendExport(token,{exportId,confirm,to}){const s=this.session(token,'pilot.write');if(confirm!==true)throw Object.assign(new Error('confirmation required'),{code:'CONFIRMATION_REQUIRED'});const row=this.repository.find(s.organisationId,'exports',req(exportId,'exportId'));if(!row)throw Object.assign(new Error('not found'),{code:'NOT_FOUND'});const docs=this.repository.list(s.organisationId,'documents').filter(x=>row.documentIds.includes(x.id));const delivery=await this.outbound.send({organisationId:s.organisationId,to:req(to,'to'),subject:'Unterlagen '+row.month,text:'WerkZ Monatsübergabe',documents:docs});return {...row,delivery}}
   async marketSnapshot(token){const s=this.session(token);this.entitlements.require(s.organisationId,'werkz.crypto-monitor');const [market,portfolio]=await Promise.all([this.market.snapshot({organisationId:s.organisationId}),this.portfolio.portfolio({organisationId:s.organisationId})]);return {label:'Demo-Portfolio',readOnly:true,market,portfolio,generatedAt:this.clock().toISOString()}}
+  async scrapPriceSnapshot(token){const s=this.session(token);const snap=await this.scrapPrices.snapshot({organisationId:s.organisationId});return {...snap,items:Array.isArray(snap.items)?snap.items.map(x=>({...x,displayUnit:x.unit==='EUR/t'?'€/t':'€/kg'})):[],generatedAt:this.clock().toISOString()}}
 }
 
 function cookieValue(cookie,name){const x=String(cookie||'').split(';').map(v=>v.trim()).find(v=>v.startsWith(name+'='));return x?decodeURIComponent(x.slice(name.length+1)):null}
@@ -92,12 +107,13 @@ function createPilotHttpHandler({service,defaultTaxRecipient='steuerberater@exam
     else if(reqr.method==='POST'&&url.pathname==='/pilot/api/export/prepare'){const b=await readBody(reqr);sendJson(res,201,service.prepareExport(token,b.month))}
     else if(reqr.method==='POST'&&url.pathname==='/pilot/api/export/send'){const b=await readBody(reqr);sendJson(res,200,await service.sendExport(token,{...b,to:b.to||defaultTaxRecipient}))}
     else if(reqr.method==='GET'&&url.pathname==='/pilot/api/market')sendJson(res,200,await service.marketSnapshot(token));
+    else if(reqr.method==='GET'&&url.pathname==='/pilot/api/scrap-prices')sendJson(res,200,await service.scrapPriceSnapshot(token));
     else sendJson(res,404,{error:'NOT_FOUND'});
     return true
   }catch(e){sendJson(res,status(e),{error:e.code||'ERROR',message:e.code==='VALIDATION_ERROR'?e.message:'Request failed'});return true}}
 }
 
 function parseSnapshot(value){if(!value)return {};try{const x=JSON.parse(value);return x&&typeof x==='object'?x:{}}catch{return {}}}
-function createPilotRuntime({auth,entitlements,dataDir,audit=()=>{}}){const snap=parseSnapshot(process.env.WERKZ_DEMO_CRYPTO_SNAPSHOT);return new WerkZSimplePilotService({auth,entitlements,repository:new FilePilotRepository(path.join(dataDir,'pilot.json')),storage:new PilotDocumentStorage(path.join(dataDir,'documents')),voice:new FakeVoiceProvider(),mail:new FakeMailProvider(),extractor:new FakeExtractor(),outbound:new DraftMailProvider(),market:new StaticMarketProvider(snap.market||null),portfolio:new StaticPortfolioProvider(snap.portfolio||null),audit})}
+function createPilotRuntime({auth,entitlements,dataDir,audit=()=>{}}){const snap=parseSnapshot(process.env.WERKZ_DEMO_CRYPTO_SNAPSHOT),scrap=parseSnapshot(process.env.WERKZ_SCRAP_PRICE_SNAPSHOT);return new WerkZSimplePilotService({auth,entitlements,repository:new FilePilotRepository(path.join(dataDir,'pilot.json')),storage:new PilotDocumentStorage(path.join(dataDir,'documents')),voice:new FakeVoiceProvider(),mail:new FakeMailProvider(),extractor:new FakeExtractor(),outbound:new DraftMailProvider(),market:new StaticMarketProvider(snap.market||null),portfolio:new StaticPortfolioProvider(snap.portfolio||null),scrapPrices:new StaticScrapPriceProvider(scrap.items?scrap:null),audit})}
 
-module.exports={VoiceProviderPort,MailProviderPort,DocumentExtractionPort,OutboundMailPort,MarketDataPort,PortfolioReadPort,FilePilotRepository,MemoryPilotRepository,PilotDocumentStorage,FakeVoiceProvider,FakeMailProvider,FakeExtractor,DraftMailProvider,StaticMarketProvider,StaticPortfolioProvider,WerkZSimplePilotService,createPilotHttpHandler,createPilotRuntime,parseSnapshot,classifyInquiry};
+module.exports={VoiceProviderPort,MailProviderPort,DocumentExtractionPort,OutboundMailPort,MarketDataPort,PortfolioReadPort,ScrapPricePort,FilePilotRepository,MemoryPilotRepository,PilotDocumentStorage,FakeVoiceProvider,FakeMailProvider,FakeExtractor,DraftMailProvider,StaticMarketProvider,StaticPortfolioProvider,StaticScrapPriceProvider,WerkZSimplePilotService,createPilotHttpHandler,createPilotRuntime,parseSnapshot,classifyInquiry};
