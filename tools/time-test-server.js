@@ -47,9 +47,10 @@ function parseExtraPilotTenants(){
   return list.map((item,index)=>{
     if(!item||typeof item!=='object')throw new Error('pilot tenant '+index+' must be an object');
     const id=String(item.id||item.slug||'tenant-'+(index+1)).trim().replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,64);
-    const org=String(item.organisationId||'org-'+id).trim().slice(0,120);
-    if(!id||!org||seen.has(org))throw new Error('pilot tenant id/organisationId invalid or duplicate');
-    seen.add(org);
+    const aliasOfPrimary=item.aliasOfPrimary===true;
+    const org=String(aliasOfPrimary?organisationId:(item.organisationId||'org-'+id)).trim().slice(0,120);
+    if(!id||!org||(!aliasOfPrimary&&seen.has(org))||(aliasOfPrimary&&org!==organisationId))throw new Error('pilot tenant id/organisationId invalid or duplicate');
+    if(!aliasOfPrimary)seen.add(org);
     const tenantLoginCode=String(item.loginCode||'').trim();
     const explicitToken=String(item.sessionToken||'').trim();
     const stableToken=explicitToken||(tenantLoginCode?crypto.createHmac('sha256',primaryPilotSessionToken).update('werkz-pilot-tenant:'+org+':'+tenantLoginCode).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
