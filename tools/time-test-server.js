@@ -53,10 +53,13 @@ function parseExtraPilotTenants(){
     const org=String(item.organisationId||'org-'+id).trim().slice(0,120);
     if(!id||!org||seen.has(org))throw new Error('pilot tenant id/organisationId invalid or duplicate');
     seen.add(org);
+    const tenantLoginCode=String(item.loginCode||'').trim();
+    const explicitToken=String(item.sessionToken||'').trim();
+    const stableToken=explicitToken||(tenantLoginCode?crypto.createHmac('sha256',primarySessionToken).update('werkz-pilot-tenant:'+org+':'+tenantLoginCode).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
     return {id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
       actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
       taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
-      token:String(item.sessionToken||'').trim()||crypto.randomBytes(48).toString('base64url'),role:'owner'};
+      loginCode:tenantLoginCode||null,token:stableToken,role:'owner'};
   });
 }
 const extraPilotTenants=parseExtraPilotTenants();
@@ -69,7 +72,7 @@ const profileAccessToken=crypto.randomBytes(32).toString('base64url');
 const workerCapabilities=['time.start','time.stop','time.correct','document.upload'];
 const managerCapabilities=[...workerCapabilities,'time.read.all','pilot.read','pilot.write','market.read'];
 const testProfiles=new Map([
-  ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:'primary'}]
+  ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null}]
 ]);
 for(const tenant of extraPilotTenants)testProfiles.set(tenant.id,{...tenant,capabilities:['pilot.read','pilot.write','market.read'],kind:'tenant'});
 if(testProfilesEnabled){
@@ -233,6 +236,16 @@ function profileAccessGranted(cookie){
 function sessionCookie(name,value,maxAge=28800){
   return name+'='+encodeURIComponent(value)+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age='+maxAge;
 }
+function sameSecret(a,b){
+  const left=crypto.createHash('sha256').update(String(a||'')).digest();
+  const right=crypto.createHash('sha256').update(String(b||'')).digest();
+  return crypto.timingSafeEqual(left,right);
+}
+function pilotLoginForm(response,{message='',returnTo='/pilot/',tenant='' }={}){
+  response.writeHead(message?401:200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});
+  response.end('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width"><title>WERKZ – SCHROTTIES</title><body style="font-family:system-ui;background:#e9e6de;color:#232323"><main style="max-width:440px;margin:40px auto;padding:22px;background:#f8f6f1;border-radius:16px"><h1>WERKZ – SCHROTTIES</h1><p>Dein Betriebszugang</p>'+(message?'<p style="color:#8b5558;font-weight:800">'+html(message)+'</p>':'')+'<form method="post" action="/pilot/login"><input type="hidden" name="return" value="'+html(returnTo)+'"><label style="display:block;margin:12px 0">Betrieb<input name="tenant" value="'+html(tenant)+'" autocomplete="username" required style="box-sizing:border-box;width:100%;font-size:20px;padding:12px;margin-top:5px"></label><label style="display:block;margin:12px 0">Zugangscode<input name="code" type="password" autocomplete="current-password" required style="box-sizing:border-box;width:100%;font-size:20px;padding:12px;margin-top:5px"></label><button style="width:100%;font-size:20px;font-weight:800;padding:13px">ANMELDEN</button></form></main></body></html>');
+}
+
 function form(response,message='',returnTo='/'){
   response.writeHead(message?401:200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
   response.end('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width"><title>WerkZ Testanmeldung</title><body><main><h1>WerkZ Zeit Testanmeldung</h1>'+(message?'<p>'+html(message)+'</p>':'')+'<form method="post"><input type="hidden" name="return" value="'+html(returnTo)+'"><label>Temporärer Testcode <input name="code" type="password" required></label><button>Anmelden</button></form></main></body></html>');
@@ -279,6 +292,27 @@ const server=http.createServer(async(request,response)=>{
     catch(e){writable=false;error='storage-unavailable'}
     response.writeHead(writable?200:503,{'content-type':'application/json','cache-control':'no-store'});
     return response.end(JSON.stringify({ok:writable,storageWritable:writable,error}));
+  }
+  if(url.pathname==='/pilot/login'&&request.method==='GET'){
+    const returnTo=safeLocalReturn(url.searchParams.get('return'),'/pilot/');
+    const tenant=String(url.searchParams.get('tenant')||'').trim().toLowerCase();
+    return pilotLoginForm(response,{returnTo,tenant});
+  }
+  if(url.pathname==='/pilot/login'&&request.method==='POST'){
+    const chunks=[];for await(const chunk of request)chunks.push(chunk);
+    const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
+    const returnTo=safeLocalReturn(params.get('return'),'/pilot/');
+    const tenant=String(params.get('tenant')||'').trim().toLowerCase();
+    const code=String(params.get('code')||'');
+    const profile=pilotTenantBySlug.get(tenant);
+    const expected=profile?.loginCode||(profile?.id==='manager'&&testProfilesEnabled?loginCode:null);
+    if(!profile||!expected||!sameSecret(code,expected))return pilotLoginForm(response,{message:'Anmeldung nicht möglich.',returnTo,tenant});
+    response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,60*60*24*60),'cache-control':'no-store'});
+    return response.end();
+  }
+  if(url.pathname==='/pilot/logout'&&request.method==='GET'){
+    response.writeHead(303,{location:'/pilot/login','set-cookie':sessionCookie('werkz_session','',0),'cache-control':'no-store'});
+    return response.end();
   }
   if(url.pathname==='/test-profiles'&&request.method==='GET'){
     const returnTo=externalFrontendUrl||safeLocalReturn(url.searchParams.get('return'),'/');
