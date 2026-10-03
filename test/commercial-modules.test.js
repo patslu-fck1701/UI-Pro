@@ -18,7 +18,7 @@ function harness(){
 }
 
 test('all business modules expose complete production contracts',()=>{
-  const {registry}=harness();assert.equal(registry.list().length,11);
+  const {registry}=harness();assert.equal(registry.list().length,12);
   for(const module of registry.list()){assert.ok(module.id.startsWith('werkz.'));assert.ok(module.sku.startsWith('WZ-'));assert.deepEqual(module.websitePublisherDependencies,[]);assert.ok(module.compatibility.core);}
 });
 
