@@ -40,7 +40,7 @@ const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ_TEST_ORGANISATION_LABEL||'Pilotbetrieb';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
 const actorLabel=process.env.WERKZ_TEST_ACTOR_LABEL||'Manager';
-const primarySessionToken=runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
+const primarySessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim()||runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
 function parseExtraPilotTenants(){
   const raw=process.env.WERKZ_PILOT_TENANTS_JSON;
   if(!raw)return [];
