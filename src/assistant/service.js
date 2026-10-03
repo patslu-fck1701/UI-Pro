@@ -73,7 +73,7 @@ const DEUTSCHZ_TARGETS=Object.freeze([
   {id:'eventschedulerz',label:'EventSchedulerZ',aliases:['eventschedulerz','event scheduler','scheduler']},
   {id:'toxicz',label:'ToxicZ',aliases:['toxicz','toxic']},
   {id:'battlegroundz',label:'BattlegroundZ',aliases:['battlegroundz','battleground']},
-  {id:'operation-deutschz',label:'Operation DeutschZ',aliases:['operation deutschz','operation eclipsez','eclipsez']},
+  {id:'operation-deutschz',label:'Operation DeutschZ',aliases:['operation deutschz','operationdeutschz']},
   {id:'atm-raidz',label:'ATM RaidZ',aliases:['atm raidz','atm raid','atmraidez']},
   {id:'propertyz',label:'PropertyZ',aliases:['propertyz','property']}
 ]);
@@ -91,6 +91,141 @@ function createMapperProjection({organisationId,actorId,sourceId,sourceType,capt
     summary:optional(textValue,1200),createdAt:now,updatedAt:now,
     note:'Durable projection; external Webmapper transport is not bound yet.'
   };
+}
+
+const DEUTSCHZ_STORY_CANON=Object.freeze({
+  id:'q17-t17-main',
+  version:'2026-10-03',
+  title:'DeutschZ Hauptstory · Q-17 / T-17',
+  premise:{
+    q17:'Q-17 umfasst konzentrierte Proben, Versuchsdaten, Stabilisatoren und mögliche Gegenmittel.',
+    t17:'Das T-17-Protokoll trennt Proben, Dokumente, Freigaben, Decoder, Schutzmaterial, Geld, Identifikationsschlüssel und Transportdaten, damit niemand allein die vollständige Kontrolle besitzt.'
+  },
+  people:[
+    {id:'morozov',name:'Dr. Viktor Morozov',state:'dead',role:'wissenschaftlicher Leiter von Q-17; sabotiert T-17 später von innen',facts:['14 Tage vor Transport Sieben getötet','Dead-Channel-Kette vor seinem Tod vorbereitet','digitale Zertifikate nach seinem Tod weiterverwendet']},
+    {id:'voronin',name:'Oberst Alexei Voronin',state:'active',role:'will Q-17 erhalten und als kontrollierbares Druckmittel bzw. mögliche Waffe nutzen',facts:['ließ Morozov töten','besitzt Kopien von Morozovs Zertifikaten','verwendet Morozovs Kennung nach dessen Tod weiter']}
+  ],
+  raven:{
+    black:'Voronin-treu; Bergung, Recovery, Beweisvernichtung und Gegenmaßnahmen.',
+    echo:'Morozov-Manipulationen und abweichende Crews; Hilfe, Falle, Köder, Quarantäne oder Recovery sind möglich.',
+    ravenHeat:'Persönlicher Reaktionswert für aggressivere BLACK-Gegenmaßnahmen.'
+  },
+  technicalScheduler:{
+    independentFromStory:true,
+    currentMajorRotation:['koth','courierz','raven','aiconvoyz'],
+    note:'Die technische Eventrotation bleibt von der persönlichen Hauptstory getrennt.'
+  },
+  supportSystems:{
+    welcomez:{
+      role:'Persönlicher Player-Hub für Storyfortschritt, nächsten Schritt und Weltrotation.',
+      verified:['trennt Weltevent-Rotation und Storystatus','liest Completion-Dateien pro Spieler','enthält Morozov-89,5-MHz-Audio als Welcome-Asset']
+    },
+    radiomissionz:{
+      role:'Story-Director und Funkkanal 89,5 MHz.',
+      verified:['Storykapitel für KOTH, Transport Sieben, Decoder und Signalaktivierung','persistente story_heard- und event_completions-Struktur','ToxicZ-/ATM-/Courier-/Battleground-/Operation-Storyführung vorhanden']
+    },
+    battlegroundz:{
+      role:'Eigenständiges Event und Autorisierungsknoten vor Operation DeutschZ.',
+      verified:['benötigt Battleground-Papiere und Convoy-CardReader','erzeugt registrierten BattlegroundZ-CardReader','gibt nach Erfolg Operation-DeutschZ-KeyCard aus','schreibt persönliche Battleground-Completion']
+    },
+    operationDeutschz:{
+      role:'Aktuelles finales Operationsmodul.',
+      verified:['erzeugt MasterCardReader aus registriertem BattlegroundZ-Reader + Operation-KeyCard','Operation-Abschluss wird persönlich persistiert','Eclipse ist nicht Teil des aktuellen Kanons']
+    }
+  },
+  mainStory:{
+    order:['koth','aiconvoyz','toxicz','atm-raidz','propertyz','courierz','raven','battlegroundz','operation-deutschz'],
+    nodes:[
+      {id:'koth',label:'KotHZ',required:true,implementationPolicy:'existing_event_unchanged',storyRole:'Einstieg; seltenes T-17 / Toxic Secret Document verweist auf Transport Sieben',artifacts:['ToxicZ_Secret_Document']},
+      {id:'aiconvoyz',label:'AIConvoyZ',required:true,implementationPolicy:'roadmap_active',storyRole:'Blackbox liefert ToxicZ Dokumenten Decoder',artifacts:['Toxicz_Doc_Decoder'],handoff:'Secret Document + Decoder → ToxicZ_Signal_Marker'},
+      {id:'toxicz',label:'ToxicZ',required:true,implementationPolicy:'roadmap_active',storyRole:'Rify / Transport Sieben; Morozovs Todesdatum und nach seinem Tod signierte Befehle',artifacts:['ToxicZ_Signal_Marker','Rify-Manifeste','Morozov-Todesdatum','Postmortem-Befehle'],handoff:'Finale Rify-Flare beendet ToxicZ und öffnet die Nach-Rify-Ermittlungsphase; Operation DeutschZ startet hier noch nicht.'},
+      {id:'atm-raidz',label:'ATM RaidZ',required:false,optional:true,blocking:false,implementationPolicy:'story_overlay_to_adjust',storyRole:'Optionale Geldspur mit Transaktionsfragmenten; verpasstes Event darf die Hauptstory nicht blockieren',artifacts:['Transaktionsfragmente']},
+      {id:'propertyz',label:'PropertyZ',required:true,implementationPolicy:'story_overlay_planned',storyRole:'Persönlicher Ermittlungsort; weiterhin raidbar; nur kleiner geschützter Story-/Archivfortschritt und später Dead Drop',artifacts:['Dead Drop','persönliches Archiv']},
+      {id:'courierz',label:'CourierZ',required:true,implementationPolicy:'existing_event_unchanged',storyRole:'Spätere Storyzuordnung: Continuity Ledger belegt weiterverwendete Identitäten einschließlich Morozov; Eventablauf selbst bleibt unverändert',artifacts:['Continuity Ledger']},
+      {id:'raven',label:'RAVEN',required:true,implementationPolicy:'existing_event_unchanged_story_overlay_planned',storyRole:'Recovery-Netz BLACK/ECHO, Emergency Beacon und RavenHeat; Eventablauf selbst bleibt unverändert',artifacts:['Emergency Beacon','RavenHeat','RAVEN-Fragmente']},
+      {id:'battlegroundz',label:'BattlegroundZ',required:true,implementationPolicy:'existing_event_keep',storyRole:'Eigenständiger roter-Sektor-Event; registriert Convoy-CardReader und liefert Operation-DeutschZ-KeyCard',artifacts:['DeutschZ_BattlegroundZ_RegisteredCardReader','DeutschZ_BattlegroundZ_OperationKeyCard']},
+      {id:'operation-deutschz',label:'Operation DeutschZ',required:true,implementationPolicy:'current_finale_expand_story',storyRole:'T-17-Archiv, RAVEN-BLACK-Angriff, Tisy-Relais, Voronin und Endentscheidung',artifacts:['DeutschZ_OperationDeutschZ_MasterCardReader'],finalChoices:['Q-17 vernichten','alles veröffentlichen','Teile sichern']}
+    ]
+  },
+  currentSourceGaps:[
+    {id:'atm-currently-blocking',severity:'story-mismatch',message:'WelcomeZ und RadioMissionZ behandeln ATM RaidZ aktuell als Pflichtstufe; Kanon verlangt optional/nicht blockierend.'},
+    {id:'property-not-wired',severity:'missing-link',message:'PropertyZ ist im aktuellen WelcomeZ/RadioMissionZ-Storypfad noch nicht eingebunden.'},
+    {id:'raven-not-wired',severity:'missing-link',message:'RAVEN ist im aktuellen persönlichen WelcomeZ/RadioMissionZ-Storypfad noch nicht eingebunden.'},
+    {id:'battleground-reader-class-collision',severity:'source-error',message:'BattlegroundZ verwendet DZBGZ_CardReader gleichzeitig als stationären Reader und erwartetes Inventaritem; AIConvoyZ besitzt eine separate CardReader-Klasse.'}
+  ],
+  discarded:['Operation EclipseZ']
+});
+function publicStoryCanon(){return clone(DEUTSCHZ_STORY_CANON)}
+
+const DEUTSCHZ_SOURCE_AUDIT=Object.freeze({
+  generatedFrom:'DeutschZ-ModZ source comparison',
+  checkedAt:'2026-10-03',
+  snapshots:[
+    {id:'current-scheduler',ref:'codex/scheduler-points-rbm-20261003',commit:'cc1fe80579971c5a1319bf1895bd86605af38c29',role:'aktueller geprüfter Event-/Story-Stand'},
+    {id:'legacy-september',ref:'archive/legacy-before-modz-rebuild-2026-09-28',commit:'4c442b30e6043a226d6f404e3dd2a4e948309eed',role:'älterer Vollsource-Vergleich'},
+    {id:'sync-july',ref:'codex/sync-modz-20260711',commit:'59f3c655c9eeb2622e571370e480d5957c4298c1',role:'älterer Sync-/Migrationsvergleich'}
+  ],
+  findings:[
+    {id:'welcome-story-separation',status:'verified',severity:'info',area:'WelcomeZ',eventId:'story',eventLabel:'Hauptstory',source:'deutschz_welcomez',action:'Beibehalten; Story und Scheduler weiter getrennt modellieren.',title:'Weltrotation und persönliche Story sind bereits getrennt',
+      actual:'WelcomeZ zeigt WELTEVENTS (ROTATION) separat vom persönlichen Storyfortschritt und liest Completion-Dateien pro Spieler.',
+      expected:'Technische Scheduler-Reihenfolge darf die Q-17/T-17-Hauptstory nicht definieren.',
+      modules:['deutschz_welcomez','deutschz_eventschedulerz']},
+    {id:'radio-story-director',status:'verified',severity:'info',area:'RadioMissionZ',eventId:'story',eventLabel:'Hauptstory',source:'deutschz_radiomissionz',action:'Bestehenden 89,5-MHz-Director erweitern statt duplizieren.',title:'89,5 MHz ist bereits der persönliche Story-Director',
+      actual:'RadioMissionZ kennt KOTH, Transport Sieben, Decoder, Signalaktivierung, ToxicZ, ATM, Courier, Battleground und Operation und persistiert gehörte Kapitel.',
+      expected:'Diesen Director erweitern statt eine zweite parallele Storyengine aufzubauen.',
+      modules:['deutschz_radiomissionz']},
+    {id:'toxicz-existing-core',status:'partial',severity:'medium',area:'ToxicZ',eventId:'toxicz',eventLabel:'ToxicZ',source:'deutschz_toxicz + welcomez + radiomissionz',action:'Bestehenden Kern schrittweise auf die neue 12-Phasen-Roadmap erweitern.',title:'ToxicZ besitzt schon einen 8-stufigen Kern, neue Roadmap geht deutlich weiter',
+      actual:'WelcomeZ kennt Signalquelle, Hospital 1, Hospital 2, NBC-Vorbereitung, Riffy-Kampf, Transport-Sieben-Blackbox, Decoderstation und letzte T-17-Übertragung.',
+      expected:'Bestehenden Kern erweitern um dynamische Klinik/Feuerwehr-Routen, zufälliges komplettes ABC-Set, ca. 3 Filter, Mehrspieler-Konvergenz, tieferen Rify-Trigger, Stimmen, Horde, Storybereich und finale Flare.',
+      modules:['deutschz_welcomez','deutschz_toxicz','deutschz_radiomissionz']},
+    {id:'atm-currently-blocking',status:'mismatch',severity:'high',area:'Hauptstory',eventId:'atm-raidz',eventLabel:'ATM RaidZ',source:'deutschz_welcomez + deutschz_radiomissionz',action:'ATM auf optional/nicht blockierend umstellen.',title:'ATM RaidZ ist im Source noch Pflicht, im neuen Kanon optional',
+      actual:'WelcomeZ und RadioMissionZ gehen nach ToxicZ zwingend über eine ATM-Completion weiter.',
+      expected:'ATM RaidZ darf zusätzliche Transaktionsfragmente liefern, aber ein verpasstes ATM-Event darf den Hauptpfad nicht blockieren.',
+      modules:['deutschz_welcomez','deutschz_radiomissionz','deutschz_atmraidez']},
+    {id:'property-story-missing',status:'missing',severity:'high',area:'Hauptstory',eventId:'propertyz',eventLabel:'PropertyZ',source:'deutschz_welcomez + deutschz_radiomissionz',action:'PropertyZ als persönlichen Archiv-/Dead-Drop-Knoten einbinden.',title:'PropertyZ fehlt im aktuellen persönlichen Storypfad',
+      actual:'PropertyZ wird in WelcomeZ nur als Nebenaktivität genannt und hat keinen Hauptstory-Completion-Knoten.',
+      expected:'Nach der Geldspur persönlicher Ermittlungsort mit kleinem geschütztem Archivfortschritt und späterem Dead Drop; Property selbst bleibt raidbar.',
+      modules:['deutschz_propertyz','deutschz_welcomez','deutschz_radiomissionz']},
+    {id:'raven-story-missing',status:'missing',severity:'high',area:'Hauptstory',eventId:'raven',eventLabel:'RAVEN',source:'deutschz_welcomez + deutschz_radiomissionz',action:'Nur Story-Overlay ergänzen; RAVEN-Event selbst unverändert lassen.',title:'RAVEN fehlt im aktuellen persönlichen Storypfad',
+      actual:'RadioMissionZ/WelcomeZ springen von CourierZ direkt zu BattlegroundZ.',
+      expected:'RAVEN als Storyknoten mit BLACK/ECHO, Emergency Beacon und RavenHeat zwischen CourierZ und BattlegroundZ ergänzen, ohne das bestehende RAVEN-Event jetzt funktional umzubauen.',
+      modules:['deutschz_airdropz','deutschz_welcomez','deutschz_radiomissionz']},
+    {id:'battleground-operation-bridge',status:'verified',severity:'info',area:'BattlegroundZ',eventId:'battlegroundz',eventLabel:'BattlegroundZ',source:'deutschz_battlegroundz + deutschz_operation_deutschz',action:'Bridge beibehalten; Finale hinter dem MasterCardReader verfeinern.',title:'BattlegroundZ → Operation DeutschZ ist bereits technisch verbunden',
+      actual:'BattlegroundZ erzeugt registrierten CardReader und Operation-KeyCard; Operation DeutschZ kombiniert beide zum MasterCardReader und persistiert Completion.',
+      expected:'Diese Bridge beibehalten; MasterCardReader ist Autorisierung, nicht das Storyfinale selbst.',
+      modules:['deutschz_battlegroundz','deutschz_operation_deutschz']},
+    {id:'battleground-reader-class-collision',status:'error',severity:'critical',area:'CardReader',eventId:'battlegroundz',eventLabel:'BattlegroundZ',source:'deutschz_battlegroundz + deutschz_aiconvoyz',action:'Stationären Reader und transportierbares Convoy-Reader-Item auf getrennte Klassen bringen.',title:'BattlegroundZ verlangt dieselbe Reader-Klasse als Inventaritem und stationären Reader',
+      actual:'DZBGZ_CONVOY_READER_CLASSNAME ist DZBGZ_CardReader. DZBGZ_CardReader ist gleichzeitig der stationäre Kartenleser und verbietet CanPutIntoHands/CanPutInCargo. AIConvoyZ besitzt zusätzlich die separate Klasse deutschz_aiconvoyz_cardreader.',
+      expected:'Stationären Reader und transportierbaren Convoy-Reader eindeutig trennen und einen einzigen kanonischen Item-Klassennamen für die Übergabe an BattlegroundZ verwenden.',
+      modules:['deutschz_battlegroundz','deutschz_aiconvoyz']},
+    {id:'cardreader-history-drift',status:'suspect',severity:'medium',area:'CardReader',eventId:'battlegroundz',eventLabel:'BattlegroundZ',source:'Juli- vs. Oktober-Source',action:'Live-PBO und Spawnklassen gegen aktuellen GPSReceiver-Vertrag prüfen.',title:'Reader-Basisklasse hat sich zwischen Source-Ständen stark geändert',
+      actual:'Im Juli-Bugfix-Stand erbte DZBGZ_CardReader von HouseNoDestruct; im aktuellen Stand von GPSReceiver. Das erhöht das Risiko alter Aliase/PBO-Reste oder falsch dargestellter Klassen.',
+      expected:'Live-PBO/Klassenauflösung und Spawn-/Reward-Klassen gegen den aktuellen GPSReceiver-Vertrag prüfen.',
+      modules:['deutschz_battlegroundz']},
+    {id:'electronic-repair-kit-visual',status:'error',severity:'critical',area:'ToxicZ',eventId:'toxicz',eventLabel:'ToxicZ',title:'Document Decoder erbt fälschlich vom Elektronikreparaturset',
+      actual:'deutschz_toxicz/config.cpp definiert DZToxicZ_DocumentDecoder : ElectronicRepairKit. Dadurch kann der Decoder als Elektronikreparaturset dargestellt werden.',
+      expected:'Decoder/CardReader-Darstellung auf den GPSReceiver-Vertrag vereinheitlichen und den echten verwendeten Klassennamen zwischen AIConvoyZ, ToxicZ und Folgeevents konsistent halten.',
+      source:'deutschz_toxicz/config.cpp',action:'DZToxicZ_DocumentDecoder auf GPSReceiver-/kanonische Decoder-Basis umstellen und ingame prüfen.',
+      modules:['deutschz_toxicz','deutschz_aiconvoyz']},
+    {id:'eclipse-retired',status:'verified',severity:'info',area:'Story',eventId:'operation-deutschz',eventLabel:'Operation DeutschZ',source:'aktueller Mod-Source',action:'Eclipse nirgends mehr als aktuellen Alias/Ziel verwenden.',title:'Eclipse ist Legacy und nicht mehr Teil des aktuellen Kanons',
+      actual:'Aktueller Source enthält deutschz_operation_deutschz; Eclipse existiert nur in älteren Entwicklungsständen.',
+      expected:'WerkZ, WelcomeZ und Storyplanung ausschließlich auf Operation DeutschZ ausrichten.',
+      modules:['deutschz_operation_deutschz']}
+  ]
+});
+function publicSourceAudit(){
+  const result=clone(DEUTSCHZ_SOURCE_AUDIT);
+  result.counts=result.findings.reduce((counts,item)=>{counts[item.status]=(counts[item.status]||0)+1;return counts},{});
+  result.openCount=result.findings.filter(item=>['error','mismatch','missing','suspect','partial','gap','needs-test'].includes(item.status)).length;
+  result.sourceBranch=result.snapshots[0]?.ref||'';
+  result.snapshotCommit=result.snapshots[0]?.commit||'';
+  result.summary={
+    open:result.openCount,
+    critical:result.findings.filter(item=>item.severity==='critical'&&!['verified','fixed'].includes(item.status)).length,
+    high:result.findings.filter(item=>item.severity==='high'&&!['verified','fixed'].includes(item.status)).length,
+    fixed:result.findings.filter(item=>['verified','fixed'].includes(item.status)).length
+  };
+  return result;
 }
 
 const DEUTSCHZ_EVENT_SPECS=Object.freeze({
@@ -124,12 +259,19 @@ const DEUTSCHZ_EVENT_SPECS=Object.freeze({
     ]
   }),
   'raven':Object.freeze({
-    id:'raven',name:'RAVEN',baseline:'DeutschZ Roadmap · 01.10.2026',
+    id:'raven',name:'RAVEN Airdrop',baseline:'RAVEN Airdrop Sollablauf · 03.10.2026',
     criteria:[
-      {id:'start',label:'RAVEN startet sauber',positive:['raven startet','raven gestartet','start sauber'],negative:['raven startet nicht','kein raven start']},
-      {id:'finish',label:'RAVEN schließt sauber ab',positive:['raven beendet','raven abgeschlossen','raven fertig'],negative:['raven endet nicht','raven hängt']},
-      {id:'handoff',label:'AIConvoyZ kann danach übernehmen',positive:['aiconvoy startet','konvoi startet','übergabe convoy'],negative:['aiconvoy startet nicht','konvoi blockiert']},
-      {id:'slot',label:'Eventslot ist danach frei',positive:['slot frei','slot freigegeben','blockiert nicht'],negative:['slot blockiert','eventslot hängt']}
+      {id:'radio_preannounce',group:'Vorankündigung',label:'Funkdurchsage kommt vor jeder sichtbaren Eventmeldung',expected:'Zuerst ausschließlich Audio/Funkspruch; noch keine normale Notification. Sounddatei real im Source/Assetbestand prüfen.',positive:['funk kommt zuerst','funkspruch zuerst','nur audio','keine notification vor funk'],negative:['notification kommt zuerst','kein funkspruch','funk fehlt','meldung vor funk']},
+      {id:'public_zone',group:'Ankündigung',label:'Danach öffentliche Meldung und große rote Suchzone',expected:'„RAVEN Airdrop ist unterwegs.“; großer absichtlicher Suchradius, exakte Position noch unbekannt.',positive:['airdrop ist unterwegs','große rote zone','suchradius groß','position noch ungenau'],negative:['keine rote zone','position sofort exakt','zone zu klein','meldung fehlt']},
+      {id:'flight_drop',group:'Flugzeug',label:'Bestehender schneller Flugzeug-/Drop-Ablauf bleibt erhalten',expected:'Flugzeug kommt schnell herein und wirft zügig ab; funktionierenden Pfad nicht unnötig umbauen.',positive:['flugzeug schnell','drop zügig','abwurf funktioniert','airdrop landet'],negative:['flugzeug hängt','abwurf hängt','drop kommt nicht','flugzeug zu langsam']},
+      {id:'zombies',group:'Landung',label:'Stärkere Event-Zombies sichern den gelandeten Airdrop',expected:'Anzahl leicht erhöht; HP ungefähr ×3; triviales Überfahren mit Fahrzeugen nach Möglichkeit verhindert/erschwert.',positive:['mehr zombies','dreifache hp','3x hp','zombies halten viel aus','nicht überfahrbar'],negative:['zu wenig zombies','normale hp','zombies sofort tot','einfach überfahren']},
+      {id:'hack_trigger',group:'Hack',label:'Beginn der vorhandenen Hackaktion ist der Phasen-Trigger',expected:'Nicht Landung oder Fund, sondern Start des ersten Hacks aktiviert Bergungstrupp und exakten öffentlichen 3D-Marker.',positive:['hack startet phase','beim hack','hackaktion gestartet','bergungstrupp beim hack','3d marker beim hack'],negative:['phase vor hack','ai kommt vor hack','marker exakt vor hack','hack triggert nichts']},
+      {id:'hack_result',group:'Hack',label:'Erster vollständiger Hack entscheidet erst am Ende mit 75/25',expected:'Erster kompletter Versuch: 75 % Erfolg / 25 % Fehlschlag. Fehlschlag wird erst nach vollständiger Hackzeit sichtbar; Drop bleibt zu und vollständiger Wiederholungshack ist nötig. Folgeversuch-Würfelregel bleibt bis Source-/Designentscheidung offen.',positive:['75 prozent','25 prozent','hack fehlgeschlagen nach abschluss','komplett neu hacken','wiederholungshack'],negative:['fehlschlag sofort','drop öffnet trotz fehlschlag','kein neuer hack nötig','chance vor hack sichtbar']},
+      {id:'recovery_team',group:'RAVEN',label:'Hackbeginn aktiviert bewaffneten RAVEN-Bergungstrupp',expected:'Airdrop zurückholen, Hacker angreifen, Bereich sichern. BLACK/ECHO-Kanon und Source entscheiden Fraktion; Russianz/Americanz nicht raten.',positive:['bergungstrupp kommt','ai kommt beim hack','hacker angegriffen','bereich gesichert'],negative:['keine ai beim hack','bergungstrupp fehlt','falsche fraktion']},
+      {id:'exact_marker',group:'PvP',label:'Erst ab Hackbeginn ist die exakte 3D-Position für alle sichtbar',expected:'Vor Hack nur Suchzone; ab Hack exakter öffentlicher 3D-Marker.',positive:['3d marker beim hack','exakte position beim hack','marker wird exakt'],negative:['exakter marker vor hack','kein 3d marker','position bleibt ungenau nach hack']},
+      {id:'loot_pool',group:'Loot',label:'RAVEN nutzt KOTH-basierte thematische Eventloot-Pools',expected:'IST-Basis Server_Stand_02.10.2026_20_00_Uhr.zip: SPECIAL + HYBRID + sinnvoller MAP/CE-Füllloot; nominal=0 allein ist kein Eventloot-Schalter. RECON priorisiert TTC-DMR/Sniper, ASSAULT TTC-High-End-Assault/Battle-Rifle, NBC ABC/Medizin/Survival mit normaler TTC-Sekundärwaffe. FOG passend zur Rolle; Anzio extrem seltenes Endgame-Special.',positive:['koth balance','recon loot passt','assault loot passt','nbc loot passt','ttc waffe','fog gear','magazine passen','munition passt'],negative:['nur nominal null','nur vanilla','falsches magazin','unpassende munition','anzio häufig','nbc super sniper']},
+      {id:'story_document',group:'Story',label:'Geöffneter Drop enthält das vorgesehene RAVEN-Story-Dokument',expected:'Dokumentfunktion prüfen. Eigene Textur/hiddenSelectionsTextures/Materialpfade verifizieren; fehlt Grafik tatsächlich, Status „Textur noch erstellen“ statt Codefehler.',positive:['story dokument im drop','dokument vorhanden','eigene textur','textur korrekt'],negative:['dokument fehlt','vanilla papier','falsche textur','texturpfad falsch']},
+      {id:'finish',group:'Abschluss',label:'Hack öffnet Drop sauber und RAVEN schließt ohne Scheduler-Blockade ab',expected:'Loot + Story-Dokument zugänglich; Cleanup/Release; AIConvoyZ kann später übernehmen.',positive:['hack erfolgreich','drop geöffnet','raven beendet','cleanup release','slot frei','aiconvoy startet'],negative:['drop bleibt zu','raven hängt','slot blockiert','cleanup fehlt','aiconvoy blockiert']}
     ]
   }),
   'aiconvoyz':Object.freeze({
@@ -158,12 +300,39 @@ const DEUTSCHZ_EVENT_SPECS=Object.freeze({
       {id:'slot',label:'Slot wird für das nächste Event freigegeben',positive:['slot frei','slot freigegeben'],negative:['slot blockiert','slot bleibt belegt']}
     ]
   }),
-  'toxicz':Object.freeze({
-    id:'toxicz',name:'ToxicZ',baseline:'DeutschZ Mod-Source + Eventkette · 03.10.2026',
+  'battlegroundz':Object.freeze({
+    id:'battlegroundz',name:'BattlegroundZ',baseline:'DeutschZ Mod-Source · 03.10.2026',
     criteria:[
-      {id:'ingredients',group:'Freischaltung',label:'Beide benötigten Eventgegenstände sind vorhanden',expected:'ToxicZ_Secret_Document aus KOTH und Toxicz_Doc_Decoder aus AIConvoyZ',positive:['secret dokument vorhanden','decoder vorhanden','beide gegenstände vorhanden','beide items vorhanden'],negative:['secret dokument fehlt','decoder fehlt','item fehlt']},
-      {id:'combine',group:'Freischaltung',label:'Beide Gegenstände werden zum ToxicZ-Signalmarker kombiniert',expected:'Recipe „ToxicZ-Signalgeraet entschluesseln“ verbraucht beide Zutaten und erzeugt ToxicZ_Signal_Marker',positive:['signalmarker erstellt','signalgerät erstellt','signalgeraet erstellt','kombination funktioniert','beide verbraucht'],negative:['kombination geht nicht','signalmarker fehlt','zutat bleibt fälschlich erhalten']},
-      {id:'activate',group:'Start',label:'Der ToxicZ-Signalmarker startet das Toxic Event erst bei Aktivierung',expected:'ToxicZ_Signal_Marker aktivieren → ToxicZ startet',positive:['signalmarker aktiviert','toxicz startet','toxic event startet'],negative:['marker aktiviert aber nichts passiert','toxicz startet nicht','startet schon beim besitz']}
+      {id:'auth',group:'Autorisierung',label:'Battleground-Papiere und Convoy-CardReader authentifizieren den Einsatz',expected:'Beide Items werden benötigt; daraus entsteht der registrierte BattlegroundZ-CardReader',positive:['papiere erkannt','convoy cardreader erkannt','reader registriert','registrierter cardreader'],negative:['papiere fehlen','cardreader fehlt','authentifizierung geht nicht']},
+      {id:'red_sector',group:'Roter Sektor',label:'Signalfolge, Reader und roter Sektor werden sauber freigeschaltet',expected:'Glitch-/Signalschritte führen zum Kartenleser und anschließend zum BattlegroundZ-Marker',positive:['roter sektor','reader marker','ping freigeschaltet','signal wiederholt sich'],negative:['marker fehlt','reader nicht sichtbar','signalfolge hängt']},
+      {id:'battle',group:'Kampf',label:'BattlegroundZ startet als eigenständiges Gefecht mit RussianZ und AmericanZ',expected:'Event initialisiert Kampfeinheiten und kann vollständig abgeschlossen werden',positive:['russianz','americanz','battleground startet','kampf läuft'],negative:['keine ai','kampf startet nicht','event hängt']},
+      {id:'operation_key',group:'Abschluss',label:'Erfolg gibt die Operation-DeutschZ-KeyCard aus und persistiert die Completion',expected:'Operation-KeyCard nur nach echtem Battleground-Abschluss; persönliche completion/battleground wird geschrieben',positive:['operation keycard bekommen','keycard erhalten','battleground abgeschlossen'],negative:['keycard fehlt','completion fehlt','keycard zu früh']}
+    ]
+  }),
+  'operation-deutschz':Object.freeze({
+    id:'operation-deutschz',name:'Operation DeutschZ',baseline:'DeutschZ Mod-Source + Hauptstory · 03.10.2026',
+    criteria:[
+      {id:'authorization',group:'Autorisierung',label:'Registrierter BattlegroundZ-CardReader + Operation-KeyCard erzeugen den MasterCardReader',expected:'DeutschZ_BattlegroundZ_RegisteredCardReader + DeutschZ_BattlegroundZ_OperationKeyCard → DeutschZ_OperationDeutschZ_MasterCardReader',positive:['mastercardreader erstellt','master cardreader erstellt','operation autorisiert'],negative:['mastercardreader fehlt','reader nicht erkannt','keycard nicht erkannt']},
+      {id:'archive',group:'Finale Story',label:'Operation öffnet das T-17-Archiv und führt durch den eigentlichen Storyabschluss',expected:'Archiv/Beweise, RAVEN-BLACK-Gegenwehr, Tisy-Relais und Voronin bilden das geplante Finale; MasterCardReader ist nur Autorisierung',positive:['t-17 archiv','archiv geöffnet','raven black','tisy relais','voronin'],negative:['reader ist schon finale','archiv fehlt','story endet am reader']},
+      {id:'decision',group:'Endentscheidung',label:'Das Finale erlaubt mehrere gültige persönliche Entscheidungen',expected:'Q-17 vernichten, alles veröffentlichen oder Teile sichern; keine einzige erzwungene richtige Lösung',positive:['vernichten','veröffentlichen','teile sichern','entscheidung gespeichert'],negative:['nur eine entscheidung','keine auswahl','entscheidung nicht gespeichert']},
+      {id:'completion',group:'Persistenz',label:'Operation-Abschluss wird persönlich gespeichert, ohne Serverreset',expected:'persönlicher Storyabschluss und spätere Nachwirkungen; neue Spieler können die Story weiterhin vollständig erleben',positive:['operation abgeschlossen','completion gespeichert','persönlicher fortschritt'],negative:['server reset','completion fehlt','fortschritt verloren']}
+    ]
+  }),
+  'toxicz':Object.freeze({
+    id:'toxicz',name:'ToxicZ',baseline:'ToxicZ Event-Roadmap · 03.10.2026',
+    criteria:[
+      {id:'source_audit',group:'1 · Bestand prüfen',label:'Vorhandene ToxicZ-/Rify-/Story-/Marker-Systeme werden wiederverwendet statt neu erfunden',expected:'ToxicZ-Source, Markerlogik, Plankarten, Storytrigger, Rify-Objekte und vorhandenen ABC-Anzug zuerst identifizieren; belegter Altbestand u. a. GasZonen_Leuchtfackel / DZBBC_GasZoneFlare',positive:['source geprüft','bestand geprüft','storytrigger gefunden','rify objekte gefunden','vorhandene systeme übernommen','gaszonen leuchtfackel gefunden'],negative:['neu gebaut obwohl vorhanden','bestand nicht geprüft','story neu erfunden']},
+      {id:'unlock',group:'2 · Freischaltung',label:'Secret-Dokument und Decoder erzeugen den persönlichen ToxicZ-Signalmarker',expected:'ToxicZ_Secret_Document + Toxicz_Doc_Decoder → ToxicZ_Signal_Marker; beide Zutaten werden verbraucht; erst Markeraktivierung startet ToxicZ',positive:['signalmarker erstellt','signalgerät erstellt','beide kombiniert','beide verbraucht','signalmarker aktiviert','toxicz gestartet'],negative:['kombination geht nicht','signalmarker fehlt','startet schon beim besitz','marker aktiviert aber nichts passiert']},
+      {id:'dynamic_route',group:'3 · Dynamische Route',label:'Aus der aktuellen Spielerposition werden mindestens zwei passende Zwischenstationen vor Rify gewählt',expected:'Krankenhaus/medizinische Einrichtung/Feuerwache dynamisch auswählen; unterschiedliche Läufe sollen nicht immer dieselben Stationen haben; Ziel bleibt Rify',positive:['zwei stationen','2 stationen','krankenhaus ausgewählt','feuerwache ausgewählt','route ist anders','dynamische route','danach rify'],negative:['nur eine station','immer dieselbe route','direkt nach rify','falsche station']},
+      {id:'abc_loot',group:'4 · ABC-Loot',label:'Ein vollständiger spezieller ABC-Schutzanzug plus ungefähr drei Filter wird über die Zwischenstationen verteilt',expected:'Oberteil, Hose, Handschuhe, Schuhe/Stiefel, Kapuze/Kopfschutz, Atemschutzmaske und ca. 3 Filter; Verteilung pro Lauf zufällig und kontrolliert',positive:['abc komplett','anzug komplett','drei filter','3 filter','maske gefunden','jacke gefunden','hose gefunden','loot verteilt','verteilung anders'],negative:['teil fehlt','filter fehlen','nur zwei filter','alles an einer stelle','immer gleiche verteilung']},
+      {id:'abc_texture',group:'5 · ABC-Textur',label:'Der DeutschZ-ABC-Anzug nutzt seine richtige eigene Textur statt weiß dargestellt zu werden',expected:'echten Klassenname aus Source übernehmen; hiddenSelectionsTextures/Materials sowie Material-/Texture-Pfade und Backslashes prüfen; keine erfundene Klasse verwenden',positive:['textur passt','deutschland textur','deutschz textur','nicht mehr weiß','pfad korrigiert','hidden selections geprüft'],negative:['anzug ist weiß','weiße textur','textur fehlt','material fehlt','pfad falsch','backslash fehler']},
+      {id:'multiplayer',group:'6 · Mehrspieler',label:'Parallele ToxicZ-Instanzen starten getrennt und führen Spieler später verdeckt wieder zusammen',expected:'unterschiedliche erste Ziele pro Spieler; spätere Stationen/benachbarte Ziele Richtung Rify konvergieren; kein Hinweis auf andere Teilnehmer',positive:['unterschiedliche route','spieler getrennt','später zusammengeführt','gleiche spätere station','benachbarte ziele','kein pvp hinweis'],negative:['identische route von anfang an','anderer spieler wird angekündigt','pvp marker angezeigt','keine zusammenführung']},
+      {id:'rify_entry',group:'7 · Rify-Trigger',label:'Die Storyphase startet erst deutlich innerhalb der Rify-Zone',expected:'Eintritt erkennen, Fortschritt verfolgen und Trigger tiefer in Rify setzen; nicht direkt am Eingang auslösen',positive:['tief in rify','story startet später','mittlerer bereich','trigger weit drin','nicht am eingang'],negative:['story startet am eingang','horde direkt am eingang','trigger zu früh']},
+      {id:'voices',group:'8 · Stimmen',label:'Vorhandene Voice-/Storyführung leitet den Spieler glaubwürdig zu einer gesicherten Stellung',expected:'Stimmen geben Richtungen/Hinweise/Anweisungen und führen tiefer in die Zone; vorhandene Voice-/Story-Dateien bevorzugen',positive:['stimmen starten','voice startet','richtungsangabe','stimmen führen','gesicherte stellung','festung erreicht'],negative:['keine stimmen','falsche richtung','voice fehlt','storyführung bricht ab']},
+      {id:'horde',group:'9 · Zombie-Horde',label:'Die Horde entsteht erst nach ausreichendem Fortschritt hinter dem Spieler und schneidet den Rückweg ab',expected:'keine offensichtlichen Spawns vor dem Spieler; Rückweg gefährlich machen und Weitergehen erzwingen',positive:['horde hinter mir','horde hinter spieler','rückweg abgeschnitten','horde startet später','zombies von hinten'],negative:['horde vor mir gespawnt','horde zu früh','keine horde','rückweg frei','spawn direkt sichtbar']},
+      {id:'rify_story',group:'10 · Rify-Story',label:'Vorhandene Storyelemente, Dokumente, Funkmeldungen, Objekte und Trigger bilden einen durchgängigen Pfad ohne Sackgasse',expected:'bestehenden Storybereich/Festung/Plankarten wiederverwenden und fehlende Verknüpfungen ergänzen',positive:['story läuft weiter','dokument gefunden','funkmeldung','storytrigger funktioniert','keine sackgasse','festung funktioniert'],negative:['sackgasse','story hängt','trigger fehlt','dokument fehlt','ziel unklar']},
+      {id:'final_flare',group:'11 · Finale Flare',label:'Am Bug des Rify-Schiffes muss die vorgesehene Signalflare korrekt aktiviert/entzündet werden',expected:'Bug als finales Ziel; finale Flare-Klasse aus ToxicZ-Source bestätigen. Belegter Altbestand: GasZonen_Leuchtfackel erbt von DZBBC_GasZoneFlare und besitzt DeutschZ-Roadflare-Textur',positive:['flare am bug','leuchtfackel am bug','signalflare gezündet','gaszonen leuchtfackel gezündet','flare aktiviert'],negative:['flare fehlt','falsche flare','flare startet nicht','trigger am falschen ort','nicht am bug']},
+      {id:'post_rify_handoff',group:'12 · Nach Rify',label:'Die finale Flare schließt ToxicZ ab und öffnet die nächste Ermittlungsphase – nicht direkt Operation DeutschZ',expected:'ToxicZ-Abschluss persistent speichern; danach Geldspur/Property/Courier/RAVEN/Battleground-Story fortsetzen. Operation DeutschZ bleibt das spätere Finale.',positive:['toxicz abgeschlossen','nächste ermittlung','geldspur freigeschaltet','story geht weiter','nach rify weiter'],negative:['operation deutschz startet sofort','operation startet direkt','abschluss nicht gespeichert','story endet nach toxicz']}
     ]
   })
 });
@@ -372,6 +541,8 @@ class AssistantService {
     return this.own(this.state.load().projections,session.organisationId).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
   }
   captureHints(token){this.session(token,'assistant.read');return publicCaptureHints();}
+  storyCanon(token){this.session(token,'assistant.read');return publicStoryCanon();}
+  sourceAudit(token){this.session(token,'assistant.read');return publicSourceAudit();}
   eventSpecs(token){
     this.session(token,'assistant.read');
     return publicEventSpecs();
@@ -457,4 +628,4 @@ class AssistantService {
   }
 }
 
-module.exports={FileAssistantState,FileAssistantDocumentStore,AssistantService,inferCapture,inferDueAt,relevance,safePayload,CAPTURE_HINTS,DEUTSCHZ_TARGETS,DEUTSCHZ_EVENT_SPECS,evaluateEventTest,inferDeutschzTarget};
+module.exports={FileAssistantState,FileAssistantDocumentStore,AssistantService,inferCapture,inferDueAt,relevance,safePayload,CAPTURE_HINTS,DEUTSCHZ_TARGETS,DEUTSCHZ_STORY_CANON,DEUTSCHZ_SOURCE_AUDIT,DEUTSCHZ_EVENT_SPECS,evaluateEventTest,inferDeutschzTarget};
