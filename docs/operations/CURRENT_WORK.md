@@ -774,3 +774,11 @@ Issues #5–#7 remain open for non-code/production gates:
 - live production restore evidence;
 - contributor-rights/brand/insurance decisions;
 - real provider credentials/adapters after approval.
+
+
+## OAuth authorization and PKCE foundation
+
+Verified code commit: `10a9e3f7cb2b0af2ab27a1ea4ed391cd7439716c`  
+CI run: `36942396612` — success; 78/78 tests, lint 45 JavaScript files, runtime contract/typecheck 19 modules, SPDX gate passed, npm audit 0 known vulnerabilities.
+
+Server-owned provider configuration now starts short-lived S256 PKCE authorizations with tenant/actor-bound one-time state. The verifier stays server-side in private file-backed state and callbacks survive restart; wrong tenant, expiry and replay are denied. This is a generic foundation, with no live provider adapter or token exchange claimed. Owner's new 2026-10-03 direction: review current GitHub/Google/WebsitePublisher/Render files and pricing workflow, then extend the customer adviser and WerkZ product without losing active Issue #3/#5–#7 gates.
