@@ -308,9 +308,14 @@ const server=http.createServer(async(request,response)=>{
   }
   if(url.pathname==='/pilot/login'&&request.method==='GET'){
     const returnTo=safeLocalReturn(url.searchParams.get('return'),'/pilot/');
+    const requestedTenant=String(url.searchParams.get('tenant')||'').trim().toLowerCase();
     const activeToken=cookieTokenFromHeader(request.headers.cookie),activeProfile=pilotProfileByToken(activeToken);
-    if(activeProfile&&!profileExpired(activeProfile)){response.writeHead(303,{location:returnTo,'cache-control':'no-store'});return response.end()}
-    const tenant=String(url.searchParams.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
+    const activeSlug=String(activeProfile?.publicSlug||'').trim().toLowerCase();
+    if(activeProfile&&!profileExpired(activeProfile)&&(!requestedTenant||requestedTenant===activeSlug)){
+      response.writeHead(303,{location:returnTo,'cache-control':'no-store'});
+      return response.end();
+    }
+    const tenant=requestedTenant||activeSlug||String(primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
     return pilotLoginForm(response,{returnTo,tenant});
   }
   if(url.pathname==='/pilot/login'&&request.method==='POST'){
