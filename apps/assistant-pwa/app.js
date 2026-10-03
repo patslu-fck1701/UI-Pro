@@ -26,14 +26,35 @@ const fallbackSpecs=[
     {id:'cleanup',group:'Abschluss',label:'Cleanup räumt sauber auf und gibt Scheduler-Slot frei',expected:'keine Reste/Doppelspawns; nächstes Major-Event kann starten'}
   ]},
   {id:'eventschedulerz',name:'EventSchedulerZ',criteria:[{id:'sequence',label:'KOTH → COURIER → RAVEN → CONVOY läuft geordnet'},{id:'phase',label:'Start, Active, Complete und Cleanup wechseln sauber'},{id:'slot',label:'Slot wird freigegeben und nächstes Event geplant'}]},
-  {id:'toxicz',name:'ToxicZ',baseline:'DeutschZ Mod-Source + Eventkette · 03.10.2026',criteria:[
-    {id:'ingredients',group:'Freischaltung',label:'Secret-Dokument und Decoder sind vorhanden',expected:'KOTH liefert das Secret-Dokument, AIConvoyZ den Decoder'},
-    {id:'combine',group:'Freischaltung',label:'Beide Gegenstände ergeben den ToxicZ-Signalmarker',expected:'beide Zutaten werden verbraucht und der Signalmarker entsteht'},
-    {id:'activate',group:'Start',label:'Erst die Aktivierung des Signalmarkers startet ToxicZ',expected:'Signalmarker aktivieren → Toxic Event startet'}
+  {id:'battlegroundz',name:'BattlegroundZ',baseline:'DeutschZ Mod-Source · 03.10.2026',criteria:[
+    {id:'auth',group:'Autorisierung',label:'Battleground-Papiere und Convoy-CardReader authentifizieren den Einsatz',expected:'beide Items nötig; registrierter BattlegroundZ-CardReader entsteht'},
+    {id:'red_sector',group:'Roter Sektor',label:'Signalfolge, Reader und roter Sektor werden sauber freigeschaltet',expected:'Glitch-/Signalschritte führen zum Reader und zum BattlegroundZ-Marker'},
+    {id:'battle',group:'Kampf',label:'BattlegroundZ startet als eigenständiges Gefecht mit RussianZ und AmericanZ',expected:'Event lässt sich vollständig abschließen'},
+    {id:'operation_key',group:'Abschluss',label:'Erfolg gibt die Operation-DeutschZ-KeyCard aus',expected:'KeyCard erst nach Abschluss; persönliche Completion wird gespeichert'}
+  ]},
+  {id:'operation-deutschz',name:'Operation DeutschZ',baseline:'DeutschZ Mod-Source + Hauptstory · 03.10.2026',criteria:[
+    {id:'authorization',group:'Autorisierung',label:'Registrierter BattlegroundZ-Reader + Operation-KeyCard ergeben den MasterCardReader',expected:'beide BattlegroundZ-Artefakte → Operation-DeutschZ-MasterCardReader'},
+    {id:'archive',group:'Finale Story',label:'Der MasterCardReader öffnet nur den Zugang zum eigentlichen T-17-Finale',expected:'Archiv, RAVEN BLACK, Tisy-Relais und Voronin folgen; Reader ist nicht selbst das Finale'},
+    {id:'decision',group:'Endentscheidung',label:'Mehrere gültige Endentscheidungen bleiben möglich',expected:'Q-17 vernichten, veröffentlichen oder Teile sichern'},
+    {id:'completion',group:'Persistenz',label:'Persönlicher Abschluss bleibt gespeichert, ohne Serverreset',expected:'Veteranen behalten Folgen; neue Spieler können die Story weiterhin erleben'}
+  ]},
+  {id:'toxicz',name:'ToxicZ',baseline:'ToxicZ Event-Roadmap · 03.10.2026',criteria:[
+    {id:'source_audit',group:'1 · Bestand prüfen',label:'Vorhandene ToxicZ-/Rify-/Story-/Marker-Systeme zuerst prüfen',expected:'WelcomeZ kennt bereits ToxicZ-State mit zwei Hospitals, Riffy, Transport-Sieben-Blackbox und Decoderstation; vorhandene Systeme erweitern'},
+    {id:'unlock',group:'2 · Freischaltung',label:'Secret-Dokument + Decoder → ToxicZ-Signalmarker → Aktivierung startet ToxicZ',expected:'beide Zutaten werden verbraucht; der Marker ist der eigentliche Starttrigger'},
+    {id:'dynamic_route',group:'3 · Dynamische Route',label:'Mindestens zwei passende Zwischenstationen werden aus der Spielerposition gewählt',expected:'Krankenhaus/medizinische Einrichtung/Feuerwache dynamisch; danach Rify'},
+    {id:'abc_loot',group:'4 · ABC-Loot',label:'Vollständiges spezielles ABC-Set plus ungefähr drei Filter wird zufällig verteilt',expected:'Anzugteile und Filter pro Eventlauf variabel auf die Zwischenstationen verteilen'},
+    {id:'abc_texture',group:'5 · ABC-Textur',label:'DeutschZ-ABC-Anzug zeigt seine richtige Textur statt Weiß',expected:'echten Klassennamen und hiddenSelectionsTextures/Materials direkt aus Source prüfen'},
+    {id:'multiplayer',group:'6 · Mehrspieler',label:'Parallele Spieler starten getrennt und werden verdeckt Richtung Rify zusammengeführt',expected:'unterschiedliche frühe Ziele; spätere Konvergenz ohne PvP-/Teilnehmerhinweis'},
+    {id:'rify_entry',group:'7 · Rify-Trigger',label:'Story startet erst tief genug innerhalb der Rify-Zone',expected:'nicht direkt am Eingang; Fortschritt innerhalb Rify verfolgen'},
+    {id:'voices',group:'8 · Stimmen',label:'Stimmen/Dead-Channel-Führung leiten den Spieler zur gesicherten Stellung',expected:'vorhandene Radio-/Storysysteme bevorzugen und Richtungshilfen sauber triggern'},
+    {id:'horde',group:'9 · Zombie-Horde',label:'Horde entsteht hinter dem Spieler und schneidet den Rückweg ab',expected:'erst nach ausreichendem Fortschritt; kein sichtbarer Spawn vor dem Spieler'},
+    {id:'rify_story',group:'10 · Rify-Story',label:'Storybereich, Dokumente, Funk, Objekte und Trigger bilden einen Pfad ohne Sackgasse',expected:'Transport Sieben, Morozovs Todesdatum und spätere Befehle verständlich auflösen'},
+    {id:'final_flare',group:'11 · Finale Flare',label:'Am Bug des Rify-Schiffes wird die vorgesehene Signalflare aktiviert',expected:'finale Flare-Klasse aus ToxicZ-Source bestätigen; belegter Altbestand: GasZonen_Leuchtfackel / DZBBC_GasZoneFlare'},
+    {id:'post_rify_handoff',group:'12 · Nach Rify',label:'Die Flare beendet ToxicZ und öffnet die nächste Ermittlungsphase – nicht direkt Operation DeutschZ',expected:'danach optionale Geldspur, PropertyZ, CourierZ, RAVEN, BattlegroundZ und erst später Operation DeutschZ'}
   ]}
-];
+]
 const state={
-  items:[],briefing:null,eventSpecs:fallbackSpecs,eventTests:[],captureType:null,activeEvent:null,pendingEventText:null,
+  items:[],briefing:null,eventSpecs:fallbackSpecs,eventTests:[],story:null,sourceAudit:null,sourceFilter:'open',captureType:null,activeEvent:null,pendingEventText:null,
   recognition:null,listening:false,voiceWanted:false,voiceMode:null,voiceText:[],voiceStopping:false,syncing:false
 };
 const uuid=()=>crypto.randomUUID();
@@ -190,6 +211,11 @@ function render(){
     'Langzeitspur sammelt Daten';
   const mailOpen=state.items.filter(item=>item.status==='open'&&item.source==='gmail').length;
   byId('mail-state').textContent=mailOpen?String(mailOpen)+' wichtig':'ruhig';
+  const audit=state.sourceAudit,s=audit?.summary||{};
+  byId('source-state').textContent=audit?String(s.open||0)+' offen':'–';
+  byId('source-note').textContent=audit
+    ?((s.critical||0)+' kritisch · '+(s.high||0)+' hoch · '+(s.fixed||0)+' bestätigt')
+    :'DeutschZ Soll/Ist-Abgleich';
   renderHints();renderActiveEvent();
 }
 function renderHints(){
@@ -205,11 +231,11 @@ async function loadRemote(){
   if(!navigator.onLine)return loadCached();
   try{
     const values=await Promise.all([
-      request('/assistant/briefing'),request('/assistant/items'),request('/assistant/event-tests/specs'),request('/assistant/event-tests')
+      request('/assistant/briefing'),request('/assistant/items'),request('/assistant/event-tests/specs'),request('/assistant/event-tests'),request('/assistant/story'),request('/assistant/source-audit')
     ]);
-    state.briefing=values[0];state.items=values[1];state.eventSpecs=values[2]?.length?values[2]:fallbackSpecs;state.eventTests=values[3]||[];
+    state.briefing=values[0];state.items=values[1];state.eventSpecs=values[2]?.length?values[2]:fallbackSpecs;state.eventTests=values[3]||[];state.story=values[4]||state.story;state.sourceAudit=values[5]||state.sourceAudit;
     await Promise.all([
-      localSet('cache-briefing',state.briefing),localSet('cache-items',state.items),localSet('cache-event-specs',state.eventSpecs),localSet('cache-event-tests',state.eventTests)
+      localSet('cache-briefing',state.briefing),localSet('cache-items',state.items),localSet('cache-event-specs',state.eventSpecs),localSet('cache-event-tests',state.eventTests),localSet('cache-story',state.story),localSet('cache-source-audit',state.sourceAudit)
     ]);
     if(!state.activeEvent){
       const running=state.eventTests.find(test=>test.status==='running');
@@ -226,6 +252,8 @@ async function loadCached(){
   state.items=await localGet('cache-items')||state.items||[];
   state.eventSpecs=await localGet('cache-event-specs')||fallbackSpecs;
   state.eventTests=await localGet('cache-event-tests')||state.eventTests||[];
+  state.story=await localGet('cache-story')||state.story;
+  state.sourceAudit=await localGet('cache-source-audit')||state.sourceAudit;
   state.activeEvent=await localGet('active-event')||state.activeEvent;
   render();
 }
@@ -250,6 +278,10 @@ function fillEventPicker(){
 }
 function renderEventCriteria(){
   const spec=state.eventSpecs.find(item=>item.id===byId('event-select').value)||state.eventSpecs[0];
+  const findings=(state.sourceAudit?.findings||[]).filter(item=>item.eventId===spec?.id&&!['verified','fixed'].includes(item.status));
+  byId('event-source-findings').innerHTML=findings.length?
+    '<div class="source-mini-head">Schon im Source auffällig · '+findings.length+'</div>'+
+    findings.slice(0,4).map(item=>'<div class="source-mini-item"><strong>'+esc(item.title)+'</strong><small>'+esc(item.actual)+'</small></div>').join(''):'';
   byId('event-criteria').innerHTML=spec?.criteria?.map(item=>'<div class="criterion"><strong>'+esc((item.group?item.group+' · ':'')+item.label)+'</strong><small>'+esc(item.expected||'Wird beim Abschluss gegen deine Beobachtungen geprüft.')+'</small></div>').join('')||'';
 }
 function openEventPicker(){fillEventPicker();byId('event-dialog').showModal();}
@@ -291,6 +323,40 @@ function openEventReport(id){
   byId('event-report-dialog').showModal();
 }
 byId('event-report-close').onclick=()=>byId('event-report-dialog').close();
+
+function sourceStatusLabel(item){
+  return ({error:'Fehler',mismatch:'Abweichung',missing:'Fehlt',gap:'Fehlt',suspect:'Verdacht','needs-test':'Prüfen',partial:'Teilweise',fixed:'Behoben',verified:'Bestätigt'})[item.status]||item.status;
+}
+function sourceFindingVisible(item){
+  if(state.sourceFilter==='all')return true;
+  if(state.sourceFilter==='fixed')return ['fixed','verified'].includes(item.status);
+  if(state.sourceFilter==='critical')return item.severity==='critical'||item.severity==='high';
+  return !['fixed','verified'].includes(item.status);
+}
+function renderSourceAudit(){
+  const audit=state.sourceAudit;
+  if(!audit){
+    byId('source-summary').textContent='Noch kein Source-Audit im lokalen Cache.';
+    byId('source-filters').innerHTML='';byId('source-list').innerHTML='<div class="empty">Source-Audit ist nach der nächsten Online-Synchronisierung verfügbar.</div>';
+    return;
+  }
+  const s=audit.summary||{};
+  byId('source-summary').textContent=(s.open||0)+' offene Punkte · '+(s.critical||0)+' kritisch · '+(s.high||0)+' hoch · '+(s.fixed||0)+' bereits behoben. Stand: '+audit.sourceBranch+' @ '+String(audit.snapshotCommit||'').slice(0,8);
+  const filters=[['open','Offen'],['critical','Kritisch/Hoch'],['fixed','Behoben/Bestätigt'],['all','Alle']];
+  byId('source-filters').innerHTML=filters.map(([id,label])=>'<button type="button" class="source-filter '+(state.sourceFilter===id?'active':'')+'" data-source-filter="'+id+'">'+label+'</button>').join('');
+  byId('source-filters').querySelectorAll('[data-source-filter]').forEach(button=>button.onclick=()=>{state.sourceFilter=button.dataset.sourceFilter;renderSourceAudit();});
+  const rows=(audit.findings||[]).filter(sourceFindingVisible);
+  byId('source-list').innerHTML=rows.length?rows.map(item=>
+    '<article class="source-card" data-severity="'+esc(item.severity)+'" data-status="'+esc(item.status)+'">'+
+    '<div class="source-meta"><span>'+esc(item.eventLabel||item.eventId)+'</span><span class="source-badge '+esc(item.severity)+' '+esc(item.status)+'">'+esc(sourceStatusLabel(item))+'</span></div>'+
+    '<h3>'+esc(item.title)+'</h3>'+
+    '<p><strong>Soll:</strong> '+esc(item.expected)+'</p>'+
+    '<p><strong>Ist:</strong> '+esc(item.actual)+'</p>'+
+    '<small>'+esc(item.source)+' · Nächster Schritt: '+esc(item.action)+'</small>'+
+    '</article>').join(''):'<div class="empty">Für diesen Filter nichts offen.</div>';
+}
+byId('source-open').onclick=()=>{renderSourceAudit();byId('source-dialog').showModal();};
+byId('source-close').onclick=()=>byId('source-dialog').close();
 
 async function saveText(value,source){
   const textValue=String(value||'').trim();if(!textValue)return;
@@ -391,6 +457,7 @@ byId('all-open').onclick=()=>{
   bindActions(byId('all-items'));byId('all-dialog').showModal();
 };
 byId('all-close').onclick=()=>byId('all-dialog').close();
+
 byId('refresh').onclick=async()=>{await syncQueue();await loadRemote();};
 byId('nav-radar').onclick=()=>byId('radar').scrollIntoView({behavior:'smooth',block:'center'});
 byId('nav-business').onclick=()=>location.href='/time/';
