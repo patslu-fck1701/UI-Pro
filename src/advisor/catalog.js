@@ -33,4 +33,40 @@ function advise(registry,selected=[]){
  const bundles=BUNDLES.map(b=>({...b,selected:b.modules.filter(x=>all.has(x)).length,total:b.modules.length})).filter(b=>b.selected>0).sort((a,b)=>b.selected-a.selected);
  return {selected:[...chosen],required:[...required],optional:[...optional],needs,access,bundles};
 }
-module.exports={ADVISOR_MODULES,BUNDLES,advise};
+
+const SCOPE_PRESETS=Object.freeze([
+ {id:'solo',title:'WerkZ Solo',setupFromCents:49000,typicalRangeCents:[79000,149000],managedFromCents:7900,fit:'Scharf abgegrenzter Ablauf, meist Einzelperson/kleiner Umfang.'},
+ {id:'team',title:'WerkZ Team',setupFromCents:149000,typicalRangeCents:[199000,399000],managedFromCents:17900,fit:'Mehrere Rollen/Mitarbeiter und verbundene Arbeitsabläufe.'},
+ {id:'business',title:'WerkZ Business',setupFromCents:249000,typicalRangeCents:[349000,750000],managedFromCents:34900,fit:'Mehrere Abläufe, Integrationen oder höhere Betriebsanforderungen.'},
+ {id:'enterprise',title:'Enterprise',setupFromCents:null,typicalRangeCents:null,managedFromCents:null,fit:'Individuelles Angebot/SLA.'}
+]);
+const DEPLOYMENTS=Object.freeze([
+ {id:'managed_cloud',title:'Managed Cloud',setupFromCents:0,opsFromCents:0,note:'Für viele Solo/Team-Szenarien; Shared Hosting im vereinbarten Managed-Rahmen enthalten.',asks:['Sind lokale Systeme zwingend anzubinden?']},
+ {id:'dedicated_cloud',title:'Dedicated Cloud',setupFromCents:49000,opsFromCents:9900,note:'Isolierte Kundeninstanz; Providerkosten zusätzlich.',asks:['Ist eine isolierte Instanz erforderlich?']},
+ {id:'hybrid_connector',title:'Hybrid + Connector',setupFromCents:69000,opsFromCents:4900,note:'Hosted WerkZ plus outbound-only Connector zu freigegebenen lokalen Systemen.',asks:['Welche lokalen Systeme/APIs müssen verbunden werden?','Wer verwaltet Netzwerk und Freigaben?']},
+ {id:'existing_hardware',title:'Vorhandene Hardware',setupFromCents:null,opsFromCents:null,note:'Geeigneten Server/NAS/Mini-PC/Mac zuerst prüfen und möglichst weiterverwenden.',asks:['OS/Patchstand','CPU/RAM/Speicher','Verschlüsselung','Backup/Restore','24/7-Eignung/USV','Remote-Administration']},
+ {id:'werkz_box',title:'WerkZ Box',setupFromCents:99000,opsFromCents:9900,note:'Vorbereitetes lokales Gerät; Hardware separat zum aktuellen Preis.',asks:['Ist vorhandene Hardware ungeeignet?','Wer übernimmt Standort/Strom/Netz?']},
+ {id:'on_prem',title:'Dedicated / On-Premise',setupFromCents:249000,opsFromCents:24900,note:'Kundeneigene Server-/Virtualisierungsumgebung; höherer Betriebsaufwand.',asks:['Technischer Betreiber','Backup/Restore','Patchen','Monitoring','Netzwerk/Identity']}
+]);
+const INTAKE=Object.freeze([
+ {id:'company',title:'Betrieb',prompt:'Was macht der Betrieb und wer arbeitet im betroffenen Ablauf?'},
+ {id:'workflow',title:'Heutiger Ablauf',prompt:'Wie läuft es heute Schritt für Schritt?'},
+ {id:'friction',title:'Zeit & Fehler',prompt:'Wo entstehen Aufwand, Wartezeit, Doppelerfassung oder Fehler?'},
+ {id:'systems',title:'Systeme',prompt:'Welche Software, Geräte, Server/NAS/Cloud und Dienstleister gibt es bereits?'},
+ {id:'authority',title:'Datenhoheit',prompt:'Welches System ist für Kunden, Aufträge, Zeiten, Dokumente und Abrechnung führend?'},
+ {id:'access',title:'Rollen & Rechte',prompt:'Wer darf was sehen, ändern oder freigeben?'},
+ {id:'success',title:'Erfolg',prompt:'Woran merken wir später messbar, dass sich der Ablauf verbessert hat?'}
+]);
+function recommendScope(selected=[]){
+ const n=new Set(selected).size;
+ if(n<=2)return 'solo';
+ if(n<=6)return 'team';
+ return 'business';
+}
+function precheck(registry,selected=[],answers={}){
+ const base=advise(registry,selected),scopeId=answers.scopeId||recommendScope(selected);
+ const scope=SCOPE_PRESETS.find(x=>x.id===scopeId);
+ const deployment=DEPLOYMENTS.find(x=>x.id===(answers.deploymentId||'managed_cloud'));
+ return {...base,scope,deployment,intake:INTAKE};
+}
+module.exports={ADVISOR_MODULES,BUNDLES,SCOPE_PRESETS,DEPLOYMENTS,INTAKE,advise,recommendScope,precheck};
