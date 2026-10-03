@@ -88,7 +88,7 @@ if(testProfilesEnabled){
   });
 }
 const authSessions=Object.fromEntries([...testProfiles.values(),...pilotProfiles.values()].map(profile=>[
-  profile.token,{organisationId:profile.organisationId||organisationId,organisationLabel:profile.organisationLabel||organisationLabel,actorId:profile.actorId,actorLabel:profile.actorLabel,role:profile.role||'owner',capabilities:profile.capabilities}
+  profile.token,{organisationId:profile.organisationId||organisationId,organisationLabel:profile.organisationLabel||organisationLabel,publicSlug:profile.publicSlug||null,actorId:profile.actorId,actorLabel:profile.actorLabel,role:profile.role||'owner',capabilities:profile.capabilities}
 ]));
 const registry=new ModuleRegistry(),entitlements=new EntitlementService({registry});
 entitlements.set({organisationId,moduleId:'werkz.time',catalogVersion:'v0.2'});
@@ -239,6 +239,9 @@ function profileAccessGranted(cookie){
   const sessionToken=cookieTokenFromHeader(cookie);
   return Boolean(sessionToken&&testProfiles.size&&[...testProfiles.values()].some(profile=>profile.token===sessionToken));
 }
+const PILOT_SESSION_MAX_AGE=60*60*24*180;
+const PILOT_FACE_URL='https://cdn.websitepublisher.ai/custom/wid23947/images/werkz/founder-point.jpg';
+const PILOT_LOGO_URL='https://cdn.websitepublisher.ai/custom/wid23947/images/werkz/logo-wide.jpg';
 function sessionCookie(name,value,maxAge=28800){
   return name+'='+encodeURIComponent(value)+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age='+maxAge;
 }
@@ -249,7 +252,7 @@ function sameSecret(a,b){
 }
 function pilotLoginForm(response,{message='',returnTo='/pilot/',tenant='' }={}){
   response.writeHead(message?401:200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});
-  response.end('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width"><title>WERKZ – SCHROTTIES</title><body style="font-family:system-ui;background:#e9e6de;color:#232323"><main style="max-width:440px;margin:40px auto;padding:22px;background:#f8f6f1;border-radius:16px"><h1>WERKZ – SCHROTTIES</h1><p>Dein Betriebszugang</p>'+(message?'<p style="color:#8b5558;font-weight:800">'+html(message)+'</p>':'')+'<form method="post" action="/pilot/login"><input type="hidden" name="return" value="'+html(returnTo)+'"><label style="display:block;margin:12px 0">Betrieb<input name="tenant" value="'+html(tenant)+'" autocomplete="username" required style="box-sizing:border-box;width:100%;font-size:20px;padding:12px;margin-top:5px"></label><label style="display:block;margin:12px 0">Zugangscode<input name="code" type="password" autocomplete="current-password" required style="box-sizing:border-box;width:100%;font-size:20px;padding:12px;margin-top:5px"></label><button style="width:100%;font-size:20px;font-weight:800;padding:13px">ANMELDEN</button></form></main></body></html>');
+  response.end('<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#25292a"><link rel="icon" href="'+PILOT_FACE_URL+'"><link rel="apple-touch-icon" href="'+PILOT_FACE_URL+'"><title>WERKZ – SCHROTTIES</title><style>*{box-sizing:border-box}body{margin:0;background:#e9e6de;color:#222;font-family:Arial,Helvetica,sans-serif;min-height:100vh;padding:22px 14px}.shell{max-width:560px;margin:12px auto}.hero{position:relative;min-height:210px;margin-bottom:-46px;z-index:2}.wordmark{display:block;width:min(72%,390px);max-height:132px;object-fit:contain;object-position:left center;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}.face{position:absolute;right:-8px;top:0;width:190px;height:190px;object-fit:cover;border-radius:30px;border:5px solid #f8f6f1;box-shadow:0 14px 32px rgba(0,0,0,.25);transform:rotate(2deg)}.card{position:relative;background:#f8f6f1;border:1px solid #d8d4ca;border-radius:28px;padding:70px 28px 28px;box-shadow:0 12px 36px rgba(28,28,28,.10)}h1{font-size:clamp(38px,10vw,58px);line-height:.98;margin:0 0 26px;letter-spacing:-.035em}.sub{font-size:25px;font-weight:800;margin:0 0 22px}.error{color:#915f5f;font-size:22px;font-weight:900;margin:0 0 18px}label{display:block;font-size:22px;font-weight:800;margin:16px 0 0}input{display:block;width:100%;margin-top:7px;border:1px solid #d0cec8;border-radius:13px;background:#fff;padding:15px 16px;font-size:22px;min-height:62px;outline:none}input:focus{border-color:#4b7259;box-shadow:0 0 0 3px rgba(63,116,80,.14)}button{width:100%;margin-top:24px;min-height:68px;border:0;border-radius:14px;background:#303638;color:#fff;font-size:24px;font-weight:1000;letter-spacing:.025em}.remember{margin:15px 2px 0;color:#625f59;font-size:15px;font-weight:700}.footer{text-align:center;color:#6f6b64;font-size:13px;font-weight:700;margin:18px 0}@media(max-width:480px){body{padding:12px}.hero{min-height:172px;margin-bottom:-37px}.wordmark{width:70%;max-height:105px}.face{width:152px;height:152px;border-radius:25px}.card{padding:59px 20px 23px;border-radius:24px}h1{font-size:41px}.sub{font-size:22px}}</style></head><body><main class="shell"><div class="hero"><img class="wordmark" src="'+PILOT_LOGO_URL+'" alt="WerkZ – Digitale Lösungen für Betriebe"><img class="face" src="'+PILOT_FACE_URL+'" alt="WerkZ Ansprechpartner"></div><section class="card"><h1>WERKZ –<br>SCHROTTIES</h1><p class="sub">Dein Betriebszugang</p>'+(message?'<p class="error">'+html(message)+'</p>':'')+'<form method="post" action="/pilot/login"><input type="hidden" name="return" value="'+html(returnTo)+'"><label>Betrieb<input name="tenant" value="'+html(tenant)+'" autocomplete="username" required autocapitalize="none"></label><label>Zugangscode<input name="code" type="password" autocomplete="current-password" required></label><button>ANMELDEN</button></form><p class="remember">Einmal anmelden – dieses Gerät bleibt anschließend angemeldet.</p></section><p class="footer">WerkZ · Digitale Lösungen für Betriebe</p></main></body></html>');
 }
 
 function form(response,message='',returnTo='/'){
@@ -301,19 +304,21 @@ const server=http.createServer(async(request,response)=>{
   }
   if(url.pathname==='/pilot/login'&&request.method==='GET'){
     const returnTo=safeLocalReturn(url.searchParams.get('return'),'/pilot/');
-    const tenant=String(url.searchParams.get('tenant')||'').trim().toLowerCase();
+    const activeToken=cookieTokenFromHeader(request.headers.cookie),activeProfile=[...pilotProfiles.values()].find(profile=>profile.token===activeToken);
+    if(activeProfile){response.writeHead(303,{location:returnTo,'cache-control':'no-store'});return response.end()}
+    const tenant=String(url.searchParams.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
     return pilotLoginForm(response,{returnTo,tenant});
   }
   if(url.pathname==='/pilot/login'&&request.method==='POST'){
     const chunks=[];for await(const chunk of request)chunks.push(chunk);
     const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
     const returnTo=safeLocalReturn(params.get('return'),'/pilot/');
-    const tenant=String(params.get('tenant')||'').trim().toLowerCase();
+    const tenant=String(params.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
     const code=String(params.get('code')||'');
     const profile=pilotTenantBySlug.get(tenant);
     const expected=profile?.loginCode||(profile?.id==='pilot-primary'&&testProfilesEnabled?loginCode:null);
     if(!profile||!expected||!sameSecret(code,expected))return pilotLoginForm(response,{message:'Anmeldung nicht möglich.',returnTo,tenant});
-    response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,60*60*24*60),'cache-control':'no-store'});
+    response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
     return response.end();
   }
   if(url.pathname==='/pilot/logout'&&request.method==='GET'){
