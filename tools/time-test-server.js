@@ -32,6 +32,7 @@ const assistantDir=path.resolve(process.env.WERKZ_ASSISTANT_DATA_DIR||path.join(
 const timeDir=path.resolve(process.env.WERKZ_TIME_DATA_DIR||path.join(dataDir,'time'));
 const assistantPwaDir=path.resolve(__dirname,'../apps/assistant-pwa');
 const timePwaDir=path.resolve(__dirname,'../apps/time-pwa');
+const advisorPwaDir=path.resolve(__dirname,'../apps/advisor-pwa');
 
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
@@ -99,6 +100,9 @@ const contentTypes={
 const assistantFiles=new Map([
   ['/','index.html'],['/index.html','index.html'],['/assistant/','index.html'],['/assistant/index.html','index.html'],
   ['/assistant/styles.css','styles.css'],['/assistant/app.js','app.js'],['/assistant/manifest.webmanifest','manifest.webmanifest'],['/assistant/sw.js','sw.js'],['/assistant/apple-touch-icon.png','apple-touch-icon.png']
+]);
+const advisorFiles=new Map([
+  ['/advisor/','index.html'],['/advisor/index.html','index.html'],['/advisor/styles.css','styles.css'],['/advisor/app.js','app.js']
 ]);
 const timeFiles=new Map([
   ['/time/','index.html'],['/time/index.html','index.html'],['/time/styles.css','styles.css'],['/time/app.js','app.js'],
@@ -187,6 +191,9 @@ const server=http.createServer(async(request,response)=>{
   if(url.pathname==='/assistant'){
     response.writeHead(308,{location:'/assistant/'});return response.end();
   }
+  if(url.pathname==='/advisor'){
+    response.writeHead(308,{location:'/advisor/'});return response.end();
+  }
   if(url.pathname==='/time'){
     response.writeHead(308,{location:'/time/'});return response.end();
   }
@@ -228,6 +235,7 @@ const server=http.createServer(async(request,response)=>{
 
   if(request.method==='GET'&&serveMapped(url,response,assistantFiles,assistantPwaDir))return;
   if(request.method==='GET'&&serveMapped(url,response,timeFiles,timePwaDir))return;
+  if(request.method==='GET'&&serveMapped(url,response,advisorFiles,advisorPwaDir))return;
 
   ensureEphemeralSession(request,response,url);
 
@@ -245,7 +253,7 @@ const server=http.createServer(async(request,response)=>{
 const port=Number(process.env.PORT||8080);
 server.listen(port,'0.0.0.0',()=>{
   process.stdout.write(JSON.stringify({
-    kind:'ready',port:server.address().port,assistant:'/',time:'/time/',profiles:testProfilesEnabled?'/test-profiles':null,
+    kind:'ready',port:server.address().port,assistant:'/',time:'/time/',advisor:'/advisor/',profiles:testProfilesEnabled?'/test-profiles':null,
     profileIds:testProfilesEnabled?[...testProfiles.keys()]:[],allowedOrigins,sameOriginPwa:true,unifiedLocalStack:true,
     demoSeed:false,ephemeralSecrets:ephemeralMode,testProfilesEnabled
   })+'\n');
