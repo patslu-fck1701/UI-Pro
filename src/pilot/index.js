@@ -68,8 +68,10 @@ class StaticScrapPriceProvider extends ScrapPricePort{constructor(value=null){su
   {key:'zinc',label:'Zink',unit:'EUR/kg',price:null},
   {key:'aluminium',label:'Aluminium',unit:'EUR/kg',price:null},
   {key:'cable',label:'Kabel',unit:'EUR/kg',price:null},
-  {key:'motors',label:'Elektromotoren',unit:'EUR/kg',price:null},
-  {key:'batteries',label:'Bleibatterien',unit:'EUR/kg',price:null}
+  {key:'motors',label:'Elektromotoren',unit:'EUR/t',price:null},
+  {key:'batteries',label:'Bleibatterien',unit:'EUR/t',price:null},
+  {key:'stainless-v2a',label:'V2A Edelstahl',unit:'EUR/t',price:null},
+  {key:'stainless-v4a',label:'V4A Edelstahl',unit:'EUR/t',price:null}
 ],note:'Tagespreise / Richtwerte. Händlerpreis kann abweichen.'}}}
 
 class WerkZSimplePilotService{
