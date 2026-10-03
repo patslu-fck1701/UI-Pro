@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WerkZ Einfach · Demo</title>
+<style>
+:root{--bg:#050806;--panel:#0a120d;--line:#203829;--g:#39e875;--txt:#eef7f0;--muted:#91a898}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,rgba(57,232,117,.12),transparent 34%),var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif}
+main{max-width:980px;margin:auto;padding:20px 14px 42px}.brand{font-weight:900;letter-spacing:.12em}.brand b{color:var(--g)}h1{font-size:clamp(2.5rem,9vw,5rem);line-height:.94;margin:.5rem 0 1rem}.lead{color:#c7d3ca;max-width:650px;line-height:1.55}.tag{display:inline-block;border:1px solid #2b5137;border-radius:99px;padding:6px 9px;color:var(--g);font-size:.75rem}.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:20px 0}.action,.card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:14px}.action{min-height:112px}.action b{display:block;font-size:1.7rem;margin-bottom:6px}.action strong{display:block}.action small,.muted,.item small{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:900;margin-bottom:9px}.list{display:grid;gap:7px}.item{border:1px solid #192d20;background:#07100a;border-radius:10px;padding:10px}.item b{display:block}.price{color:var(--g);font-weight:900;float:right}.cta{display:inline-block;margin-top:13px;background:var(--g);color:#031006;text-decoration:none;font-weight:900;padding:12px 15px;border-radius:11px}.ghost{background:transparent;color:var(--txt);border:1px solid #2b5137;margin-left:6px}.foot{margin-top:20px;color:var(--muted);font-size:.8rem;text-align:center}@media(max-width:720px){.actions{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="brand">WERK<b>Z</b> · EINFACH</div>
+<span class="tag">Verkaufsdemo · Beispiel-Daten</span>
+<h1>Weniger Büro.<br>Mehr arbeiten.</h1>
+<p class="lead">So könnte WerkZ für einen Ein-Mann-Metallbetrieb aussehen: Anrufe sammeln, Belege fotografieren, wichtige Mails sehen, Schrottpreise im Blick behalten und am Monatsende die Unterlagen für den Steuerberater vorbereiten.</p>
+
+<section class="actions">
+<div class="action"><b>📞</b><strong>Anrufe</strong><small>2 Rückrufe offen</small></div>
+<div class="action"><b>📷</b><strong>Beleg fotografieren</strong><small>Bon · Rechnung · Wiegeschein</small></div>
+<div class="action"><b>🎙</b><strong>Sprechen / Notiz</strong><small>Einfach reinsprechen</small></div>
+<div class="action"><b>📤</b><strong>Monat senden</strong><small>Steuerberater-Paket</small></div>
+</section>
+
+<section class="grid">
+<article class="card"><div class="head"><span>Rückrufe</span><span class="tag">2 offen</span></div><div class="list">
+<div class="item"><b>Beispielkunde · Abholung</b><small>ca. 1 t Mischschrott · Raum Alfeld</small></div>
+<div class="item"><b>Neuer Kontakt · Rückruf</b><small>Anfrage kam über die Website</small></div>
+</div></article>
+
+<article class="card"><div class="head"><span>Wichtige E-Mails</span><span class="tag">gefiltert</span></div><div class="list">
+<div class="item"><b>Kundenanfrage</b><small>Abholung anfragen</small></div>
+<div class="item"><b>Steuerberater</b><small>Monatsunterlagen angefragt</small></div>
+</div></article>
+
+<article class="card"><div class="head"><span>Schrottpreise</span><span class="tag">Richtwerte</span></div><div class="list">
+<div class="item"><b>Mischschrott <span class="price">100–130 €/t</span></b></div>
+<div class="item"><b>Sorte 3 <span class="price">120–150 €/t</span></b></div>
+<div class="item"><b>Schreddervormaterial <span class="price">70–80 €/t</span></b></div>
+<div class="item"><b>Kupfer <span class="price">9,00–11,35 €/kg</span></b></div>
+<div class="item"><b>Aluminium <span class="price">0,80–2,40 €/kg</span></b></div>
+</div><p class="muted">Nur Markt-Richtwerte. Der echte Händlerpreis hängt von Sorte, Menge und Qualität ab.</p></article>
+
+<article class="card"><div class="head"><span>Bitcoin / Markt</span><span class="tag">Simulation</span></div>
+<div class="item"><b>Markt beobachten</b><small>Trend, Szenarien, Stop-Loss-/Take-Profit-Simulationen und historische Vergleiche – ohne automatische Orders.</small></div>
+<div class="item" style="margin-top:7px"><b>Was wäre wenn?</b><small>BTC mit anderen Coins vergleichen; Gold/Aktien später über separate Marktdatenquelle.</small></div>
+</article>
+
+<article class="card"><div class="head"><span>Belege</span><span class="tag">12 im Monat</span></div><div class="list">
+<div class="item"><b>Wiegeschein</b><small>automatisch dem Monat zugeordnet</small></div>
+<div class="item"><b>Betriebsbeleg</b><small>Foto reicht fürs Einsammeln</small></div>
+</div></article>
+
+<article class="card"><div class="head"><span>Kleine Firmenwebsite</span><span class="tag">öffentlich</span></div>
+<p class="muted">Kunden können einen Rückruf anfordern. Name, Telefonnummer, Ort und Anliegen landen direkt als Aufgabe in WerkZ.</p>
+<a class="cta" href="/pilot/site/">Website-Demo ansehen</a>
+</article>
+</section>
+
+<p><a class="cta" href="/pilot/site/">Firmenwebsite öffnen</a><a class="cta ghost" href="/">WerkZ zurück</a></p>
+<p class="foot">Demo-Daten · keine echten Kundendaten · keine automatische Preis-, Handels- oder Vertragsentscheidung</p>
+</main></body></html>
