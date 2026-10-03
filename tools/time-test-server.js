@@ -57,10 +57,12 @@ function parseExtraPilotTenants(){
     const tenantLoginCode=String(item.loginCode||'').trim();
     const explicitToken=String(item.sessionToken||'').trim();
     const stableToken=explicitToken||(tenantLoginCode?crypto.createHmac('sha256',primaryPilotSessionToken).update('werkz-pilot-tenant:'+org+':'+tenantLoginCode).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
-    return {id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
+    return {
+      id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
       actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
       taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
-      loginCode:tenantLoginCode||null,token:stableToken,role:'owner'};
+      loginCode:tenantLoginCode||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true
+    };
   });
 }
 const extraPilotTenants=parseExtraPilotTenants();
@@ -76,7 +78,7 @@ const pilotCapabilities=['pilot.read','pilot.write','market.read'];
 const testProfiles=new Map([
   ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'manager',kind:'time-manager'}]
 ]);
-const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null};
+const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null,cryptoEnabled:process.env.WERKZ_PILOT_CRYPTO_ENABLED==='1'};
 const pilotProfiles=new Map([['primary',primaryPilotProfile]]);
 for(const tenant of extraPilotTenants)pilotProfiles.set(tenant.id,{...tenant,capabilities:pilotCapabilities,kind:'tenant'});
 if(testProfilesEnabled){
@@ -95,8 +97,11 @@ const authSessions=Object.fromEntries([...testProfiles.values(),...pilotProfiles
 const registry=new ModuleRegistry(),entitlements=new EntitlementService({registry});
 entitlements.set({organisationId,moduleId:'werkz.time',catalogVersion:'v0.2'});
 const pilotOrganisationIds=[...new Set([...pilotProfiles.values()].map(p=>p.organisationId||organisationId))];
-for(const org of pilotOrganisationIds)for(const moduleId of ['werkz.simple','werkz.documents','werkz.billing-prep','werkz.channel.voice','werkz.channel.gmail','werkz.crypto-monitor']){
+for(const org of pilotOrganisationIds)for(const moduleId of ['werkz.simple','werkz.documents','werkz.billing-prep','werkz.channel.voice','werkz.channel.gmail']){
   entitlements.set({organisationId:org,moduleId,catalogVersion:'v0.2'});
+}
+for(const profile of pilotProfiles.values())if(profile.cryptoEnabled===true){
+  entitlements.set({organisationId:profile.organisationId,moduleId:'werkz.crypto-monitor',catalogVersion:'v0.2'});
 }
 const pilotTenantByOrg=new Map([...pilotProfiles.values()].map(p=>[p.organisationId||organisationId,p]));
 const pilotTenantBySlug=new Map([...pilotProfiles.values()].map(p=>[p.publicSlug||p.id,p]));
