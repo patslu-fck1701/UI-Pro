@@ -19,15 +19,11 @@ function runtimeLoginCode(){
   const configured=process.env.WERKZ_TEST_LOGIN_CODE;
   if(configured)return configured;
   if(process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS!=='1')throw new Error('WERKZ_TEST_LOGIN_CODE is required');
-  const renderServiceId=process.env.RENDER_SERVICE_ID;
-  const value=renderServiceId
-    ? crypto.createHash('sha256').update('werkz-time-device-test:'+renderServiceId).digest('base64url').slice(0,16)
-    : crypto.randomBytes(12).toString('base64url');
+  const value=crypto.randomBytes(24).toString('base64url');
   process.stdout.write(JSON.stringify({
     kind:'ephemeral-test-login',
-    stableForService:Boolean(renderServiceId),
-    value,
-    note:'Non-production device-test code only'
+    stableForService:false,
+    note:'Non-production code regenerated on restart; value withheld from logs'
   })+'\n');
   return value;
 }
