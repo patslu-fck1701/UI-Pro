@@ -78,6 +78,10 @@ class TimeApplication {
     if(request.expectedRevision!==undefined)input.expectedRevision=request.expectedRevision;
     return this.execute(token,{operation:request.type,input});
   }
+  downloadEvidence(token,evidenceId){
+    try{return {ok:true,data:this.service.getEvidence(token,required(evidenceId,'evidenceId'))};}
+    catch(error){return errorResult(error);}
+  }
   uploadEvidence(token,upload){
     try{
       const request=object(upload,'upload'),fields=object(request.fields,'fields'),file=object(request.file,'file');

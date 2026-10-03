@@ -1,0 +1,15 @@
+{
+  "orders": [
+    {"id":"WO-260812-001","title":"Förderanlage prüfen","asset":"Anlage A-14","status":"In Arbeit","priority":"Hoch","due":"12.08.2026 14:00"},
+    {"id":"WO-260811-014","title":"Dichtung kontrollieren","asset":"Pumpenstation P-02","status":"Geplant","priority":"Mittel","due":"13.08.2026 09:00"},
+    {"id":"WO-260810-009","title":"Sicherheitsprüfung dokumentieren","asset":"Standort Nord","status":"Neu","priority":"Mittel","due":"14.08.2026 11:30"},
+    {"id":"WO-260809-006","title":"Filter wechseln","asset":"Kühlgerät K-07","status":"Abgeschlossen","priority":"Niedrig","due":"11.08.2026 15:00"},
+    {"id":"WO-260808-003","title":"Temperaturabweichung analysieren","asset":"Schaltschrank S-04","status":"In Arbeit","priority":"Hoch","due":"12.08.2026 16:00"}
+  ],
+  "activities":[{"text":"Auftrag WO-260809-006 abgeschlossen","time":"Heute, 08:10"},{"text":"Status von WO-260812-001 aktualisiert","time":"Heute, 08:02"},{"text":"Synthetische Demo-Daten geladen","time":"Heute, 08:00"}],
+  "assets":[{"name":"Förderanlage A-14","serial":"DEMO-FA-1402","location":"Standort Nord","status":"Betrieb","next_service":"18.08.2026"},{"name":"Pumpenstation P-02","serial":"DEMO-PS-0208","location":"Werkhalle 2","status":"Prüfung","next_service":"13.08.2026"},{"name":"Kühlgerät K-07","serial":"DEMO-KG-0711","location":"Lager West","status":"Wartung fällig","next_service":"überfällig"}],
+  "tasks":[{"title":"Prüfprotokoll ergänzen","owner":"Team Betrieb","priority":"Hoch","due":"Heute, 15:00"},{"title":"Ersatzteil freigeben","owner":"Disposition","priority":"Mittel","due":"Morgen, 09:00"},{"title":"Servicebericht archivieren","owner":"Dokumentation","priority":"Niedrig","due":"14.08.2026"}],
+  "documents":[{"name":"Prüfbericht A-14.pdf","kind":"Prüfbericht","updated":"12.08.2026"},{"name":"Wartungsplan K-07.pdf","kind":"Wartungsplan","updated":"10.08.2026"},{"name":"Anlagenübersicht.csv","kind":"Export","updated":"12.08.2026"}],
+  "systems":["Weboberfläche","Seed-Daten","Automation","Export"],
+  "maintenance":{"asset":"Kühlgerät K-07","description":"Jährliche Inspektion","overdue_days":2}
+}

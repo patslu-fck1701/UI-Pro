@@ -13,14 +13,32 @@ function sameOrigin(request,origin){
   try{return new URL(origin).host===String(request.headers.host||'')}
   catch{return false}
 }
-function send(response,status,payload,origin,allowed){
+function cors(response,origin,allowed){
   if(origin&&allowed.includes(origin)){
     response.setHeader('access-control-allow-origin',origin);
     response.setHeader('access-control-allow-credentials','true');
     response.setHeader('vary','Origin');
   }
+}
+function send(response,status,payload,origin,allowed){
+  cors(response,origin,allowed);
   response.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});
   response.end(JSON.stringify(payload));
+}
+function sendEvidence(response,result,origin,allowed){
+  if(result.ok===false)return send(response,statusOf(result),result,origin,allowed);
+  const {metadata,bytes}=result.data,inlineTypes=new Set(['image/jpeg','image/png','image/webp','image/gif']);
+  const inline=inlineTypes.has(String(metadata.mime||'').toLowerCase());
+  cors(response,origin,allowed);
+  response.writeHead(200,{
+    'content-type':inline?metadata.mime:'application/octet-stream',
+    'content-length':String(bytes.length),
+    'content-disposition':(inline?'inline':'attachment')+'; filename="werkz-evidence-'+metadata.id+'"',
+    'cache-control':'no-store',
+    'x-content-type-options':'nosniff',
+    'content-security-policy':"default-src 'none'; sandbox"
+  });
+  response.end(bytes);
 }
 function statusOf(result){
   if(result.ok!==false)return 200;
@@ -81,13 +99,18 @@ function createTimeHttpHandler({application,auth,allowedOrigins=[],sessionCookie
     try{
       if(request.method==='GET'&&url.pathname==='/session'){
         const session=auth.resolveSession(token);
-        return send(response,200,{organisationId:session.organisationId,actorId:session.actorId,capabilities:[...session.capabilities]},origin,allowedOrigins);
+        return send(response,200,{organisationId:session.organisationId,actorId:session.actorId,actorLabel:session.actorLabel||session.displayName||null,capabilities:[...session.capabilities]},origin,allowedOrigins);
       }
       if(request.method==='POST'&&url.pathname==='/time/commands'){
         const body=await readBody(request,MAX_JSON_BYTES);
         let command;try{command=JSON.parse(body.toString('utf8'))}catch{const error=new Error('Invalid JSON');error.code='VALIDATION_ERROR';throw error;}
         const result=application.execute(token,command);
         return send(response,statusOf(result),result,origin,allowedOrigins);
+      }
+      if(request.method==='GET'&&url.pathname.startsWith('/time/evidence/')){
+        const evidenceId=decodeURIComponent(url.pathname.slice('/time/evidence/'.length));
+        const result=application.downloadEvidence(token,evidenceId);
+        return sendEvidence(response,result,origin,allowedOrigins);
       }
       if(request.method==='POST'&&url.pathname==='/time/evidence'){
         const body=await readBody(request,MAX_EVIDENCE_BYTES+64*1024);

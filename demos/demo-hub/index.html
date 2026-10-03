@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Lokale WerkZ-Demo mit ausschließlich synthetischen Daten">
+  <title>WerkZ Demo Hub</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="modules.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Zum Inhalt springen</a>
+  <aside class="sidebar" aria-label="Hauptnavigation">
+    <div class="brand"><strong id="brand-name">WerkZ</strong><span>Demo Hub</span></div>
+    <nav id="navigation"></nav>
+    <button id="reset-demo" class="quiet-button">Demo zurücksetzen</button>
+  </aside>
+  <main id="content">
+    <header class="topbar">
+      <div><h1>Guten Morgen</h1><p>Ihre Betriebszentrale für heute</p></div>
+      <strong class="demo-label" id="demo-label">DEMO DATA</strong>
+    </header>
+    <section class="metrics" aria-label="Kennzahlen" id="metrics"></section>
+    <section class="module-panel time-module" id="time-section">
+      <div class="time-module-head">
+        <div>
+          <p class="eyebrow">WerkZ Modul</p>
+          <h2>WerkZ Zeit</h2>
+          <p>Aktive und letzte Zeitmessungen aus dem verbundenen WerkZ-Time-Backend.</p>
+        </div>
+        <div class="time-bridge-actions">
+          <span class="module-badge">werkz.time · /api/time</span>
+          <span id="time-connection" class="time-connection" aria-live="polite">Verbindung wird geprüft</span>
+          <button id="time-refresh" type="button" class="time-refresh">Aktualisieren</button>
+          <button id="time-export" type="button" class="time-refresh">CSV Zeit exportieren</button>
+          <a id="time-profile-open" class="time-profile-link" href="http://127.0.0.1:8080/test-profiles?return=/hub/">Testprofil wechseln</a>
+          <a id="time-open" class="time-open" href="http://127.0.0.1:8080/test-profiles?return=/" target="_blank" rel="noopener">In WerkZ Zeit öffnen</a>
+        </div>
+      </div>
+      <div id="time-login-hint" class="time-login-hint" hidden>
+        <strong>Zeitserver erreichbar, aber noch nicht verbunden.</strong>
+        <span>Öffne die Testanmeldung einmal und kehre danach hierher zurück.</span>
+      </div>
+      <section class="time-summary" aria-label="Zeitübersicht heute">
+        <article><span>Aktiv gerade</span><strong id="time-kpi-active">0</strong><small>Mitarbeiter/Akteure</small></article>
+        <article><span>Heute erfasst</span><strong id="time-kpi-today">00:00</strong><small>laufend + beendet</small></article>
+        <article><span>Heute beendet</span><strong id="time-kpi-finished">0</strong><small>Zeitmessungen</small></article>
+        <article><span>Heute beteiligt</span><strong id="time-kpi-actors">0</strong><small>Mitarbeiter/Akteure</small></article>
+      </section>
+      <div class="time-filters" aria-label="Zeitmessungen filtern">
+        <label>Suche<input id="time-search" type="search" placeholder="Mitarbeiter, Kunde oder Auftrag"></label>
+        <label>Mitarbeiter/Akteur<select id="time-actor-filter"><option value="">Alle</option></select></label>
+        <label>Zeitraum<select id="time-period-filter"><option value="today">Heute</option><option value="all">Alle</option></select></label>
+      </div>
+      <section class="time-actor-overview" aria-label="Mitarbeiter Tagesübersicht">
+        <div class="time-list-heading"><h3>Mitarbeiter heute</h3><span id="time-actor-summary-count">0 Mitarbeiter/Akteure</span></div>
+        <div id="time-actor-summary" class="time-actor-summary"><p class="time-empty">Noch keine Zeitdaten.</p></div>
+      </section>
+      <div class="time-overview-grid">
+        <div>
+          <div class="time-list-heading"><h3>Aktive Zeitmessungen</h3><span id="time-active-count">0 aktiv</span></div>
+          <div id="time-active-list" class="time-record-list"><p class="time-empty">Noch keine Verbindung.</p></div>
+        </div>
+        <div>
+          <div class="time-list-heading"><h3>Letzte Zeitmessungen</h3><span id="time-recent-count">0 Einträge</span></div>
+          <div id="time-recent-list" class="time-record-list"><p class="time-empty">Noch keine Verbindung.</p></div>
+        </div>
+      </div>
+      <section id="time-detail" class="time-detail" aria-live="polite">
+        <div class="time-detail-empty">
+          <strong>Zeitmessung auswählen</strong>
+          <span>Hier erscheinen Start, Ende, Dauer, Einsatz, Kilometer, Notizen, Korrekturen und vorhandene Nachweise.</span>
+        </div>
+      </section>
+    </section>
+    <section class="workspace">
+      <div class="orders-panel" id="orders-section">
+        <div class="section-heading"><div><h2>Letzte Aufträge</h2><p>Suche, Filter und Export arbeiten lokal.</p></div><button id="export-csv">CSV exportieren</button></div>
+        <div class="filters">
+          <label>Suche<input id="search" type="search" placeholder="Auftrag oder Anlage"></label>
+          <label>Status<select id="status-filter"><option value="">Alle</option></select></label>
+          <label>Priorität<select id="priority-filter"><option value="">Alle</option></select></label>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Auftrag</th><th>Titel</th><th>Anlage</th><th>Status</th><th>Priorität</th><th>Fällig</th></tr></thead><tbody id="orders"></tbody></table></div>
+        <p id="empty-state" class="empty" hidden>Keine Aufträge entsprechen den Filtern.</p>
+      </div>
+      <aside class="activity-panel"><div class="section-heading"><h2>Aktivitäten</h2></div><ol id="activities"></ol></aside>
+    </section>
+    <section class="module-grid" aria-label="Weitere Demo-Module">
+      <article class="module-panel" id="assets-section"><div class="section-heading"><div><h2>Anlagen</h2><p>Servicezustand und Standort.</p></div></div><div id="assets" class="card-list"></div></article>
+      <article class="module-panel" id="tasks-section"><div class="section-heading"><div><h2>Aufgaben</h2><p>Verantwortung und Fälligkeit.</p></div></div><div id="tasks" class="card-list"></div></article>
+      <article class="module-panel" id="documents-section"><div class="section-heading"><div><h2>Dokumente</h2><p>Ausschließlich synthetische Metadaten.</p></div></div><div id="documents" class="card-list"></div></article>
+      <article class="module-panel" id="reporting-section"><div class="section-heading"><div><h2>Reporting</h2><p>Lokale Kennzahlen ohne externe Übertragung.</p></div></div><div id="reporting" class="report-bars"></div></article>
+    </section>
+    <section class="module-panel" id="briefing-section">
+      <div class="section-heading"><div><h2>Chef-Briefing</h2><p>Die wichtigsten offenen Punkte aus den vorhandenen Demo-Daten.</p></div></div>
+      <div id="briefing" class="card-list"><div class="data-card"><strong>2 · Rückrufe offen</strong><span>Heute vor 12:00 prüfen</span><small>Priorität hoch</small></div><div class="data-card"><strong>1 · Fotodokumentation fehlt</strong><span>Auftrag WO-260812-001</span><small>Vor Abschluss ergänzen</small></div><div class="data-card"><strong>1 · Freigabe ausstehend</strong><span>Zusatzleistung Ventile</span><small>Keine automatische Kundenkommunikation</small></div></div>
+    </section>
+    <section class="module-panel" id="field-section">
+      <div class="section-heading"><div><h2>Rückmeldung vom Außendienst</h2><p>Eine Sprachnotiz wird als strukturierter Entwurf gezeigt – ohne automatische Freigabe.</p></div></div>
+      <blockquote id="field-note">„Auftrag Müller fertig. Zwei zusätzliche Ventile eingebaut. Foto ist dabei.“</blockquote>
+      <div id="field-result" class="card-list"><div class="data-card"><strong>Auftrag</strong><span>Müller · Zuordnung prüfen</span></div><div class="data-card"><strong>Status</strong><span>Fertig gemeldet</span></div><div class="data-card"><strong>Zusatzleistung</strong><span>2 Ventile · Freigabe erforderlich</span></div><div class="data-card"><strong>Nachweis</strong><span>Foto vorhanden</span></div></div>
+    </section>
+    <section class="automation-panel" id="automation-section">
+      <div class="section-heading"><div><h2>Wartung & Automation</h2><p>Eine überfällige Wartung erzeugt nachvollziehbar eine Aufgabe.</p></div><button id="run-automation">Automation ausführen</button></div>
+      <div id="automation-flow" class="flow" aria-live="polite"></div>
+    </section>
+    <section class="status-panel" id="status-section"><div><strong>Systemstatus</strong><span id="system-summary">Alle lokalen Demo-Komponenten normal</span></div><ul id="systems"></ul></section>
+  </main>
+  <script src="app.js" defer></script>
+</body>
+</html>

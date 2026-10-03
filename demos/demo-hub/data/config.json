@@ -1,0 +1,16 @@
+{
+  "company_name": "WerkZ",
+  "logo": "",
+  "demo_label": "DEMO DATA",
+  "primary_color": "#B6FF00",
+  "secondary_color": "#39FF14",
+  "industry": "neutral",
+  "terminology": {
+    "orders": "Aufträge",
+    "assets": "Anlagen",
+    "maintenance": "Wartung"
+  },
+  "time_app_url": "http://127.0.0.1:8080/test-login",
+  "time_api_base": "http://127.0.0.1:8080/api",
+  "time_profile_url": "http://127.0.0.1:8080/test-profiles?return=/hub/"
+}

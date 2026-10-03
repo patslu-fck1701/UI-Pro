@@ -14,6 +14,7 @@ class TimeRepositoryPort {
 class EvidenceStoragePort {
   putPrivate(_) { throw new Error('EvidenceStoragePort.putPrivate must be implemented'); }
   listPrivate(_,__) { throw new Error('EvidenceStoragePort.listPrivate must be implemented'); }
+  getPrivate(_,__) { throw new Error('EvidenceStoragePort.getPrivate must be implemented'); }
 }
 
 class LocalAuthPort extends AuthPort {
@@ -63,22 +64,24 @@ class InMemoryTenantTimeRepository extends TimeRepositoryPort {
 }
 
 class InMemoryPrivateEvidenceStorage extends EvidenceStoragePort {
-  constructor(){super();this.objects=new Map();this.idempotency=new Map();}
+  constructor(){super();this.objects=new Map();this.bytes=new Map();this.idempotency=new Map();}
   key(org,id){return org+':'+id}
-  putPrivate({organisationId,ownerId,timeRecordId,mime,size,hash,objectKey,idempotencyKey}){
+  putPrivate({organisationId,ownerId,timeRecordId,mime,size,hash,objectKey,bytes,idempotencyKey}){
     const ik=this.key(organisationId,idempotencyKey);
     if(this.idempotency.has(ik))return clone(this.idempotency.get(ik));
-    const metadata={id:uid('file'),organisationId,ownerId,timeRecordId,mime,size,hash,objectKey,visibility:'private'};
-    this.objects.set(this.key(organisationId,metadata.id),metadata);this.idempotency.set(ik,metadata);
+    const body=Buffer.from(bytes||[]);
+    const metadata={id:uid('file'),organisationId,ownerId,timeRecordId,mime,size:size??body.length,hash,objectKey,visibility:'private'};
+    const key=this.key(organisationId,metadata.id);
+    this.objects.set(key,metadata);this.bytes.set(key,body);this.idempotency.set(ik,metadata);
     return clone(metadata);
   }
   listPrivate(organisationId,timeRecordId){
     return [...this.objects.values()].filter(x=>x.organisationId===organisationId&&x.timeRecordId===timeRecordId).map(value=>clone(value));
   }
   getPrivate(organisationId,id){
-    const value=this.objects.get(this.key(organisationId,id));
+    const key=this.key(organisationId,id),value=this.objects.get(key);
     if(!value){const error=new Error('Evidence not found');error.code='NOT_FOUND';throw error;}
-    return clone(value);
+    return {metadata:clone(value),bytes:Buffer.from(this.bytes.get(key)||[])};
   }
 }
 
@@ -118,6 +121,17 @@ class TimeProductionService {
     if(!session.capabilities.includes(capability)){const error=new Error('Missing capability: '+capability);error.code='FORBIDDEN';throw error;}
     return session;
   }
+  readSession(token){
+    const session=this.auth.resolveSession(token);
+    this.entitlements.require(session.organisationId,'werkz.time');
+    if(!session.capabilities.includes('time.start')&&!session.capabilities.includes('time.read.all')){
+      const error=new Error('Missing Time read capability');error.code='FORBIDDEN';throw error;
+    }
+    return session;
+  }
+  mayRead(session,record){
+    return session.capabilities.includes('time.read.all')||record.actorId===session.actorId;
+  }
   event(session,eventType,entityId,idempotencyKey,payload={}){
     this.audit({
       organisationId:session.organisationId,actorId:session.actorId,entityType:'time-record',
@@ -131,6 +145,7 @@ class TimeProductionService {
     const s=this.session(token,'time.start');
     const record={
       id:input.id||this.id('time'),organisationId:s.organisationId,actorId:s.actorId,
+      actorLabel:String(s.actorLabel||s.displayName||s.actorId).trim().slice(0,160),
       orderId:input.orderId||null,customerLabel:input.customerLabel||null,
       startedAt:input.startedAt||this.clock().toISOString(),endedAt:null,
       mileageStart:input.mileageStart??null,mileageEnd:null,note:input.note||'',status:'running'
@@ -175,18 +190,24 @@ class TimeProductionService {
     return result;
   }
   get(token,id){
-    const s=this.session(token,'time.start'),record=this.repository.get(s.organisationId,id);
-    if(!record){const error=new Error('Time record not found');error.code='NOT_FOUND';throw error;}
+    const s=this.readSession(token),record=this.repository.get(s.organisationId,id);
+    if(!record||!this.mayRead(s,record)){const error=new Error('Time record not found');error.code='NOT_FOUND';throw error;}
     return record;
   }
   list(token){
-    const s=this.session(token,'time.start');
-    return this.repository.list(s.organisationId);
+    const s=this.readSession(token),records=this.repository.list(s.organisationId);
+    return s.capabilities.includes('time.read.all')?records:records.filter(record=>record.actorId===s.actorId);
   }
   gallery(token,timeRecordId){
-    const s=this.session(token,'time.start');
-    if(!this.repository.get(s.organisationId,timeRecordId)){const error=new Error('Time record not found');error.code='NOT_FOUND';throw error;}
+    const s=this.readSession(token),record=this.repository.get(s.organisationId,timeRecordId);
+    if(!record||!this.mayRead(s,record)){const error=new Error('Time record not found');error.code='NOT_FOUND';throw error;}
     return this.storage.listPrivate(s.organisationId,timeRecordId);
+  }
+  getEvidence(token,evidenceId){
+    const s=this.readSession(token),evidence=this.storage.getPrivate(s.organisationId,evidenceId);
+    const record=this.repository.get(s.organisationId,evidence.metadata.timeRecordId);
+    if(!record||!this.mayRead(s,record)){const error=new Error('Evidence not found');error.code='NOT_FOUND';throw error;}
+    return evidence;
   }
 }
 

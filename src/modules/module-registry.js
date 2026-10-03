@@ -4,7 +4,7 @@ const ENTITLED = new Set(['active', 'trial']);
 const STATUSES = new Set(['active', 'trial', 'suspended', 'expired']);
 
 const MODULE_MANIFESTS = Object.freeze([
-  ['werkz.time','WZ-TIME','WerkZ Zeit',['time.start','time.stop'],['/api/time'],[],[]],
+  ['werkz.time','WZ-TIME','WerkZ Zeit',['time.start','time.stop','time.correct'],['/api/time'],[],[]],
   ['werkz.customers','WZ-CUSTOMERS','Kunden',['customer.read','customer.write'],['/api/customers'],[],[]],
   ['werkz.orders','WZ-ORDERS','Auftrag',['order.read','order.create','order.assign','order.complete'],['/api/orders'],[],['werkz.customers']],
   ['werkz.materials','WZ-MATERIAL','Material',['material.write'],['/api/materials'],[],[]],
@@ -12,7 +12,7 @@ const MODULE_MANIFESTS = Object.freeze([
   ['werkz.billing-prep','WZ-BILLINGPREP','Abrechnungsvorbereitung',['billing.prepare'],['/api/billing-prep'],[],[]],
   ['werkz.analytics','WZ-ANALYTICS','Analyse',['analytics.view'],['/api/analytics'],[],[]],
   ['werkz.simulation','WZ-SIM','Simulation',['simulation.run'],['/api/simulation'],[],[]],
-  ['werkz.management','WZ-MANAGEMENT','Chefmodus',['management.view'],['/api/management'],[],[]],
+  ['werkz.management','WZ-MANAGEMENT','Chefmodus',['management.view','time.read.all'],['/api/management'],[],[]],
   ['werkz.approvals','WZ-APPROVALS','Freigaben',['approval.decide'],['/api/approvals'],[],[]],
   ['werkz.channel.whatsapp','WZ-WHATSAPP','WhatsApp-Freigabekanal',[],[],[],['werkz.approvals']]
 ].map(([id,sku,displayName,capabilities,routes,hardDependencies,optionalIntegrations]) => Object.freeze({
