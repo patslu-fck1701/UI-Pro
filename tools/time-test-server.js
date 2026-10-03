@@ -145,6 +145,16 @@ function serveMapped(url,response,map,root){
   response.writeHead(200,{'content-type':contentTypes[path.extname(file)]||'application/octet-stream'});
   response.end(fs.readFileSync(candidate));return true;
 }
+function servePilotReference(url,response){
+  const targets={
+    '/pilot/crypto-lab':'https://project23947.websitepublisher.ai/crypto-lab.html',
+    '/pilot/crypto-simulation':'https://project23947.websitepublisher.ai/werkz-analyse-simulation.html'
+  };
+  const target=targets[url.pathname];
+  if(!target)return false;
+  response.writeHead(302,{location:target,'cache-control':'no-store'});response.end();return true;
+}
+
 function servePilotHtml(url,response){
   if(url.pathname==='/pilot'){response.writeHead(308,{location:'/pilot/'});response.end();return true}
   if(url.pathname==='/pilot/site'){response.writeHead(308,{location:'/pilot/site/'});response.end();return true}
