@@ -606,14 +606,22 @@
       7
     ],
     "state": "IN_PROGRESS_DRAFT",
-    "latest_verified_commit": "3fa5de08eeaefb8e9fe70a519dc68ce5c1b51bcf",
+    "latest_verified_commit": "10a9e3f7cb2b0af2ab27a1ea4ed391cd7439716c",
     "latest_verified_ci": {
-      "run_id": 36956316494,
+      "run_id": 36942396612,
       "conclusion": "success",
       "tests": {
-        "total": 86,
-        "passed": 86,
+        "total": 78,
+        "passed": 78,
         "failed": 0
+      },
+      "lint": {
+        "status": "passed",
+        "files": 45
+      },
+      "typecheck": {
+        "status": "passed",
+        "modules": 19
       },
       "oss_check": "passed",
       "npm_vulnerabilities": 0
@@ -637,7 +645,8 @@
       "Time/private-evidence backup, verification and staged restore",
       "remote Google Fonts removed from repository Time prototype runtime with regression test",
       "atomic file-backed retry job state with restart-persistent idempotency keys and interrupted-running recovery",
-      "renewable file-backed multi-worker job leases preventing parallel duplicate execution with stale-lease takeover"
+      "renewable file-backed multi-worker job leases preventing parallel duplicate execution with stale-lease takeover",
+      "server-owned OAuth authorization configuration with S256 PKCE, tenant/actor-bound one-time state and private restart-persistent callback state"
     ],
     "blockers": [
       "public repository visibility decision",
@@ -649,5 +658,6 @@
     ],
     "stacked_base_sync": "0 behind current main",
     "issue3_dependency": "resolved"
-  }
+  },
+  "owner_steering_2026_10_03": "Review current GitHub, Google, WebsitePublisher and existing Render Node.js service; reconcile current price/workflow documents; extend WerkZ customer adviser with dependencies, drill-down, deployment/hardware choices and website/domain publication diagnosis."
 }
