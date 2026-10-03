@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "scanRoots": [
+      "apps",
+      "packages",
+      "demos",
+      "deploy"
+    ],
+    "productionRoots": [
+      "apps",
+      "deploy"
+    ],
+    "localAssetExtensions": [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".svg",
+      ".webp",
+      ".woff",
+      ".woff2",
+      ".ttf",
+      ".otf",
+      ".ico"
+    ]
+  },
+  "localAssets": [
+    {
+      "path": "apps/time-pwa/icon.svg",
+      "kind": "app-icon",
+      "source": "WerkZ repository project asset",
+      "rightsBasis": "Project-authored/generated asset; human accepted for the WerkZ Time test surface",
+      "reviewStatus": "registered",
+      "productionUse": "brand-clearance-pending"
+    },
+    {
+      "path": "apps/time-pwa/logo_ich_black.png",
+      "kind": "brand-logo",
+      "source": "Owner-provided WerkZ project asset",
+      "rightsBasis": "Owner-provided project asset; trademark/brand clearance is tracked separately and is not implied by this record",
+      "reviewStatus": "registered",
+      "productionUse": "brand-clearance-pending"
+    },
+    {
+      "path": "apps/assistant-pwa/apple-touch-icon.png",
+      "kind": "app-icon",
+      "source": "Owner-provided WerkZ logo image supplied in the project conversation; resized/composited onto black background only, no generative artwork",
+      "rightsBasis": "Owner-provided project asset; this record documents provenance only and does not itself imply trademark clearance",
+      "reviewStatus": "registered",
+      "productionUse": "brand-clearance-pending"
+    }
+  ],
+  "remoteRuntimeReferences": [
+    {
+      "pathPrefix": "packages/time-tracking/",
+      "urlPrefix": "https://cdn.websitepublisher.ai/",
+      "classification": "reference-prototype",
+      "productionAllowed": false,
+      "note": "Historical/reference WebsitePublisher prototype dependency. It is not the canonical WerkZ production runtime."
+    }
+  ]
+}
