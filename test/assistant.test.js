@@ -117,7 +117,7 @@ test('AIConvoyZ roadmap detects spoken deviations from the desired event design'
 });
 
 
-test('ToxicZ signal marker chain stays explicit in the assistant baseline',()=>{
+test('ToxicZ roadmap keeps signal marker start and post-Rify investigation separate',()=>{
   const fx=fixture();try{
     const specs=fx.service.eventSpecs('a');
     const convoy=specs.find(spec=>spec.id==='aiconvoyz');
@@ -125,8 +125,113 @@ test('ToxicZ signal marker chain stays explicit in the assistant baseline',()=>{
     assert.ok(convoy.criteria.some(item=>item.id==='toxic_activation'&&/aktivieren/i.test(item.expected)));
 
     const toxic=specs.find(spec=>spec.id==='toxicz');
-    assert.ok(toxic);
-    assert.ok(toxic.criteria.some(item=>item.id==='combine'&&/Signalmarker/.test(item.label)));
-    assert.ok(toxic.criteria.some(item=>item.id==='activate'&&/ToxicZ_Signal_Marker aktivieren/.test(item.expected)));
+    assert.equal(toxic.baseline,'ToxicZ Event-Roadmap · 03.10.2026');
+    assert.equal(toxic.criteria.length,12);
+    assert.ok(toxic.criteria.some(item=>item.id==='unlock'&&/ToxicZ_Signal_Marker/.test(item.expected)));
+    assert.ok(toxic.criteria.some(item=>item.id==='dynamic_route'&&/Feuerwache/.test(item.expected)));
+    assert.ok(toxic.criteria.some(item=>item.id==='final_flare'&&/GasZonen_Leuchtfackel/.test(item.expected)));
+    assert.ok(toxic.criteria.some(item=>item.id==='post_rify_handoff'&&/nicht direkt Operation DeutschZ/i.test(item.label)));
+    assert.equal(toxic.criteria.some(item=>item.id==='operation_handoff'),false);
+  }finally{fx.close()}
+});
+
+
+test('story canon separates technical scheduler from personal Q17 T17 progression',()=>{
+  const fx=fixture();try{
+    const story=fx.service.storyCanon('a');
+    assert.equal(story.id,'q17-t17-main');
+    assert.deepEqual(story.technicalScheduler.currentMajorRotation,['koth','courierz','raven','aiconvoyz']);
+    assert.deepEqual(story.mainStory.order,['koth','aiconvoyz','toxicz','atm-raidz','propertyz','courierz','raven','battlegroundz','operation-deutschz']);
+    assert.equal(story.discarded.includes('Operation EclipseZ'),true);
+
+    const atm=story.mainStory.nodes.find(node=>node.id==='atm-raidz');
+    assert.equal(atm.optional,true);assert.equal(atm.blocking,false);
+    const property=story.mainStory.nodes.find(node=>node.id==='propertyz');
+    assert.match(property.storyRole,/Dead Drop/);
+    const raven=story.mainStory.nodes.find(node=>node.id==='raven');
+    assert.match(raven.storyRole,/BLACK\/ECHO/);
+
+    for(const id of ['koth','courierz']){
+      assert.match(story.mainStory.nodes.find(node=>node.id===id).implementationPolicy,/existing_event_unchanged/);
+    }
+    assert.match(story.mainStory.nodes.find(node=>node.id==='raven').implementationPolicy,/existing_event_unchanged/);
+    assert.equal(inferDeutschzTarget('Operation EclipseZ'),null);
+  }finally{fx.close()}
+});
+
+test('story canon records verified WelcomeZ RadioMissionZ and BattlegroundZ integration points',()=>{
+  const fx=fixture();try{
+    const story=fx.service.storyCanon('a');
+    assert.match(story.supportSystems.welcomez.role,/Player-Hub/);
+    assert.match(story.supportSystems.radiomissionz.role,/89,5 MHz/);
+    assert.ok(story.supportSystems.battlegroundz.verified.some(value=>/Operation-DeutschZ-KeyCard/.test(value)));
+    assert.ok(story.currentSourceGaps.some(gap=>gap.id==='atm-currently-blocking'));
+    assert.ok(story.currentSourceGaps.some(gap=>gap.id==='property-not-wired'));
+    assert.ok(story.currentSourceGaps.some(gap=>gap.id==='raven-not-wired'));
+    assert.ok(story.currentSourceGaps.some(gap=>gap.id==='battleground-reader-class-collision'));
+  }finally{fx.close()}
+});
+
+test('BattlegroundZ and Operation DeutschZ are testable without changing KOTH CourierZ or RAVEN specs',()=>{
+  const fx=fixture();try{
+    const specs=fx.service.eventSpecs('a');
+    const koth=specs.find(spec=>spec.id==='koth');
+    const courier=specs.find(spec=>spec.id==='courierz');
+    const raven=specs.find(spec=>spec.id==='raven');
+    assert.deepEqual(koth.criteria.map(x=>x.id),['start','finish','handoff','slot']);
+    assert.deepEqual(courier.criteria.map(x=>x.id),['start','finish','handoff','slot']);
+    assert.deepEqual(raven.criteria.map(x=>x.id),['radio_preannounce','public_zone','flight_drop','zombies','hack_trigger','recovery_team','exact_marker','story_document','finish']);
+
+    const battleground=specs.find(spec=>spec.id==='battlegroundz');
+    assert.ok(battleground.criteria.some(item=>item.id==='operation_key'));
+    const operation=specs.find(spec=>spec.id==='operation-deutschz');
+    assert.ok(operation.criteria.some(item=>item.id==='authorization'&&/MasterCardReader/.test(item.expected)));
+    assert.ok(operation.criteria.some(item=>item.id==='decision'));
+  }finally{fx.close()}
+});
+
+
+test('source audit exposes current verified source errors and unresolved suspicions',()=>{
+  const fx=fixture();try{
+    const audit=fx.service.sourceAudit('a');
+    assert.equal(audit.checkedAt,'2026-10-03');
+    assert.equal(audit.snapshots.length,3);
+    assert.ok(audit.openCount>=5);
+
+    const reader=audit.findings.find(item=>item.id==='battleground-reader-class-collision');
+    assert.equal(reader.status,'error');
+    assert.equal(reader.severity,'critical');
+    assert.match(reader.actual,/CanPutIntoHands\/CanPutInCargo/);
+    assert.match(reader.actual,/deutschz_aiconvoyz_cardreader/);
+
+    const visual=audit.findings.find(item=>item.id==='electronic-repair-kit-visual');
+    assert.equal(visual.status,'error');
+    assert.equal(visual.severity,'critical');
+    assert.match(visual.actual,/DZToxicZ_DocumentDecoder/);
+    assert.match(visual.actual,/ElectronicRepairKit/);
+
+    const atm=audit.findings.find(item=>item.id==='atm-currently-blocking');
+    assert.equal(atm.status,'mismatch');
+    const property=audit.findings.find(item=>item.id==='property-story-missing');
+    const raven=audit.findings.find(item=>item.id==='raven-story-missing');
+    assert.equal(property.status,'missing');
+    assert.equal(raven.status,'missing');
+  }finally{fx.close()}
+});
+
+test('source audit distinguishes verified facts from desired roadmap extensions',()=>{
+  const fx=fixture();try{
+    const audit=fx.service.sourceAudit('a');
+    const toxic=audit.findings.find(item=>item.id==='toxicz-existing-core');
+    assert.equal(toxic.status,'partial');
+    assert.match(toxic.actual,/Hospital 1/);
+    assert.match(toxic.expected,/Feuerwehr-Routen/);
+
+    const bridge=audit.findings.find(item=>item.id==='battleground-operation-bridge');
+    assert.equal(bridge.status,'verified');
+    assert.match(bridge.actual,/Operation-KeyCard/);
+
+    const eclipse=audit.findings.find(item=>item.id==='eclipse-retired');
+    assert.equal(eclipse.status,'verified');
   }finally{fx.close()}
 });
