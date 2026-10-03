@@ -30,6 +30,8 @@ function createAssistantHttpHandler({service,allowedOrigins=[],sessionCookie='we
       if(request.method==='GET'&&url.pathname==='/assistant/briefing')return send(response,200,{ok:true,data:service.briefing(token)},origin,allowedOrigins);
       if(request.method==='GET'&&url.pathname==='/assistant/items')return send(response,200,{ok:true,data:service.list(token)},origin,allowedOrigins);
       if(request.method==='GET'&&url.pathname==='/assistant/capture-hints')return send(response,200,{ok:true,data:service.captureHints(token)},origin,allowedOrigins);
+      if(request.method==='GET'&&url.pathname==='/assistant/story')return send(response,200,{ok:true,data:service.storyCanon(token)},origin,allowedOrigins);
+      if(request.method==='GET'&&url.pathname==='/assistant/source-audit')return send(response,200,{ok:true,data:service.sourceAudit(token)},origin,allowedOrigins);
       if(request.method==='GET'&&url.pathname==='/assistant/event-tests/specs')return send(response,200,{ok:true,data:service.eventSpecs(token)},origin,allowedOrigins);
       if(request.method==='GET'&&url.pathname==='/assistant/event-tests')return send(response,200,{ok:true,data:service.listEventTests(token)},origin,allowedOrigins);
       if(request.method==='GET'&&url.pathname==='/assistant/projections')return send(response,200,{ok:true,data:service.listProjections(token)},origin,allowedOrigins);
