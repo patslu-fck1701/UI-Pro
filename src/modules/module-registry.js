@@ -10,6 +10,7 @@ const MODULE_MANIFESTS = Object.freeze([
   ['werkz.materials','WZ-MATERIAL','Material',['material.write'],['/api/materials'],[],[]],
   ['werkz.documents','WZ-DOCS','Dokumente & Fotos',['document.upload'],['/api/documents'],[],[]],
   ['werkz.billing-prep','WZ-BILLINGPREP','Abrechnungsvorbereitung',['billing.prepare'],['/api/billing-prep'],[],[]],
+  ['werkz.assistant','WZ-ASSISTANT','Chef-Assistent',['assistant.read','assistant.capture','assistant.manage'],['/api/assistant'],[],['werkz.time','werkz.orders','werkz.documents','werkz.analytics','werkz.simulation']],
   ['werkz.analytics','WZ-ANALYTICS','Analyse',['analytics.view'],['/api/analytics'],[],[]],
   ['werkz.simulation','WZ-SIM','Simulation',['simulation.run'],['/api/simulation'],[],[]],
   ['werkz.management','WZ-MANAGEMENT','Chefmodus',['management.view','time.read.all'],['/api/management'],[],[]],
