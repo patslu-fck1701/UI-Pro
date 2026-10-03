@@ -15,7 +15,11 @@ const MODULE_MANIFESTS = Object.freeze([
   ['werkz.simulation','WZ-SIM','Simulation',['simulation.run'],['/api/simulation'],[],[]],
   ['werkz.management','WZ-MANAGEMENT','Chefmodus',['management.view','time.read.all'],['/api/management'],[],[]],
   ['werkz.approvals','WZ-APPROVALS','Freigaben',['approval.decide'],['/api/approvals'],[],[]],
-  ['werkz.channel.whatsapp','WZ-WHATSAPP','WhatsApp-Freigabekanal',[],[],['werkz.approvals'],[]]
+  ['werkz.channel.whatsapp','WZ-WHATSAPP','WhatsApp-Freigabekanal',[],[],['werkz.approvals'],[]],
+  ['werkz.simple','WZ-SIMPLE','WerkZ Einfach',['pilot.read','pilot.write'],['/pilot/api'],[],['werkz.documents','werkz.billing-prep','werkz.channel.voice','werkz.channel.gmail','werkz.crypto-monitor']],
+  ['werkz.channel.voice','WZ-VOICE','Telefon-Assistent',[],[],[],['werkz.simple']],
+  ['werkz.channel.gmail','WZ-GMAIL','E-Mail-Relevanz',[],[],[],['werkz.simple']],
+  ['werkz.crypto-monitor','WZ-CRYPTO','Bitcoin / Markt',['market.read'],['/pilot/api/market'],[],[]]
 ].map(([id,sku,displayName,capabilities,routes,hardDependencies,optionalIntegrations]) => Object.freeze({
   id, sku, displayName, version:'1.0.0', capabilities, routes,
   navigation: routes.length ? [{label:displayName,route:routes[0].replace('/api','')}] : [],
