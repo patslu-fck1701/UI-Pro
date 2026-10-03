@@ -26,13 +26,24 @@ const featureStage={
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 let selectedFeatures=new Set(JSON.parse(localStorage.getItem('wz-advisor-features')||'[]'));
 function resolveFeatureSelection(){
- const autoF=new Set(),mods=new Set(),acc=[];const visit=id=>{const f=features.find(x=>x[0]===id);if(!f)return;mods.add(f[3]);for(const d of f[4]){if(!selectedFeatures.has(d)){selectedFeatures.add(d);autoF.add(d)}visit(d)}for(const a of f[5])acc.push([f[1],a])};[...selectedFeatures].forEach(visit);
- const req=new Set();const vm=id=>(deps[id]||[]).forEach(d=>{if(!mods.has(d)){mods.add(d);req.add(d);vm(d)}});[...mods].forEach(vm);
- return {autoF,mods,req,acc};
+ const featuresResolved=new Set(selectedFeatures),autoF=new Set(),mods=new Set(),acc=[];
+ const visited=new Set();
+ const visit=id=>{
+  if(visited.has(id))return;visited.add(id);
+  const f=features.find(x=>x[0]===id);if(!f)return;
+  mods.add(f[3]);
+  for(const d of f[4]){if(!featuresResolved.has(d)){featuresResolved.add(d);autoF.add(d)}visit(d)}
+  for(const a of f[5])acc.push([f[1],a]);
+ };
+ [...selectedFeatures].forEach(visit);
+ const req=new Set();
+ const vm=id=>(deps[id]||[]).forEach(d=>{if(!mods.has(d)){mods.add(d);req.add(d);vm(d)}});
+ [...mods].forEach(vm);
+ return {features:featuresResolved,autoF,mods,req,acc};
 }
 function renderFeatures(){
  const r=resolveFeatureSelection();
- $('features').innerHTML=features.map(([id,t,d])=>`<article class="card ${selectedFeatures.has(id)?'on':''}"><label><input type="checkbox" data-feature="${id}" ${selectedFeatures.has(id)?'checked':''}><strong>${t}</strong><span class="status">${featureStage[id]||'Individuell prüfen'}</span><p>${d}</p></label></article>`).join('');
+ $('features').innerHTML=features.map(([id,t,d])=>`<article class="card ${r.features.has(id)?'on':''}"><label><input type="checkbox" data-feature="${id}" ${r.features.has(id)?'checked':''} ${r.autoF.has(id)?'disabled':''}><strong>${t}</strong><span class="status">${r.autoF.has(id)?'Automatisch · ':''}${featureStage[id]||'Individuell prüfen'}</span><p>${d}</p></label></article>`).join('');
  selected=new Set(r.mods);localStorage.setItem('wz-advisor-features',JSON.stringify([...selectedFeatures]));
  document.querySelectorAll('[data-feature]').forEach(x=>x.onchange=()=>{x.checked?selectedFeatures.add(x.dataset.feature):selectedFeatures.delete(x.dataset.feature);renderFeatures();render();renderCommercial()});
  const a=document.getElementById('autoSelection');if(a)a.innerHTML=`<section class="result"><h2>Automatisch ergänzt</h2>${[...r.autoF].map(id=>`<div class="line"><b>Funktion:</b> ${features.find(x=>x[0]===id)?.[1]}</div>`).join('')}${[...r.req].map(id=>`<div class="line"><b>Grundlage:</b> ${label(id)}</div>`).join('')}${r.acc.map(([t,v])=>`<div class="line"><b>${t}:</b> ${v}</div>`).join('')||'<div class="empty">Keine zusätzlichen Konten/Zugänge nötig.</div>'}</section>`;
@@ -74,13 +85,14 @@ function renderPrecheck(){
 function saveAdvisor(){localStorage.setItem('wz-advisor-state',JSON.stringify(advisorState))}
 
 function requirementRows(){
+ const activeFeatures=resolveFeatureSelection().features;
  const rows=[['Handy, Tablet oder PC','Aktueller Browser und Internetzugang.']];
  if(advisorState.deploymentId==='hybrid_connector')rows.push(['Lokaler Connector-Rechner','Nur für lokale Programme/Dateien. Vorhandene Hardware zuerst auf OS, Updates, CPU/RAM, Speicher, Verschlüsselung, Backup und 24/7-Betrieb prüfen.']);
  if(advisorState.deploymentId==='existing_hardware'||advisorState.deploymentId==='on_prem')rows.push(['Vorhandene Hardware prüfen','Server/NAS/Mini-PC/Mac technisch prüfen; nichts unnötig neu kaufen.']);
- if(selectedFeatures.has('email.analysis'))rows.push(['E-Mail-Konto','Später sicher per OAuth verbinden; kein Passwort hier eingeben.']);
- if(selectedFeatures.has('calendar.analysis'))rows.push(['Kalenderkonto','Microsoft/Google später sicher autorisieren.']);
- if(selectedFeatures.has('ai.phone')||selectedFeatures.has('ai.call.summary')||selectedFeatures.has('ai.call.appointment'))rows.push(['Telefonie + KI-Sprachdienst','Rufnummer/Telefonie-Provider und freigegebenen KI-/Sprachdienst einrichten; Datenfluss, Aufbewahrung und Kosten vorher prüfen.']);
- if(selectedFeatures.has('approval.whatsapp'))rows.push(['WhatsApp-/Provider-Zugang','Für den echten Kanal bei Einrichtung erforderlich.']);
+ if(activeFeatures.has('email.analysis'))rows.push(['E-Mail-Konto','Später sicher per OAuth verbinden; kein Passwort hier eingeben.']);
+ if(activeFeatures.has('calendar.analysis'))rows.push(['Kalenderkonto','Microsoft/Google später sicher autorisieren.']);
+ if(activeFeatures.has('ai.phone')||activeFeatures.has('ai.call.summary')||activeFeatures.has('ai.call.appointment'))rows.push(['Telefonie + KI-Sprachdienst','Rufnummer/Telefonie-Provider und freigegebenen KI-/Sprachdienst einrichten; Datenfluss, Aufbewahrung und Kosten vorher prüfen.']);
+ if(activeFeatures.has('approval.whatsapp'))rows.push(['WhatsApp-/Provider-Zugang','Für den echten Kanal bei Einrichtung erforderlich.']);
  return rows;
 }
 
@@ -102,4 +114,4 @@ function render(){ $('modules').innerHTML=modules.map(([id,t,d,s,tech])=>`<artic
  $('needs').innerHTML=rows(needs);$('access').innerHTML=rows(access);localStorage.setItem('wz-advisor',JSON.stringify([...selected]));
  document.querySelectorAll('input[data-id]').forEach(x=>x.onchange=()=>{x.checked?selected.add(x.dataset.id):selected.delete(x.dataset.id);render()});
 }
-$('reset').onclick=()=>{selected.clear();advisorState={answers:{}};localStorage.removeItem('wz-advisor-state');render();renderPrecheck();renderCommercial()};renderFeatures();render();renderPrecheck();renderCommercial();
+$('reset').onclick=()=>{selected.clear();selectedFeatures.clear();localStorage.removeItem('wz-advisor-features');advisorState={answers:{}};localStorage.removeItem('wz-advisor-state');render();renderPrecheck();renderCommercial()};renderFeatures();render();renderPrecheck();renderCommercial();
