@@ -18,6 +18,7 @@ module.exports = {
   ...require('./integrations/providers/calendar'),
   ...require('./integrations/providers/calendar-webhook-runtime'),
   ...require('./integrations/providers/calendar-projection'),
+  ...require('./integrations/providers/gmail'),
   ...require('./time/production'),
   ...require('./time/durable'),
   ...require('./time/recovery'),
