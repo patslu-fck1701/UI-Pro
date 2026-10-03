@@ -25,6 +25,7 @@ module.exports = {
   ...require('./time/http'),
   ...require('./assistant/service'),
   ...require('./assistant/http'),
+  ...require('./pilot'),
   ...require('./time/offline'),
   ...require('./security/licensing'),
   ...require('./security/identity'),
