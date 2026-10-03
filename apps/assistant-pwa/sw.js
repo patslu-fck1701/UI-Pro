@@ -1,6 +1,6 @@
 'use strict';
-const CACHE='werkz-assistant-v2';
-const STATIC=['/assistant/','/assistant/styles.css','/assistant/app.js','/assistant/manifest.webmanifest'];
+const CACHE='werkz-assistant-v5';
+const STATIC=['/assistant/','/assistant/styles.css','/assistant/app.js','/assistant/manifest.webmanifest','/assistant/apple-touch-icon.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(STATIC))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))));
 self.addEventListener('fetch',event=>{
