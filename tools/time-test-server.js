@@ -40,7 +40,8 @@ const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ_TEST_ORGANISATION_LABEL||'Pilotbetrieb';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
 const actorLabel=process.env.WERKZ_TEST_ACTOR_LABEL||'Manager';
-const primarySessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim()||runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
+const primarySessionToken=runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
+const primaryPilotSessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim()||crypto.createHmac('sha256',primarySessionToken).update('werkz-pilot-primary').digest('base64url');
 function parseExtraPilotTenants(){
   const raw=process.env.WERKZ_PILOT_TENANTS_JSON;
   if(!raw)return [];
@@ -55,7 +56,7 @@ function parseExtraPilotTenants(){
     seen.add(org);
     const tenantLoginCode=String(item.loginCode||'').trim();
     const explicitToken=String(item.sessionToken||'').trim();
-    const stableToken=explicitToken||(tenantLoginCode?crypto.createHmac('sha256',primarySessionToken).update('werkz-pilot-tenant:'+org+':'+tenantLoginCode).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
+    const stableToken=explicitToken||(tenantLoginCode?crypto.createHmac('sha256',primaryPilotSessionToken).update('werkz-pilot-tenant:'+org+':'+tenantLoginCode).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
     return {id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
       actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
       taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
@@ -70,11 +71,14 @@ const ephemeralMode=process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1';
 const testProfilesEnabled=ephemeralMode||process.env.WERKZ_ENABLE_TEST_PROFILES==='1';
 const profileAccessToken=crypto.randomBytes(32).toString('base64url');
 const workerCapabilities=['time.start','time.stop','time.correct','document.upload'];
-const managerCapabilities=[...workerCapabilities,'time.read.all','pilot.read','pilot.write','market.read'];
+const managerCapabilities=[...workerCapabilities,'time.read.all'];
+const pilotCapabilities=['pilot.read','pilot.write','market.read'];
 const testProfiles=new Map([
-  ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null}]
+  ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'manager',kind:'time-manager'}]
 ]);
-for(const tenant of extraPilotTenants)testProfiles.set(tenant.id,{...tenant,capabilities:['pilot.read','pilot.write','market.read'],kind:'tenant'});
+const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null};
+const pilotProfiles=new Map([['primary',primaryPilotProfile]]);
+for(const tenant of extraPilotTenants)pilotProfiles.set(tenant.id,{...tenant,capabilities:pilotCapabilities,kind:'tenant'});
 if(testProfilesEnabled){
   testProfiles.set('worker-a',{
     id:'worker-a',organisationId,organisationLabel,actorId:'worker-a',actorLabel:process.env.WERKZ_TEST_WORKER_A_LABEL||'Mitarbeiter A',
@@ -85,17 +89,17 @@ if(testProfilesEnabled){
     capabilities:workerCapabilities,token:crypto.randomBytes(48).toString('base64url'),role:'worker',kind:'time-worker'
   });
 }
-const authSessions=Object.fromEntries([...testProfiles.values()].map(profile=>[
+const authSessions=Object.fromEntries([...testProfiles.values(),...pilotProfiles.values()].map(profile=>[
   profile.token,{organisationId:profile.organisationId||organisationId,organisationLabel:profile.organisationLabel||organisationLabel,actorId:profile.actorId,actorLabel:profile.actorLabel,role:profile.role||'owner',capabilities:profile.capabilities}
 ]));
 const registry=new ModuleRegistry(),entitlements=new EntitlementService({registry});
 entitlements.set({organisationId,moduleId:'werkz.time',catalogVersion:'v0.2'});
-const pilotOrganisationIds=[...new Set([...testProfiles.values()].filter(p=>p.kind==='tenant').map(p=>p.organisationId||organisationId))];
+const pilotOrganisationIds=[...new Set([...pilotProfiles.values()].map(p=>p.organisationId||organisationId))];
 for(const org of pilotOrganisationIds)for(const moduleId of ['werkz.simple','werkz.documents','werkz.billing-prep','werkz.channel.voice','werkz.channel.gmail','werkz.crypto-monitor']){
   entitlements.set({organisationId:org,moduleId,catalogVersion:'v0.2'});
 }
-const pilotTenantByOrg=new Map([...testProfiles.values()].filter(p=>p.kind==='tenant').map(p=>[p.organisationId||organisationId,p]));
-const pilotTenantBySlug=new Map([...testProfiles.values()].filter(p=>p.kind==='tenant').map(p=>[p.publicSlug||p.id,p]));
+const pilotTenantByOrg=new Map([...pilotProfiles.values()].map(p=>[p.organisationId||organisationId,p]));
+const pilotTenantBySlug=new Map([...pilotProfiles.values()].map(p=>[p.publicSlug||p.id,p]));
 const auth=new LocalAuthPort(authSessions);
 const application=new TimeApplication(new TimeProductionService({
   auth,entitlements,repository:new FileTimeRepository(path.join(dataDir,'time.json')),
@@ -267,7 +271,7 @@ function profilePage(request,response,returnTo){
   }
   const links=[...testProfiles.values()].map(profile=>{
     const target='/test-login?profile='+encodeURIComponent(profile.id)+'&return='+encodeURIComponent(returnTo);
-    const detail=profile.kind==='tenant'?((profile.organisationLabel||profile.organisationId)+' · eigener Betrieb · vollständig getrennte Daten'):(profile.role==='manager'?'Chefansicht · sieht organisationsweite Testzeiten':'Mitarbeiteransicht · sieht nur eigene Testzeiten');
+    const detail=profile.role==='manager'?'Chefansicht · sieht organisationsweite Testzeiten':'Mitarbeiteransicht · sieht nur eigene Testzeiten';
     return '<li><a href="'+html(target)+'"><strong>'+html(profile.actorLabel)+'</strong></a><br><small>'+html(detail)+'</small></li>';
   }).join('');
   response.writeHead(200,{
@@ -305,7 +309,7 @@ const server=http.createServer(async(request,response)=>{
     const tenant=String(params.get('tenant')||'').trim().toLowerCase();
     const code=String(params.get('code')||'');
     const profile=pilotTenantBySlug.get(tenant);
-    const expected=profile?.loginCode||(profile?.id==='manager'&&testProfilesEnabled?loginCode:null);
+    const expected=profile?.loginCode||(profile?.id==='pilot-primary'&&testProfilesEnabled?loginCode:null);
     if(!profile||!expected||!sameSecret(code,expected))return pilotLoginForm(response,{message:'Anmeldung nicht möglich.',returnTo,tenant});
     response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,60*60*24*60),'cache-control':'no-store'});
     return response.end();
@@ -392,7 +396,7 @@ const server=http.createServer(async(request,response)=>{
 const port=Number(process.env.PORT||8080);
 server.listen(port,'0.0.0.0',()=>{const actualPort=server.address().port;process.stdout.write(JSON.stringify({
   kind:'ready',port:actualPort,hub:'/hub/',time:'/',pilot:'/pilot/',pilotSite:'/pilot/site/',profiles:testProfilesEnabled?'/test-profiles':null,
-  profileIds:testProfilesEnabled?[...testProfiles.keys()]:[],allowedOrigins,sameOriginPwa:true,unifiedLocalStack:true,
+  profileIds:testProfilesEnabled?[...testProfiles.keys()]:[],pilotTenantSlugs:[...pilotTenantBySlug.keys()],allowedOrigins,sameOriginPwa:true,unifiedLocalStack:true,
   ephemeralSecrets:ephemeralMode,testProfilesEnabled
 })+'\n')});
 
