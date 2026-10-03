@@ -23,6 +23,8 @@ module.exports = {
   ...require('./time/recovery'),
   ...require('./time/application'),
   ...require('./time/http'),
+  ...require('./assistant/service'),
+  ...require('./assistant/http'),
   ...require('./time/offline'),
   ...require('./security/licensing'),
   ...require('./security/identity'),
