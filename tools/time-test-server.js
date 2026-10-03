@@ -162,6 +162,7 @@ function servePilotHtml(url,response){
   if(url.pathname==='/pilot/'||url.pathname==='/pilot/index.html')file=path.join(pilotPwaDir,'index.html');
   if(url.pathname==='/pilot/sw.js'){file=path.join(pilotPwaDir,'sw.js');cache='no-cache'}
   if(url.pathname==='/pilot/manifest.webmanifest'){file=path.join(pilotPwaDir,'manifest.webmanifest');cache='public, max-age=300'}
+  if(url.pathname==='/pilot/icon.svg'){file=path.join(pilotPwaDir,'icon.svg');cache='public, max-age=300'}
   if(url.pathname==='/pilot/site/'||url.pathname==='/pilot/site/index.html')file=path.join(pilotSiteDir,'index.html');
   if(!file)return false;
   if(!fs.existsSync(file)||!fs.statSync(file).isFile())return false;
