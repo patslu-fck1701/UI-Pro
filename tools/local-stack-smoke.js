@@ -76,6 +76,11 @@ async function run(){
   const hub=await request(base+'/hub/');
   assert(hub.status===404,'legacy demo hub must not be mounted in personal test runtime');
 
+  const icon=await request(base+'/assistant/apple-touch-icon.png');
+  assert(icon.status===200,'assistant apple touch icon failed');
+  assert((icon.headers.get('content-type')||'').startsWith('image/png'),'assistant apple touch icon mime invalid');
+  assert((await icon.arrayBuffer()).byteLength>1000,'assistant apple touch icon bytes missing');
+
   const time=await request(base+'/time/');
   assert(time.status===200,'time app failed');
   assert((await time.text()).includes('WerkZ'),'time app HTML missing');
@@ -99,6 +104,11 @@ async function run(){
   assert(managerIdentity.actorLabel==='Chef','manager session identity invalid');
   assert(managerIdentity.capabilities.includes('time.read.all'),'manager must receive time.read.all');
   assert(managerIdentity.capabilities.includes('assistant.capture'),'manager must receive assistant capture');
+
+  const audit=await request(base+'/api/assistant/source-audit',{headers:{cookie:managerCookie}});
+  const auditBody=await audit.json();
+  assert(audit.status===200&&auditBody.ok===true,'assistant source audit failed');
+  assert(auditBody.data.findings.some(item=>item.id==='electronic-repair-kit-visual'&&item.status==='error'),'confirmed ToxicZ decoder source error missing');
 
   const emptyBriefing=await request(base+'/api/assistant/briefing',{headers:{cookie:managerCookie}});
   const emptyPayload=await emptyBriefing.json();
