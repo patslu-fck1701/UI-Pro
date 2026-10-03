@@ -52,13 +52,14 @@ function parseExtraPilotTenants(){
     if(!id||!org||(!aliasOfPrimary&&seen.has(org))||(aliasOfPrimary&&org!==organisationId))throw new Error('pilot tenant id/organisationId invalid or duplicate');
     if(!aliasOfPrimary)seen.add(org);
     const tenantLoginCode=String(item.loginCode||'').trim();
+    const tenantLoginCodeHash=String(item.loginCodeHash||'').trim().toLowerCase();
     const explicitToken=String(item.sessionToken||'').trim();
-    const stableToken=explicitToken||(tenantLoginCode?crypto.createHmac('sha256',primaryPilotSessionToken).update('werkz-pilot-tenant:'+org+':'+tenantLoginCode).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
+    const stableToken=explicitToken||((tenantLoginCode||tenantLoginCodeHash)?crypto.createHmac('sha256',primaryPilotSessionToken).update('werkz-pilot-tenant:'+org+':'+(tenantLoginCode||tenantLoginCodeHash)).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
     return {
       id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
       actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
       taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
-      loginCode:tenantLoginCode||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
+      loginCode:tenantLoginCode||null,loginCodeHash:tenantLoginCodeHash||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
     };
   });
 }
@@ -75,7 +76,7 @@ const pilotCapabilities=['pilot.read','pilot.write','market.read'];
 const testProfiles=new Map([
   ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'manager',kind:'time-manager'}]
 ]);
-const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null,cryptoEnabled:process.env.WERKZ_PILOT_CRYPTO_ENABLED==='1',ownerDemoEnabled:process.env.WERKZ_PILOT_OWNER_DEMO_ENABLED==='1'};
+const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null,loginCodeHash:String(process.env.WERKZ_PILOT_LOGIN_CODE_SHA256||'').trim().toLowerCase()||null,cryptoEnabled:process.env.WERKZ_PILOT_CRYPTO_ENABLED==='1',ownerDemoEnabled:process.env.WERKZ_PILOT_OWNER_DEMO_ENABLED==='1'};
 const pilotProfiles=new Map([['primary',primaryPilotProfile]]);
 for(const tenant of extraPilotTenants)pilotProfiles.set(tenant.id,{...tenant,capabilities:pilotCapabilities,kind:'tenant'});
 if(testProfilesEnabled){
@@ -317,8 +318,10 @@ const server=http.createServer(async(request,response)=>{
     const tenant=String(params.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
     const code=String(params.get('code')||'');
     const profile=pilotTenantBySlug.get(tenant);
-    const expected=profile?.loginCode||(profile?.id==='pilot-primary'&&testProfilesEnabled?loginCode:null);
-    if(!profile||!expected||!sameSecret(code,expected))return pilotLoginForm(response,{message:'Anmeldung nicht möglich.',returnTo,tenant});
+    const expectedHash=profile?.loginCodeHash||null;
+    const expected=profile?.loginCode||(profile?.id==='pilot-primary'&&!expectedHash&&testProfilesEnabled?loginCode:null);
+    const valid=Boolean(profile&&(expectedHash?sameSecret(crypto.createHash('sha256').update(code).digest('hex'),expectedHash):(expected&&sameSecret(code,expected))));
+    if(!valid)return pilotLoginForm(response,{message:'Anmeldung nicht möglich.',returnTo,tenant});
     response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
     return response.end();
   }
