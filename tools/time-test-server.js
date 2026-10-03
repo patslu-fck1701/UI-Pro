@@ -59,7 +59,7 @@ function parseExtraPilotTenants(){
       id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
       actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
       taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
-      loginCode:tenantLoginCode||null,loginCodeHash:tenantLoginCodeHash||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
+      loginCode:tenantLoginCode||null,loginCodeHash:tenantLoginCodeHash||null,accessExpiresAt:String(item.accessExpiresAt||'').trim()||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
     };
   });
 }
@@ -76,7 +76,7 @@ const pilotCapabilities=['pilot.read','pilot.write','market.read'];
 const testProfiles=new Map([
   ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'manager',kind:'time-manager'}]
 ]);
-const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null,loginCodeHash:String(process.env.WERKZ_PILOT_LOGIN_CODE_SHA256||'').trim().toLowerCase()||null,cryptoEnabled:process.env.WERKZ_PILOT_CRYPTO_ENABLED==='1',ownerDemoEnabled:process.env.WERKZ_PILOT_OWNER_DEMO_ENABLED==='1'};
+const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null,loginCodeHash:String(process.env.WERKZ_PILOT_LOGIN_CODE_SHA256||'').trim().toLowerCase()||null,accessExpiresAt:String(process.env.WERKZ_PILOT_ACCESS_EXPIRES_AT||'').trim()||null,cryptoEnabled:process.env.WERKZ_PILOT_CRYPTO_ENABLED==='1',ownerDemoEnabled:process.env.WERKZ_PILOT_OWNER_DEMO_ENABLED==='1'};
 const pilotProfiles=new Map([['primary',primaryPilotProfile]]);
 for(const tenant of extraPilotTenants)pilotProfiles.set(tenant.id,{...tenant,capabilities:pilotCapabilities,kind:'tenant'});
 if(testProfilesEnabled){
@@ -103,6 +103,8 @@ for(const profile of pilotProfiles.values())if(profile.cryptoEnabled===true){
 }
 const pilotTenantByOrg=new Map([...pilotProfiles.values()].map(p=>[p.organisationId||organisationId,p]));
 const pilotTenantBySlug=new Map([...pilotProfiles.values()].map(p=>[p.publicSlug||p.id,p]));
+function profileExpired(profile){if(!profile||!profile.accessExpiresAt)return false;const expires=Date.parse(profile.accessExpiresAt);return Number.isFinite(expires)&&Date.now()>expires}
+function pilotProfileByToken(token){return token?[...pilotProfiles.values()].find(profile=>profile.token===token)||null:null}
 const auth=new LocalAuthPort(authSessions);
 const application=new TimeApplication(new TimeProductionService({
   auth,entitlements,repository:new FileTimeRepository(path.join(dataDir,'time.json')),
@@ -306,8 +308,8 @@ const server=http.createServer(async(request,response)=>{
   }
   if(url.pathname==='/pilot/login'&&request.method==='GET'){
     const returnTo=safeLocalReturn(url.searchParams.get('return'),'/pilot/');
-    const activeToken=cookieTokenFromHeader(request.headers.cookie),activeProfile=[...pilotProfiles.values()].find(profile=>profile.token===activeToken);
-    if(activeProfile){response.writeHead(303,{location:returnTo,'cache-control':'no-store'});return response.end()}
+    const activeToken=cookieTokenFromHeader(request.headers.cookie),activeProfile=pilotProfileByToken(activeToken);
+    if(activeProfile&&!profileExpired(activeProfile)){response.writeHead(303,{location:returnTo,'cache-control':'no-store'});return response.end()}
     const tenant=String(url.searchParams.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
     return pilotLoginForm(response,{returnTo,tenant});
   }
@@ -320,8 +322,9 @@ const server=http.createServer(async(request,response)=>{
     const profile=pilotTenantBySlug.get(tenant);
     const expectedHash=profile?.loginCodeHash||null;
     const expected=profile?.loginCode||(profile?.id==='pilot-primary'&&!expectedHash&&testProfilesEnabled?loginCode:null);
-    const valid=Boolean(profile&&(expectedHash?sameSecret(crypto.createHash('sha256').update(code).digest('hex'),expectedHash):(expected&&sameSecret(code,expected))));
-    if(!valid)return pilotLoginForm(response,{message:'Anmeldung nicht möglich.',returnTo,tenant});
+    const expired=profileExpired(profile);
+    const valid=Boolean(profile&&!expired&&(expectedHash?sameSecret(crypto.createHash('sha256').update(code).digest('hex'),expectedHash):(expected&&sameSecret(code,expected))));
+    if(!valid)return pilotLoginForm(response,{message:expired?'Testzugang ist abgelaufen.':'Anmeldung nicht möglich.',returnTo,tenant});
     response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
     return response.end();
   }
@@ -389,6 +392,13 @@ const server=http.createServer(async(request,response)=>{
   if(request.method==='GET'&&servePilot(url,response))return;
   if(request.method==='GET'&&serveDemoHub(url,response))return;
   if(request.method==='GET'&&serveStatic(url,response))return;
+  if(url.pathname.startsWith('/pilot/api/')){
+    const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));
+    if(profile&&profileExpired(profile)){
+      response.writeHead(401,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','set-cookie':sessionCookie('werkz_session','',0)});
+      return response.end(JSON.stringify({error:'ACCESS_EXPIRED',message:'Testzugang ist abgelaufen.'}));
+    }
+  }
   if(url.pathname.startsWith('/pilot/api/')||url.pathname.startsWith('/pilot/public/')){
     const handled=await pilotHandler(request,response);
     if(handled)return;
