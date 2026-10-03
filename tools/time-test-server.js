@@ -37,9 +37,29 @@ const hubDir=path.resolve(__dirname,'../demos/demo-hub');
 const pilotDir=path.resolve(__dirname,'../apps/simple-pilot');
 const pilotSiteDir=path.resolve(__dirname,'../apps/simple-site');
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
+const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ_TEST_ORGANISATION_LABEL||'Pilotbetrieb';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
 const actorLabel=process.env.WERKZ_TEST_ACTOR_LABEL||'Manager';
 const primarySessionToken=runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
+function parseExtraPilotTenants(){
+  const raw=process.env.WERKZ_PILOT_TENANTS_JSON;
+  if(!raw)return [];
+  let list;try{list=JSON.parse(raw)}catch{throw new Error('WERKZ_PILOT_TENANTS_JSON must be valid JSON')}
+  if(!Array.isArray(list))throw new Error('WERKZ_PILOT_TENANTS_JSON must be an array');
+  const seen=new Set([organisationId]);
+  return list.map((item,index)=>{
+    if(!item||typeof item!=='object')throw new Error('pilot tenant '+index+' must be an object');
+    const id=String(item.id||item.slug||'tenant-'+(index+1)).trim().replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,64);
+    const org=String(item.organisationId||'org-'+id).trim().slice(0,120);
+    if(!id||!org||seen.has(org))throw new Error('pilot tenant id/organisationId invalid or duplicate');
+    seen.add(org);
+    return {id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
+      actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
+      taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
+      token:String(item.sessionToken||'').trim()||crypto.randomBytes(48).toString('base64url'),role:'owner'};
+  });
+}
+const extraPilotTenants=parseExtraPilotTenants();
 const loginCode=runtimeLoginCode();
 const allowedOrigins=String(process.env.WERKZ_TEST_ALLOWED_ORIGINS||process.env.WERKZ_TEST_ALLOWED_ORIGIN||'https://project29212.websitepublisher.ai,http://127.0.0.1:8765').split(',').map(value=>value.trim()).filter(Boolean);
 const externalFrontendUrl=process.env.WERKZ_TEST_EXTERNAL_FRONTEND_URL||'';
@@ -49,26 +69,30 @@ const profileAccessToken=crypto.randomBytes(32).toString('base64url');
 const workerCapabilities=['time.start','time.stop','time.correct','document.upload'];
 const managerCapabilities=[...workerCapabilities,'time.read.all','pilot.read','pilot.write','market.read'];
 const testProfiles=new Map([
-  ['manager',{id:'manager',actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'manager'}]
+  ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:'primary'}]
 ]);
+for(const tenant of extraPilotTenants)testProfiles.set(tenant.id,{...tenant,capabilities:['pilot.read','pilot.write','market.read'],kind:'tenant'});
 if(testProfilesEnabled){
   testProfiles.set('worker-a',{
-    id:'worker-a',actorId:'worker-a',actorLabel:process.env.WERKZ_TEST_WORKER_A_LABEL||'Mitarbeiter A',
-    capabilities:workerCapabilities,token:crypto.randomBytes(48).toString('base64url'),role:'worker'
+    id:'worker-a',organisationId,organisationLabel,actorId:'worker-a',actorLabel:process.env.WERKZ_TEST_WORKER_A_LABEL||'Mitarbeiter A',
+    capabilities:workerCapabilities,token:crypto.randomBytes(48).toString('base64url'),role:'worker',kind:'time-worker'
   });
   testProfiles.set('worker-b',{
-    id:'worker-b',actorId:'worker-b',actorLabel:process.env.WERKZ_TEST_WORKER_B_LABEL||'Mitarbeiter B',
-    capabilities:workerCapabilities,token:crypto.randomBytes(48).toString('base64url'),role:'worker'
+    id:'worker-b',organisationId,organisationLabel,actorId:'worker-b',actorLabel:process.env.WERKZ_TEST_WORKER_B_LABEL||'Mitarbeiter B',
+    capabilities:workerCapabilities,token:crypto.randomBytes(48).toString('base64url'),role:'worker',kind:'time-worker'
   });
 }
 const authSessions=Object.fromEntries([...testProfiles.values()].map(profile=>[
-  profile.token,{organisationId,actorId:profile.actorId,actorLabel:profile.actorLabel,capabilities:profile.capabilities}
+  profile.token,{organisationId:profile.organisationId||organisationId,organisationLabel:profile.organisationLabel||organisationLabel,actorId:profile.actorId,actorLabel:profile.actorLabel,role:profile.role||'owner',capabilities:profile.capabilities}
 ]));
 const registry=new ModuleRegistry(),entitlements=new EntitlementService({registry});
 entitlements.set({organisationId,moduleId:'werkz.time',catalogVersion:'v0.2'});
-for(const moduleId of ['werkz.simple','werkz.documents','werkz.billing-prep','werkz.channel.voice','werkz.channel.gmail','werkz.crypto-monitor']){
-  entitlements.set({organisationId,moduleId,catalogVersion:'v0.2'});
+const pilotOrganisationIds=[...new Set([...testProfiles.values()].filter(p=>p.kind==='tenant').map(p=>p.organisationId||organisationId))];
+for(const org of pilotOrganisationIds)for(const moduleId of ['werkz.simple','werkz.documents','werkz.billing-prep','werkz.channel.voice','werkz.channel.gmail','werkz.crypto-monitor']){
+  entitlements.set({organisationId:org,moduleId,catalogVersion:'v0.2'});
 }
+const pilotTenantByOrg=new Map([...testProfiles.values()].filter(p=>p.kind==='tenant').map(p=>[p.organisationId||organisationId,p]));
+const pilotTenantBySlug=new Map([...testProfiles.values()].filter(p=>p.kind==='tenant').map(p=>[p.publicSlug||p.id,p]));
 const auth=new LocalAuthPort(authSessions);
 const application=new TimeApplication(new TimeProductionService({
   auth,entitlements,repository:new FileTimeRepository(path.join(dataDir,'time.json')),
@@ -83,7 +107,9 @@ const pilotService=createPilotRuntime({
 const pilotHandler=createPilotHttpHandler({
   service:pilotService,
   defaultTaxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||'steuerberater@example.invalid',
-  publicOrganisationId:organisationId
+  taxRecipientResolver:org=>pilotTenantByOrg.get(org)?.taxRecipient||process.env.WERKZ_TAX_ADVISER_EMAIL||'steuerberater@example.invalid',
+  publicOrganisationId:organisationId,
+  publicOrganisationResolver:({url})=>{const slug=url.searchParams.get('tenant');if(!slug)return organisationId;return pilotTenantBySlug.get(String(slug).toLowerCase())?.organisationId||null}
 });
 
 const staticFiles=new Map([
@@ -228,7 +254,7 @@ function profilePage(request,response,returnTo){
   }
   const links=[...testProfiles.values()].map(profile=>{
     const target='/test-login?profile='+encodeURIComponent(profile.id)+'&return='+encodeURIComponent(returnTo);
-    const detail=profile.role==='manager'?'Chefansicht · sieht organisationsweite Testzeiten':'Mitarbeiteransicht · sieht nur eigene Testzeiten';
+    const detail=profile.kind==='tenant'?((profile.organisationLabel||profile.organisationId)+' · eigener Betrieb · vollständig getrennte Daten'):(profile.role==='manager'?'Chefansicht · sieht organisationsweite Testzeiten':'Mitarbeiteransicht · sieht nur eigene Testzeiten');
     return '<li><a href="'+html(target)+'"><strong>'+html(profile.actorLabel)+'</strong></a><br><small>'+html(detail)+'</small></li>';
   }).join('');
   response.writeHead(200,{
