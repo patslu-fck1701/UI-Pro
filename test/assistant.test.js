@@ -180,7 +180,7 @@ test('BattlegroundZ and Operation DeutschZ are testable without changing KOTH Co
     const raven=specs.find(spec=>spec.id==='raven');
     assert.deepEqual(koth.criteria.map(x=>x.id),['start','finish','handoff','slot']);
     assert.deepEqual(courier.criteria.map(x=>x.id),['start','finish','handoff','slot']);
-    assert.deepEqual(raven.criteria.map(x=>x.id),['radio_preannounce','public_zone','flight_drop','zombies','hack_trigger','recovery_team','exact_marker','story_document','finish']);
+    assert.deepEqual(raven.criteria.map(x=>x.id),['radio_preannounce','public_zone','flight_drop','zombies','hack_trigger','hack_result','recovery_team','exact_marker','loot_pool','story_document','finish']);
 
     const battleground=specs.find(spec=>spec.id==='battlegroundz');
     assert.ok(battleground.criteria.some(item=>item.id==='operation_key'));
