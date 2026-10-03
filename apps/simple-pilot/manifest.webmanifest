@@ -1,18 +1,23 @@
 {
-  "name": "WerkZ Einfach",
-  "short_name": "WerkZ",
+  "name": "WERKZ – SCHROTTIES",
+  "short_name": "SCHROTTIES",
   "start_url": "/pilot/",
   "scope": "/pilot/",
   "display": "standalone",
   "background_color": "#e9e6de",
   "theme_color": "#303638",
-  "description": "WerkZ Einfach – mobiler Arbeitshelfer",
+  "description": "WERKZ – SCHROTTIES · mobiler Betriebshelfer für Schrotthändler",
   "icons": [
+    {
+      "src": "https://cdn.websitepublisher.ai/custom/wid23947/images/werkz/founder-point.jpg",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
     {
       "src": "/pilot/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
