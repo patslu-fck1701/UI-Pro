@@ -4,7 +4,8 @@ const http=require('node:http'),path=require('node:path'),fs=require('node:fs'),
 const {
   ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,
   TimeProductionService,TimeApplication,createTimeHttpHandler,
-  FileAssistantState,FileAssistantDocumentStore,AssistantService,createAssistantHttpHandler
+  FileAssistantState,FileAssistantDocumentStore,AssistantService,createAssistantHttpHandler,
+  createPilotRuntime,createPilotHttpHandler
 }=require('../src');
 
 function runtimeSecret(name,bytes){
@@ -33,6 +34,8 @@ const timeDir=path.resolve(process.env.WERKZ_TIME_DATA_DIR||path.join(dataDir,'t
 const assistantPwaDir=path.resolve(__dirname,'../apps/assistant-pwa');
 const timePwaDir=path.resolve(__dirname,'../apps/time-pwa');
 const advisorPwaDir=path.resolve(__dirname,'../apps/advisor-pwa');
+const pilotPwaDir=path.resolve(__dirname,'../apps/simple-pilot');
+const pilotSiteDir=path.resolve(__dirname,'../apps/simple-site');
 
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
@@ -50,7 +53,8 @@ const workerCapabilities=['time.start','time.stop','time.correct','document.uplo
 const managerCapabilities=[
   ...workerCapabilities,'time.read.all',
   'assistant.read','assistant.capture','assistant.manage',
-  'analytics.view','simulation.run','management.view'
+  'analytics.view','simulation.run','management.view',
+  'pilot.read','pilot.write','market.read'
 ];
 const testProfiles=new Map([
   ['manager',{id:'manager',actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'manager'}]
@@ -70,7 +74,7 @@ const authSessions=Object.fromEntries([...testProfiles.values()].map(profile=>[
 ]));
 
 const registry=new ModuleRegistry(),entitlements=new EntitlementService({registry});
-for(const moduleId of ['werkz.time','werkz.assistant','werkz.analytics','werkz.simulation','werkz.management']){
+for(const moduleId of ['werkz.time','werkz.assistant','werkz.analytics','werkz.simulation','werkz.management','werkz.simple','werkz.documents','werkz.billing-prep','werkz.channel.voice','werkz.channel.gmail','werkz.crypto-monitor']){
   entitlements.set({organisationId,moduleId,catalogVersion:'v0.2'});
 }
 const auth=new LocalAuthPort(authSessions);
@@ -91,6 +95,15 @@ const assistantService=new AssistantService({
   audit
 });
 const assistantHandler=createAssistantHttpHandler({service:assistantService,allowedOrigins});
+
+const pilotService=createPilotRuntime({
+  auth,entitlements,dataDir:path.join(dataDir,'simple-pilot'),audit
+});
+const pilotHandler=createPilotHttpHandler({
+  service:pilotService,
+  defaultTaxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||'steuerberater@example.invalid',
+  publicOrganisationId:organisationId
+});
 
 const contentTypes={
   '.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8',
@@ -132,6 +145,21 @@ function serveMapped(url,response,map,root){
   response.writeHead(200,{'content-type':contentTypes[path.extname(file)]||'application/octet-stream'});
   response.end(fs.readFileSync(candidate));return true;
 }
+function servePilotHtml(url,response){
+  if(url.pathname==='/pilot'){response.writeHead(308,{location:'/pilot/'});response.end();return true}
+  if(url.pathname==='/pilot/site'){response.writeHead(308,{location:'/pilot/site/'});response.end();return true}
+  let file=null;
+  if(url.pathname==='/pilot/'||url.pathname==='/pilot/index.html')file=path.join(pilotPwaDir,'index.html');
+  if(url.pathname==='/pilot/site/'||url.pathname==='/pilot/site/index.html')file=path.join(pilotSiteDir,'index.html');
+  if(!file)return false;
+  if(!fs.existsSync(file)||!fs.statSync(file).isFile())return false;
+  response.setHeader('content-security-policy',"default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+  response.setHeader('x-content-type-options','nosniff');
+  response.setHeader('referrer-policy','no-referrer');
+  response.setHeader('cache-control','no-store');
+  response.writeHead(200,{'content-type':'text/html; charset=utf-8'});
+  response.end(fs.readFileSync(file));return true;
+}
 function html(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
 function cookieValue(cookie,name){
   const match=String(cookie||'').split(';').map(value=>value.trim()).find(value=>value.startsWith(name+'='));
@@ -172,7 +200,7 @@ function profilePage(request,response,returnTo){
   response.end('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width"><title>WerkZ Testprofile</title><body><main><h1>WerkZ Testprofile</h1><p>Nicht-produktive Testinstanz.</p><ul>'+links+'</ul></main></body></html>');
 }
 function ensureEphemeralSession(request,response,url){
-  if(!ephemeralMode||!url.pathname.startsWith('/api/'))return;
+  if(!ephemeralMode||(!url.pathname.startsWith('/api/')&&!url.pathname.startsWith('/pilot/api/')))return;
   const sessionToken=cookieTokenFromHeader(request.headers.cookie);
   if(sessionToken&&authSessions[sessionToken])return;
   const manager=selectedProfile('manager');
@@ -233,11 +261,17 @@ const server=http.createServer(async(request,response)=>{
     return response.end();
   }
 
+  if(request.method==='GET'&&servePilotHtml(url,response))return;
   if(request.method==='GET'&&serveMapped(url,response,assistantFiles,assistantPwaDir))return;
   if(request.method==='GET'&&serveMapped(url,response,timeFiles,timePwaDir))return;
   if(request.method==='GET'&&serveMapped(url,response,advisorFiles,advisorPwaDir))return;
 
   ensureEphemeralSession(request,response,url);
+
+  if(url.pathname.startsWith('/pilot/api/')||url.pathname.startsWith('/pilot/public/')){
+    const handled=await pilotHandler(request,response);
+    if(handled)return;
+  }
 
   if(url.pathname.startsWith('/api/')){
     const apiPath=url.pathname.slice(4);
@@ -253,10 +287,10 @@ const server=http.createServer(async(request,response)=>{
 const port=Number(process.env.PORT||8080);
 server.listen(port,'0.0.0.0',()=>{
   process.stdout.write(JSON.stringify({
-    kind:'ready',port:server.address().port,assistant:'/',time:'/time/',advisor:'/advisor/',profiles:testProfilesEnabled?'/test-profiles':null,
+    kind:'ready',port:server.address().port,assistant:'/',time:'/time/',advisor:'/advisor/',pilot:'/pilot/',pilotSite:'/pilot/site/',profiles:testProfilesEnabled?'/test-profiles':null,
     profileIds:testProfilesEnabled?[...testProfiles.keys()]:[],allowedOrigins,sameOriginPwa:true,unifiedLocalStack:true,
     demoSeed:false,ephemeralSecrets:ephemeralMode,testProfilesEnabled
   })+'\n');
 });
 
-module.exports={server,safeLocalReturn,testProfiles,profileAccessGranted,sessionCookie,assistantService};
+module.exports={server,safeLocalReturn,testProfiles,profileAccessGranted,sessionCookie,assistantService,pilotService,servePilotHtml};
