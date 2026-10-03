@@ -315,6 +315,9 @@ const server=http.createServer(async(request,response)=>{
       response.writeHead(303,{location:returnTo,'cache-control':'no-store'});
       return response.end();
     }
+    if(activeProfile&&requestedTenant&&requestedTenant!==activeSlug){
+      response.setHeader('set-cookie',sessionCookie('werkz_session','',0));
+    }
     const tenant=requestedTenant||activeSlug||String(primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
     return pilotLoginForm(response,{returnTo,tenant});
   }
@@ -323,12 +326,13 @@ const server=http.createServer(async(request,response)=>{
     const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
     const returnTo=safeLocalReturn(params.get('return'),'/pilot/');
     const tenant=String(params.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
-    const code=String(params.get('code')||'');
+    const code=String(params.get('code')||'').trim();
     const profile=pilotTenantBySlug.get(tenant);
     const expectedHash=profile?.loginCodeHash||null;
     const expected=profile?.loginCode||(profile?.id==='pilot-primary'&&!expectedHash&&testProfilesEnabled?loginCode:null);
     const expired=profileExpired(profile);
     const valid=Boolean(profile&&!expired&&(expectedHash?sameSecret(crypto.createHash('sha256').update(code).digest('hex'),expectedHash):(expected&&sameSecret(code,expected))));
+    process.stdout.write(JSON.stringify({kind:'pilot-login',tenant,profileFound:Boolean(profile),expired,success:valid})+'\\n');
     if(!valid)return pilotLoginForm(response,{message:expired?'Testzugang ist abgelaufen.':'Anmeldung nicht möglich.',returnTo,tenant});
     response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
     return response.end();
