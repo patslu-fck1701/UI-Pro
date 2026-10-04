@@ -415,3 +415,92 @@ test('runtime: Maps action is a button and tap handler can navigate without anch
   assert.match(script,/closest\('\.mapsgo\[data-maps-destination\]'\)/);
   assert.match(script,/location\.href=url/);
 });
+
+
+test('runtime: Android speech keeps full address and renders active Maps button for Christian',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:christian',
+    werkzPilotTenantLabel:'Christian',
+    werkzPilotTenantSlug:'christian',
+    werkzPilotPage:'home'
+  });
+  let recognitionInstance=null;
+  class FakeRecognition{
+    constructor(){recognitionInstance=this}
+    start(){if(this.onstart)this.onstart()}
+    stop(){if(this.onend)this.onend()}
+  }
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}},
+    location:{href:'https://example.invalid/pilot/?tenant=christian',search:'?tenant=christian'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:FakeRecognition};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  await elements.get('#noteBtn').onclick();
+  const result=[{transcript:'Morgen Teststraße, Hausnummer 12, Postleitzahl 31061, Ort Alfeld, 2 Tonnen Schrott abholen'}];
+  result.isFinal=true;
+  recognitionInstance.onresult({resultIndex:0,results:[result]});
+  recognitionInstance.onend();
+  await new Promise(resolve=>setTimeout(resolve,10));
+
+  const stored=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:christian')||'[]');
+  assert.equal(stored.length,1);
+  assert.equal(stored[0].location,'Teststraße 12, 31061 Alfeld');
+  assert.match(elements.get('#routePlan').innerHTML,/data-maps-destination="Teststraße 12, 31061 Alfeld"/);
+  assert.match(elements.get('#nextJob').innerHTML,/GOOGLE MAPS STARTEN/);
+});
+
+test('runtime: blank server location cannot erase richer local Christian address after sync',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:christian',
+    werkzPilotTenantLabel:'Christian',
+    werkzPilotTenantSlug:'christian',
+    werkzPilotPage:'home'
+  });
+  localStorage.setItem('werkzPilotLocalOrders::slug:christian',JSON.stringify([{
+    id:'local-1',clientMutationId:'local-1',tenant:'slug:christian',tenantSlug:'christian',
+    serverCallId:'call-1',status:'open',name:'Sprachauftrag',
+    originalText:'Teststraße 12 31061 Alfeld 2 Tonnen Schrott',
+    text:'Teststraße 12 31061 Alfeld 2 Tonnen Schrott',
+    location:'Teststraße 12, 31061 Alfeld',materialKey:'mixed-scrap',material:'Mischschrott',
+    quantity:'2000 kg',estimatedWeightKg:2000,scheduledFor:null,source:'voice-note-local',syncState:'synced'
+  }]));
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=christian',search:'?tenant=christian'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async url=>{
+      if(String(url).includes('/pilot/api/route-plan'))return {ok:true,status:200,json:async()=>({stops:[{
+        id:'call-1',entityType:'call',name:'Sprachauftrag',location:'',materialKey:'',material:'',quantity:'',
+        estimatedWeightKg:null,scheduledFor:null,source:'voice-note',originalText:'',orders:[]
+      }]})};
+      throw new TypeError('offline');
+    },
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await new Promise(resolve=>setTimeout(resolve,10));
+  await context.routePlan();
+  assert.match(elements.get('#routePlan').innerHTML,/Teststraße 12, 31061 Alfeld/);
+  assert.match(elements.get('#routePlan').innerHTML,/data-maps-destination="Teststraße 12, 31061 Alfeld"/);
+});
