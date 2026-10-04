@@ -82,3 +82,33 @@ test('missing pilot session is unauthenticated, not validation error',()=>{
     return true;
   });
 });
+
+
+test('spoken Eisenschrott and lowercase town are parsed into the order',()=>{
+  const s=svc();
+  const note=s.addNote('a','morgen 2500 kilo eisenschrott in alfeld abholen','voice-place-1');
+  assert.equal(note.call.materialKey,'mixed-scrap');
+  assert.equal(note.call.material,'Mischschrott');
+  assert.equal(note.call.estimatedWeightKg,2500);
+  assert.equal(note.call.location,'alfeld');
+  assert.equal(note.call.scheduledFor,'2026-10-05');
+  const plan=s.routePlan('a');
+  assert.equal(plan.stops[0].material,'Mischschrott');
+  assert.equal(plan.stops[0].location,'alfeld');
+  assert.equal(plan.stops[0].estimatedWeightKg,2500);
+});
+
+test('spoken address formats keep street and postal town',()=>{
+  const s=svc();
+  const first=s.addNote('a','Kupfer 80 kg Hauptstraße 12 31061 Alfeld morgen','voice-place-2');
+  assert.match(first.call.location,/Hauptstraße 12/i);
+  const second=s.addNote('a','Messing 50 kg Ort Delligsen heute','voice-place-3');
+  assert.equal(second.call.location,'Delligsen');
+});
+
+test('specific materials win over generic scrap words',()=>{
+  const s=svc();
+  assert.equal(s.addNote('a','Kupfer Schrott 100 kg in alfeld','voice-material-1').call.materialKey,'copper');
+  assert.equal(s.addNote('a','Kupferkabel 100 kg in alfeld','voice-material-2').call.materialKey,'cable');
+  assert.equal(s.addNote('a','Schwerschrott 100 kg in alfeld','voice-material-3').call.materialKey,'grade-3');
+});
