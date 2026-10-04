@@ -199,3 +199,18 @@ test('deleteCall is idempotent when an offline retry reaches an already deleted 
   assert.equal(replay.missing,true);
   assert.equal(replay.id,a.call.id);
 });
+
+
+test('spoken Sorte drei is grade 3 even without weight or location',()=>{
+  const s=svc();
+  for(const [id,text] of [
+    ['voice-grade3-1','Sorte 3 abholen'],
+    ['voice-grade3-2','Sorte drei abholen'],
+    ['voice-grade3-3','Sorte Nummer drei abholen']
+  ]){
+    const note=s.addNote('a',text,id);
+    assert.equal(note.call.materialKey,'grade-3');
+    assert.equal(note.call.material,'Sorte 3');
+    assert.equal(note.call.status,'neu');
+  }
+});
