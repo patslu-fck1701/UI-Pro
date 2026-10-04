@@ -912,3 +912,18 @@ test('runtime: calculator transfer is local-first, deduplicated and routes as no
   await context.syncLocalVoiceOrders();await context.syncLocalVoiceOrders();assert.equal(created,1);
   const synced=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');assert.equal(synced[0].serverCallId,'call-calc');
 });
+
+test('runtime: successful server response keeps remotely deleted synced call out of tour',async()=>{
+  const elements=new Map(),getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({werkzPilotTenantScope:'slug:tester',werkzPilotTenantSlug:'tester',werkzPilotPage:'home',
+    'werkzPilotLocalOrders::slug:tester':JSON.stringify([{id:'local-old',clientMutationId:'local-old',tenant:'slug:tester',tenantSlug:'tester',status:'open',syncState:'synced',serverCallId:'call-removed',name:'Alter Auftrag',location:'Nordpol',material:'Schnee',distanceKm:7,source:'voice-note-local'}])});
+  const context={console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async url=>{if(String(url).includes('/pilot/api/route-plan'))return {ok:true,status:200,json:async()=>({stops:[]})};throw new TypeError('offline')},
+    alert(){},confirm(){return true},prompt(){return null},btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null};
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await context.routePlan();assert.equal(getEl('#tourCount').textContent,0);assert.match(getEl('#nextJob').innerHTML,/Keine offenen Aufträge/);
+});
