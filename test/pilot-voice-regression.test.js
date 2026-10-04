@@ -72,3 +72,13 @@ test('voice mutation id prevents duplicate orders on replay',()=>{
   assert.equal(replay.replayed,true);
   assert.equal(s.listCalls('a').length,1);
 });
+
+
+test('missing pilot session is unauthenticated, not validation error',()=>{
+  const s=svc();
+  assert.throws(()=>s.summary(null),err=>{
+    assert.equal(err.code,'UNAUTHENTICATED');
+    assert.match(String(err.message),/session required/i);
+    return true;
+  });
+});
