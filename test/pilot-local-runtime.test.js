@@ -400,7 +400,18 @@ test('runtime: Google Maps URL is generated for a local order and remains clicka
   const routeHtml=elements.get('#routePlan').innerHTML;
   const nextHtml=elements.get('#nextJob').innerHTML;
   assert.match(routeHtml,/class="mapsgo"/);
-  assert.match(routeHtml,/https:\/\/www\.google\.com\/maps\/dir\/\?api=1&amp;destination=Alfeld&amp;travelmode=driving/);
+  assert.match(routeHtml,/data-maps-destination="Alfeld"/);
   assert.doesNotMatch(routeHtml,/target="_blank"/);
   assert.match(nextHtml,/GOOGLE MAPS STARTEN/);
+
+  const opened=context.openMapsDestination('Alfeld');
+  assert.equal(opened,'https://www.google.com/maps/dir/?api=1&destination=Alfeld&travelmode=driving');
+  assert.equal(context.location.href,opened);
+});
+
+test('runtime: Maps action is a button and tap handler can navigate without anchor behavior',()=>{
+  assert.match(script,/function openMapsDestination\(destination\)/);
+  assert.match(script,/data-maps-destination/);
+  assert.match(script,/closest\('\.mapsgo\[data-maps-destination\]'\)/);
+  assert.match(script,/location\.href=url/);
 });
