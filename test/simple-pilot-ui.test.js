@@ -7,11 +7,11 @@ const path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','apps','simple-pilot','index.html'),'utf8');
 const sw=fs.readFileSync(path.join(__dirname,'..','apps','simple-pilot','sw.js'),'utf8');
 
-test('Schrotties voice control saves locally before syncing to Render',()=>{
+test('Schrotties voice control saves synchronously before syncing to Render',()=>{
   assert.match(html,/id="noteLabel">Auftrag sprechen</);
-  assert.match(html,/localOrderPut\(local\)/);
+  assert.match(html,/localOrderPutSync\(local\)/);
   assert.match(html,/queueablePost\('\/notes'/);
-  assert.ok(html.indexOf('await localOrderPut(local)') < html.indexOf("await queueablePost('/notes'"));
+  assert.ok(html.indexOf('localOrderPutSync(local)') < html.indexOf("await queueablePost('/notes'"));
   assert.match(html,/Auf dem Gerät gespeichert/);
 });
 
@@ -66,8 +66,8 @@ test('stale session responses redirect to the correct tenant login',()=>{
 });
 
 
-test('local-first voice sync is tenant scoped and idempotent',()=>{
-  assert.match(html,/function localOrderPut\(v\).*tenant:tenantScope/s);
+test('local-first voice sync is tenant-slug scoped and idempotent',()=>{
+  assert.match(html,/function localOrderPutSync\(v\).*tenant:'slug:'\+tenantSlug.*tenantSlug:tenantSlug/s);
   assert.match(html,/clientMutationId:id/);
   assert.match(html,/clientMutationId:row\.clientMutationId\|\|row\.id/);
   assert.match(html,/serverCallId:res&&res\.call&&res\.call\.id/);
@@ -89,11 +89,11 @@ test('iOS navigator.onLine never blocks WerkZ network attempts',()=>{
   assert.match(html,/fetch\('\/healthz\?ts='/);
 });
 
-test('local voice orders use tenant-scoped localStorage and fail truthfully',()=>{
+test('local voice orders use tenant-slug localStorage and fail truthfully',()=>{
   assert.match(html,/werkzPilotLocalOrders::slug:/);
   assert.match(html,/localStorage\.setItem\(localOrderStorageKey\(\),JSON\.stringify\(rows\)\)/);
   assert.match(html,/Lokaler Speicher fehlgeschlagen/);
-  assert.match(html,/await localOrderPut\(local\)/);
+  assert.match(html,/localOrderPutSync\(local\)/);
 });
 
 test('connection indicator reflects server reachability, not sync backlog',()=>{
