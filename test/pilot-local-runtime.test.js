@@ -898,7 +898,10 @@ test('runtime: calculator transfer is local-first, deduplicated and routes as no
   context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
   vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
   context.scrapRows=[{key:'grade-3',label:'Sorte 3'}];
-  context.lastPickupEstimate={id:'estimate-1',materialKey:'grade-3',weightKg:500,distanceKm:18,customerPayoutEur:40};
+  getEl('#pickupMaterial').value='grade-3';getEl('#pickupWeight').value='500';getEl('#pickupKm').value='18';getEl('#pickupPay').value='40';
+  context.fetch=async url=>{if(String(url).includes('/pilot/api/pickup-estimates'))return {ok:true,status:201,json:async()=>({id:'estimate-1',materialKey:'grade-3',weightKg:500,distanceKm:18,customerPayoutEur:40,decision:'lohnt',gross:200,grossLow:180,grossHigh:220,driveCost:16,handlingCostEur:15,roundTripKm:36,maxCustomerPayout:80,expectedProfit:60,loadPct:42,priceSource:'Test'})};throw new TypeError('offline')};
+  await context.pickupCalc();assert.equal(getEl('#pickupTakeoverBtn').hidden,false);
+  assert.equal(JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]').length,0);
   assert.equal(JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]').length,0);
   context.openPickupOrderTakeover();assert.equal(JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]').length,0);
   assert.equal(await context.savePickupOrder(),false);assert.match(getEl('#pickupOrderError').textContent,/Adresse oder Ort/);
