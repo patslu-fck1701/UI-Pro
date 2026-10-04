@@ -307,6 +307,14 @@ test('calculator order keeps optional estimate reference only when it belongs to
   const linked=await s.recordCall('a',{...base,clientMutationId:'calc-owned-estimate',sourcePickupEstimateId:estimate.id});assert.equal(linked.sourcePickupEstimateId,estimate.id);
 });
 
+test('calculator order completes through the normal call path and keeps planned payout separate from actual cash',async()=>{
+  const s=svc(),payload={clientMutationId:'calc-complete',source:'pickup-calculator',category:'Abholung',name:'Kunde',location:'Alfeld',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:500,distanceKm:18,plannedCustomerPayoutEur:40};
+  const row=await s.recordCall('a',payload);assert.equal(s.listCashEntries('a').length,0);assert.equal(s.monthlyEconomics('a','2026-10').pickupPayoutEur,0);
+  const done=s.completeCall('a',row.id,{clientMutationId:'calc-complete-done',boughtScrap:true,customerPayoutEur:30,receiptPresent:true,addToLoad:false,weightKg:500,materialKey:'grade-3',materialLabel:'Sorte 3'});
+  assert.equal(done.call.status,'erledigt');assert.equal(done.call.plannedCustomerPayoutEur,40);assert.equal(done.call.customerPayoutEur,30);assert.equal(s.routePlan('a').stops.length,0);
+  const cash=s.listCashEntries('a');assert.equal(cash.length,1);assert.equal(cash[0].amount,30);assert.equal(s.monthlyEconomics('a','2026-10').pickupPayoutEur,30);
+});
+
 test('calculator transfer requires a usable destination before creating any call',async()=>{
   const s=svc(),base={clientMutationId:'calc-no-target',source:'pickup-calculator',category:'Abholung',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:100,distanceKm:7};
   await assert.rejects(s.recordCall('a',base),e=>e.code==='VALIDATION_ERROR');
