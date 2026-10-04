@@ -26,4 +26,4 @@ jobs:
         run: |
           node --check src/pilot/index.js
           node --check tools/time-test-server.js
-          node --test test/pilot-simple.test.js test/simple-pilot-ui.test.js
+          node --test test/pilot-voice-regression.test.js test/simple-pilot-ui.test.js
