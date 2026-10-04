@@ -304,3 +304,21 @@ test('P0 tour blocks all stops when one lacks a target and preserves moved order
   ctx.renderTourList([{id:'a',location:'Frankfurt'},{id:'b',name:'Ziel unbekannt'}]);assert.match(nodes.tourList.innerHTML,/data-missing-destination="true"/);assert.equal(ctx.openCombinedRoute(),false);assert.equal(ctx.location.href,'');assert.match(nodes.tourFeedback.textContent,/Stopp 2/);
   ctx.renderTourList([{id:'b',location:'Berlin'},{id:'a',location:'Frankfurt'},{id:'c',location:'Berlin'}]);const url=new URL(ctx.openCombinedRoute());assert.equal(url.searchParams.get('waypoints'),'Berlin|Frankfurt');assert.equal(url.searchParams.get('destination'),'Berlin');
 });
+
+test('offline and backend target parsers agree for natural zu zum zur and address',()=>{
+  const vm=require('node:vm'),backend=require('../src/pilot'),start=html.indexOf('function offlineLocation('),end=html.indexOf('function localVoiceOrderFromText(',start);
+  const parse=vm.runInNewContext(html.slice(start,end)+';({offlineLocation,offlineFreeMaterial})');
+  const cases=['Ich will zum Nordpol fahren und Schnee holen.','Ich möchte zum Nordpol.','Zum Nordpol fahren und Schnee holen.','Zum Weihnachtsmann an den Nordpol fahren.','Ich muss zur Firma Müller.','Ich fahre zu Meyer und hole Schrott.','Gallusanlage 7, 60329'];
+  for(const raw of cases)assert.equal(parse.offlineLocation(raw),backend.parseOperationalNote(raw).location,raw);
+  assert.equal(parse.offlineFreeMaterial(cases[0]),'Schnee');
+  assert.match(html,/status!=='completed'&&row.status!=='deleted'/);
+  assert.match(html,/await dropQueuedOrderCreate\(localOrderId\)/);
+  assert.match(html,/markDeletedCall\(callId\)/);
+});
+test('voice diagnostics are hidden unless session enables them and stay tenant-local',()=>{
+  assert.match(html,/id="voiceDiagnosticCard"[^>]*style="display:none"/);
+  assert.match(html,/s.voiceDiagnostics===true\?'block':'none'/);
+  assert.match(html,/api\('\/voice-diagnostics'\)/);
+  assert.match(html,/localOrderAllSync\(\)/);
+  assert.match(html,/safeDiagnosticText\(raw\)/);
+});
