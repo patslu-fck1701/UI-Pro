@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=17'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=18'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v17/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=17'/);
-  assert.match(sw,/werkz-simple-pilot-v17/);
+  assert.match(html,/· v18/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=18'/);
+  assert.match(sw,/werkz-simple-pilot-v18/);
 });
 
 
@@ -186,4 +186,14 @@ test('unsupported Android browser explains fallback instead of silently opening 
   assert.match(html,/Spracherkennung in diesem Browser nicht verfügbar/);
   assert.match(html,/Android: Bitte Chrome verwenden oder Auftrag eintippen\./);
   assert.match(html,/Spracherkennung nicht verfügbar\. Auftrag stattdessen eintippen:/);
+});
+
+
+test('Google Maps navigation is a permanent mobile smoke-test invariant',()=>{
+  assert.match(html,/function mapsUrl\(destination\)/);
+  assert.match(html,/https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=/);
+  assert.match(html,/class="mapsgo"/);
+  assert.match(html,/GOOGLE MAPS STARTEN/);
+  assert.match(html,/ZU DIESEM STOPP NAVIGIEREN/);
+  assert.doesNotMatch(html,/class="mapsgo"[^>]*target="_blank"/);
 });
