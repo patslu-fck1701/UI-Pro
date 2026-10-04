@@ -120,6 +120,8 @@ const pilotService=createPilotRuntime({
   ownerDemoOrganisationIds:[...pilotProfiles.values()].filter(p=>p.cryptoEnabled===true&&p.ownerDemoEnabled===true).map(p=>p.organisationId),
   audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
 });
+const exampleMailProvider=pilotService.mail;
+pilotService.mail={listRelevant:({organisationId})=>{const profile=pilotTenantByOrg.get(organisationId);return profile&&profile.accountEmails&&profile.accountEmails.length?Promise.resolve([]):exampleMailProvider.listRelevant({organisationId})}};
 const pilotHandler=createPilotHttpHandler({
   service:pilotService,
   defaultTaxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||'steuerberater@example.invalid',
