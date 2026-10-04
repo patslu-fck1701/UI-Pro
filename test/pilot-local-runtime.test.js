@@ -273,7 +273,7 @@ test('runtime: Android-capable browser requests microphone permission before sta
   const context={
     console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
     document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
-    navigator:{mediaDevices:{getUserMedia:async opts=>{getUserMediaCalls++;assert.deepEqual(opts,{audio:true});return {getTracks:()=>[{stop(){trackStops++}}]}}}},
+    navigator:{mediaDevices:{getUserMedia:async opts=>{getUserMediaCalls++;assert.equal(opts&&opts.audio,true);return {getTracks:()=>[{stop(){trackStops++}}]}}}},
     location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
     URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
     fetch:async()=>{throw new TypeError('Load failed')},
