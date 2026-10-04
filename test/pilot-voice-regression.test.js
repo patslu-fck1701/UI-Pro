@@ -4,6 +4,8 @@ const assert=require('node:assert/strict');
 const {
   WerkZSimplePilotService,
   MemoryPilotRepository,
+  FilePilotRepository,
+  parseOperationalNote,
   FakeVoiceProvider,
   FakeMailProvider,
   FakeExtractor,
@@ -29,11 +31,11 @@ class Ent{
     return {organisationId:org,moduleId};
   }
 }
-function svc(){
+function svc({repository=new MemoryPilotRepository(),voiceDiagnosticOrganisationIds=[]}={}){
   return new WerkZSimplePilotService({
     auth:new Auth(),
     entitlements:new Ent(),
-    repository:new MemoryPilotRepository(),
+    repository,voiceDiagnosticOrganisationIds,
     storage:{put:x=>({fileName:x.fileName,mime:x.mime,size:x.bytes.length})},
     voice:new FakeVoiceProvider(),
     mail:new FakeMailProvider(),
@@ -231,3 +233,40 @@ test('driver order overrides distance and completion promotes next open stop',()
 test('monthly economics separates receipts, stated km and incomplete costs by tenant',()=>{const s=svc(),n=s.addNote('a','Sorte 3 abholen, 18 Kilometer','econ-18');s.completeCall('a',n.call.id,{clientMutationId:'econ-done',boughtScrap:true,customerPayoutEur:40});s.recordSettlement('a',{dealer:'Händler Eins',materialKey:'grade-3',materialLabel:'Sorte 3',weightKg:1000,totalEur:300,date:'2026-10-04'});s.repository.add('documents',{id:'fuel-1',organisationId:'org-a',receiptCategory:'tanken',expenseClass:'betrieblich',date:'2026-10-04',amount:50});s.repository.add('documents',{id:'fuel-unknown',organisationId:'org-a',receiptCategory:'tanken',expenseClass:'pruefen',date:'2026-10-04',amount:null});s.repository.add('documents',{id:'fuel-other',organisationId:'org-b',receiptCategory:'tanken',expenseClass:'betrieblich',date:'2026-10-04',amount:999});s.saveOperatingProfile('a',{baseLocation:'Alfeld',vehicleCostPerKm:0.5});const x=s.monthlyEconomics('a','2026-10');assert.equal(x.baseLocation,'Alfeld');assert.equal(x.statedDistanceKm,18);assert.equal(x.fuelReceipts,2);assert.equal(x.fuelReceiptsWithAmount,1);assert.equal(x.fuelExpenseEur,50);assert.equal(x.weighSlipRevenueEur,300);assert.equal(x.pickupPayoutEur,40);assert.equal(x.knownContributionEur,210);assert.equal(x.estimatedVehicleCostEur,9);assert.equal(x.estimatedCostIsAlternativeToFuel,true);assert.equal(x.missing.fuelAmounts,1);assert.equal(s.monthlyEconomics('b','2026-10').fuelExpenseEur,999);assert.equal(s.monthlyEconomics('b','2026-10').weighSlipRevenueEur,0)});
 
 test('fuel upload without extracted amount stays unknown in monthly view',async()=>{const s=svc();s.extractor={extract:async()=>({type:'Kassenbon',company:'Tankstelle',amount:null})};const doc=await s.addDocument('a',{fileName:'tank.jpg',mime:'image/jpeg',dataBase64:Buffer.from('test-image').toString('base64'),receiptCategory:'tanken'});assert.equal(doc.amount,null);const month=s.monthlyEconomics('a','2026-10');assert.equal(month.fuelReceipts,1);assert.equal(month.fuelReceiptsWithAmount,0);assert.equal(month.missing.fuelAmounts,1);assert.equal(month.fuelExpenseEur,0)});
+
+test('voice relation uses sourceNoteId and deletion removes only the linked planned work item',()=>{
+  const s=svc(),n=s.addNote('a','Ich will zum Nordpol fahren und Schnee holen.','ghost-1');
+  assert.equal(n.call.sourceNoteId,n.id);assert.equal(n.workItem.sourceNoteId,n.id);assert.equal(n.workItem.sourceCallId,undefined);
+  const other=s.addNote('b','Ich will zum Nordpol fahren und Schnee holen.','other-tenant');
+  const result=s.deleteCall('a',n.call.id,{clientMutationId:'delete:'+n.call.id});
+  assert.deepEqual(result.removedWorkItemIds,[n.workItem.id]);assert.equal(result.removedNoteId,n.id);
+  assert.equal(s.routePlan('a').stops.length,0);assert.equal(s.routePlan('b').stops.length,1);
+  assert.ok(s.repository.find('org-b','workItems',other.workItem.id));
+  assert.equal(s.deleteCall('a',n.call.id).missing,true);
+});
+test('legacy orphaned voice work item is not resurrected by route plan',()=>{
+  const s=svc(),n=s.addNote('a','Ich will zum Nordpol fahren und Schnee holen.','legacy-orphan');
+  s.repository.remove('org-a','calls',n.call.id);s.repository.remove('org-a','notes',n.id);
+  assert.ok(s.repository.find('org-a','workItems',n.workItem.id));
+  assert.equal(s.routePlan('a').stops.length,0);
+});
+test('voice deletion remains gone after file repository reload',()=>{
+  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),dir=fs.mkdtempSync(path.join(os.tmpdir(),'werkz-voice-delete-'));
+  try{const file=path.join(dir,'pilot.json'),s=svc({repository:new FilePilotRepository(file)}),n=s.addNote('a','Ich will zum Nordpol fahren und Schnee holen.','persist-ghost');
+    s.deleteCall('a',n.call.id);const again=svc({repository:new FilePilotRepository(file)});
+    assert.equal(again.routePlan('a').stops.length,0);assert.equal(again.repository.find('org-a','workItems',n.workItem.id),null)
+  }finally{fs.rmSync(dir,{recursive:true,force:true})}
+});
+test('natural zu zum zur targets and existing street address parse consistently',()=>{
+  for(const [raw,want] of [['Ich will zum Nordpol fahren und Schnee holen.','Nordpol'],['Ich möchte zum Nordpol.','Nordpol'],['Zum Nordpol fahren und Schnee holen.','Nordpol'],['Zum Weihnachtsmann an den Nordpol fahren.','Nordpol'],['Ich muss zur Firma Müller.','Firma Müller'],['Ich fahre zu Meyer und hole Schrott.','Meyer'],['Gallusanlage 7, 60329','Gallusanlage 7, 60329']])assert.equal(parseOperationalNote(raw).location,want,raw);
+  assert.equal(parseOperationalNote('Ich will zum Nordpol fahren und Schnee holen.').materialLabel,'Schnee');
+  assert.notEqual(parseOperationalNote('Ich fahre zu Meyer und hole Schrott.').materialLabel,'Meyer');
+});
+test('voice diagnostics are opt-in, owner-only, tenant-scoped and redact secrets',()=>{
+  const s=svc({voiceDiagnosticOrganisationIds:['org-a']});
+  assert.throws(()=>s.listVoiceDiagnostics('b'),e=>e.code==='FORBIDDEN');
+  const n=s.addNote('a','Ich will zum Nordpol fahren und Schnee holen. Passwort ist geheim','diagnostic-1');
+  let rows=s.listVoiceDiagnostics('a');assert.equal(rows.length,1);assert.equal(rows[0].noteId,n.id);assert.equal(rows[0].callId,n.call.id);assert.equal(rows[0].workItemId,n.workItem.id);assert.doesNotMatch(rows[0].recognizedText,/geheim/);
+  const result=s.deleteCall('a',n.call.id);rows=s.listVoiceDiagnostics('a');assert.equal(rows[0].syncStatus,'deleted');assert.deepEqual(rows[0].removedIds,[n.call.id,n.id,n.workItem.id]);assert.deepEqual(result.removedWorkItemIds,[n.workItem.id]);assert.equal(s.listVoiceDiagnostics('a').length,1);
+  const off=svc();assert.throws(()=>off.listVoiceDiagnostics('a'),e=>e.code==='FORBIDDEN');
+});
