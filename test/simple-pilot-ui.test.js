@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=25'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=26'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -152,10 +152,10 @@ test('local order storage is bound to stable tenant slug before session resolves
   assert.ok(put>save&&render>put&&firstAwait>render);
 });
 
-test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v25/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=25'/);
-  assert.match(sw,/werkz-simple-pilot-v25/);
+test('pilot UI exposes v26 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v26/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=26'/);
+  assert.match(sw,/werkz-simple-pilot-v26/);
 });
 
 
