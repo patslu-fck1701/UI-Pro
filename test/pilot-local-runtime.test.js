@@ -909,7 +909,7 @@ test('runtime: calculator transfer is local-first, deduplicated and routes as no
   const results=await Promise.all([context.savePickupOrder(),context.savePickupOrder()]);assert.equal(results.filter(Boolean).length,1);
   const rows=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');assert.equal(rows.length,1);
   assert.equal(rows[0].manualPayload.materialKey,'grade-3');assert.equal(rows[0].manualPayload.estimatedWeightKg,500);assert.equal(rows[0].manualPayload.distanceKm,18);assert.equal(rows[0].manualPayload.plannedCustomerPayoutEur,40);
-  assert.match(getEl('#nextJob').innerHTML,/Gallusanlage 7, 60329/);assert.match(getEl('#tourList').innerHTML,/Gallusanlage 7, 60329/);
+  assert.match(getEl('#nextJob').innerHTML,/Gallusanlage 7, 60329/);assert.match(getEl('#tourList').innerHTML,/Gallusanlage 7, 60329/);assert.match(getEl('#routePlan').innerHTML,/🚚 Abholung/);assert.doesNotMatch(getEl('#routePlan').innerHTML,/🎙️ Sprachauftrag/);
   const loaded=context.localVoiceStopsSync();assert.equal(loaded.length,1);assert.equal(loaded[0].source,'pickup-calculator-local');
   let created=0;context.fetch=async url=>{const u=String(url);if(u.includes('/pilot/api/calls')){created++;return {ok:true,status:201,json:async()=>({id:'call-calc',location:'Gallusanlage 7, 60329'})}}return {ok:true,status:200,json:async()=>({})}};
   await context.syncLocalVoiceOrders();await context.syncLocalVoiceOrders();assert.equal(created,1);
