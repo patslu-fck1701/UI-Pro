@@ -21,9 +21,22 @@ jobs:
       - name: Verify full core
         if: github.ref != 'refs/heads/test/mobile-assistant-render'
         run: npm run verify
-      - name: Verify Schrotties Render mirror
+      - name: Schrotties · Backend syntax
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
         run: |
           node --check src/pilot/index.js
           node --check tools/time-test-server.js
-          node --test test/pilot-voice-regression.test.js test/simple-pilot-ui.test.js
+      - name: Schrotties · Voice and tenant isolation
+        if: github.ref == 'refs/heads/test/mobile-assistant-render'
+        run: node --test test/pilot-voice-regression.test.js
+      - name: Schrotties · Live prices and weigh-slip recalculation
+        if: github.ref == 'refs/heads/test/mobile-assistant-render'
+        run: node --test test/pilot-price-diagnostics.test.js
+      - name: Schrotties · iPhone PWA contract
+        if: github.ref == 'refs/heads/test/mobile-assistant-render'
+        run: node --test test/simple-pilot-ui.test.js
+      - name: Schrotties · Failure diagnosis
+        if: failure() && github.ref == 'refs/heads/test/mobile-assistant-render'
+        run: |
+          echo "::error title=Schrotties CI failed::Check the first failed Schrotties step above: backend syntax, voice/tenant, live prices/weigh-slip, or iPhone PWA."
+          echo "Render deployment should not be treated as verified until these checks are green."
