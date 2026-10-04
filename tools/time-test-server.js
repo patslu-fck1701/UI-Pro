@@ -121,24 +121,22 @@ const pilotService=createPilotRuntime({
   ownerDemoOrganisationIds:[...pilotProfiles.values()].filter(p=>p.cryptoEnabled===true&&p.ownerDemoEnabled===true).map(p=>p.organisationId),
   audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
 });
-const mailProfile=pilotTenantBySlug.get('tester')||null;
-const mailEmails=mailProfile?.accountEmails||[];
-const gmailEmail=mailEmails.find(value=>value.endsWith('@gmail.com'))||null;
-const icloudEmail=mailEmails.find(value=>value.endsWith('@icloud.com'))||null;
 const mailTokenKey=process.env.WERKZ_PILOT_MAIL_TOKEN_KEY||'';
 const mailTokenStore=mailTokenKey?new EncryptedMailTokenStore({file:path.join(dataDir,'mail-tokens.enc.json'),key:mailTokenKey}):null;
-const gmailAccess=mailProfile&&gmailEmail&&mailTokenStore&&process.env.GOOGLE_OAUTH_CLIENT_ID&&process.env.GOOGLE_OAUTH_CLIENT_SECRET&&process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI
-  ?new GmailOAuthReadAccess({organisationId:mailProfile.organisationId,accountEmail:gmailEmail,clientId:process.env.GOOGLE_OAUTH_CLIENT_ID,clientSecret:process.env.GOOGLE_OAUTH_CLIENT_SECRET,redirectUri:process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI,tokenStore:mailTokenStore})
-  :null;
-const icloudAccess=mailProfile&&icloudEmail&&process.env.WERKZ_PILOT_ICLOUD_APP_PASSWORD
-  ?new ICloudImapReadAccess({organisationId:mailProfile.organisationId,accountEmail:icloudEmail,appPassword:process.env.WERKZ_PILOT_ICLOUD_APP_PASSWORD})
-  :null;
+const googleClientReady=Boolean(mailTokenStore&&process.env.GOOGLE_OAUTH_CLIENT_ID&&process.env.GOOGLE_OAUTH_CLIENT_SECRET&&process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI);
+const gmailPending=new Map();
+function mailEmail(value,domain){const email=String(value||'').trim().toLowerCase();return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)&&(!domain||email.endsWith(domain))?email:null}
+function gmailFor(profile,email){if(!googleClientReady||!email)return null;return new GmailOAuthReadAccess({organisationId:profile.organisationId,accountEmail:email,clientId:process.env.GOOGLE_OAUTH_CLIENT_ID,clientSecret:process.env.GOOGLE_OAUTH_CLIENT_SECRET,redirectUri:process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI,tokenStore:mailTokenStore})}
+function icloudFor(profile){const row=mailTokenStore?.get(profile.organisationId+':icloud');return row?.email&&row?.appPassword?new ICloudImapReadAccess({organisationId:profile.organisationId,accountEmail:row.email,appPassword:row.appPassword}):null}
 const exampleMailProvider=pilotService.mail;
 pilotService.mail={async listRelevant({organisationId}){
-  if(!mailProfile||organisationId!==mailProfile.organisationId)return exampleMailProvider.listRelevant({organisationId});
-  const results=[];
-  if(gmailAccess&&gmailAccess.status({organisationId}).connected)results.push(...await gmailAccess.listRelevant({organisationId}));
-  if(icloudAccess)results.push(...await icloudAccess.listRelevant({organisationId}));
+  const profile=pilotTenantByOrg.get(organisationId);
+  if(!profile)return [];
+  const gmailRow=mailTokenStore?.get(organisationId);
+  const gmail=gmailFor(profile,gmailRow?.email),icloud=icloudFor(profile),results=[];
+  if(gmail&&gmail.status({organisationId}).connected)results.push(...await gmail.listRelevant({organisationId}));
+  if(icloud)results.push(...await icloud.listRelevant({organisationId}));
+  if(!gmail&&!icloud&&!profile.accountEmails?.length)return exampleMailProvider.listRelevant({organisationId});
   return results.sort((a,b)=>String(b.receivedAt||'').localeCompare(String(a.receivedAt||'')));
 }};
 const pilotHandler=createPilotHttpHandler({
@@ -452,30 +450,47 @@ const server=http.createServer(async(request,response)=>{
       return response.end(JSON.stringify({error:'ACCESS_EXPIRED',message:'Testzugang ist abgelaufen.'}));
     }
   }
-  if(url.pathname==='/pilot/api/mail/status'||url.pathname==='/pilot/mail/google/connect'||url.pathname==='/pilot/mail/google/callback'||url.pathname==='/pilot/api/mail/google/disconnect'){
+  if(url.pathname==='/pilot/api/mail/status'||url.pathname==='/pilot/mail/google/connect'||url.pathname==='/pilot/mail/google/callback'||url.pathname==='/pilot/api/mail/google/disconnect'||url.pathname==='/pilot/api/mail/icloud/connect'||url.pathname==='/pilot/api/mail/icloud/disconnect'){
     const token=cookieTokenFromHeader(request.headers.cookie);
     const profile=[...pilotProfiles.values()].find(p=>p.token===token);
     const session=token&&authSessions[token];
-    if(!mailProfile||!profile||profile.organisationId!==mailProfile.organisationId||!session){
+    if(!profile||!session||profileExpired(profile)){
       response.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});
       return response.end(JSON.stringify({error:'Anmeldung erforderlich'}));
     }
     const json=(status,value)=>{response.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});response.end(JSON.stringify(value))};
+    const safePost=()=>{if(request.headers.origin!==('https://'+request.headers.host))throw Object.assign(new Error('Origin denied'),{code:'FORBIDDEN'})};
+    const readPost=async()=>{const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>4096)throw Object.assign(new Error('Too large'),{code:'VALIDATION_ERROR'});chunks.push(chunk)}return JSON.parse(Buffer.concat(chunks).toString('utf8'))};
     try{
-      if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:gmailEmail,configured:Boolean(gmailAccess),connected:gmailAccess?gmailAccess.status(session).connected:false},icloud:{email:icloudEmail,configured:Boolean(icloudAccess),connected:Boolean(icloudAccess)},readOnly:true});
+      const org=profile.organisationId,storedGmail=mailTokenStore?.get(org),storedIcloud=mailTokenStore?.get(org+':icloud');
+      if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:storedGmail?.email||profile.accountEmails?.find(x=>x.endsWith('@gmail.com'))||null,configured:googleClientReady,connected:Boolean(storedGmail?.refreshToken)},icloud:{email:storedIcloud?.email||profile.accountEmails?.find(x=>x.endsWith('@icloud.com'))||null,configured:Boolean(mailTokenStore),connected:Boolean(storedIcloud?.appPassword)},readOnly:true});
       if(url.pathname==='/pilot/mail/google/connect'&&request.method==='GET'){
-        if(!gmailAccess)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
-        response.writeHead(303,{location:gmailAccess.begin(session),'cache-control':'no-store'});return response.end();
+        if(!googleClientReady)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
+        const address=mailEmail(url.searchParams.get('email')||storedGmail?.email||profile.accountEmails?.find(x=>x.endsWith('@gmail.com')));
+        if(!address)return json(400,{error:'Gültige Gmail-Adresse erforderlich'});
+        const access=gmailFor(profile,address);gmailPending.set(org,access);
+        response.writeHead(303,{location:access.begin(session),'cache-control':'no-store'});return response.end();
       }
       if(url.pathname==='/pilot/mail/google/callback'&&request.method==='GET'){
-        if(!gmailAccess)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
         if(url.searchParams.has('error'))return json(400,{error:'Google-Anmeldung abgebrochen'});
-        await gmailAccess.finish(session,{state:url.searchParams.get('state'),code:url.searchParams.get('code')});
+        const access=gmailPending.get(org);if(!access)return json(400,{error:'Anmeldung abgelaufen; bitte erneut starten'});
+        try{await access.finish(session,{state:url.searchParams.get('state'),code:url.searchParams.get('code')})}finally{gmailPending.delete(org)}
         response.writeHead(303,{location:'/pilot/?mail=connected','cache-control':'no-store'});return response.end();
       }
       if(url.pathname==='/pilot/api/mail/google/disconnect'&&request.method==='POST'){
-        if(!gmailAccess)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
-        return json(200,gmailAccess.disconnect(session));
+        safePost();mailTokenStore?.remove(org);gmailPending.delete(org);return json(200,{connected:false});
+      }
+      if(url.pathname==='/pilot/api/mail/icloud/connect'&&request.method==='POST'){
+        safePost();if(!mailTokenStore)return json(503,{error:'Verschlüsselter Speicher nicht konfiguriert'});
+        const body=await readPost(),address=mailEmail(body.email,'@icloud.com'),password=String(body.appPassword||'').trim();
+        if(!address||password.length<10||password.length>128)return json(400,{error:'iCloud-Adresse und Apple-App-Passwort erforderlich'});
+        const access=new ICloudImapReadAccess({organisationId:org,accountEmail:address,appPassword:password});
+        await access.listRelevant({organisationId:org});
+        mailTokenStore.set(org+':icloud',{email:address,appPassword:password});
+        return json(200,{connected:true,email:address,readOnly:true});
+      }
+      if(url.pathname==='/pilot/api/mail/icloud/disconnect'&&request.method==='POST'){
+        safePost();mailTokenStore?.remove(org+':icloud');return json(200,{connected:false});
       }
     }catch(error){process.stderr.write(JSON.stringify({kind:'mail-access-error',code:error.code||'MAIL_ERROR'})+'\\n');return json(400,{error:'Postfach-Verbindung fehlgeschlagen',code:error.code||'MAIL_ERROR'})}
     return json(405,{error:'Methode nicht erlaubt'});
