@@ -1,6 +1,7 @@
 'use strict';
 
 const http=require('node:http'),path=require('node:path'),fs=require('node:fs'),crypto=require('node:crypto');
+const {EncryptedMailTokenStore,GmailOAuthReadAccess,ICloudImapReadAccess}=require('../src/pilot/mail-access');
 const {ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,TimeProductionService,TimeApplication,createTimeHttpHandler,createPilotRuntime,createPilotHttpHandler}=require('../src');
 
 function runtimeSecret(name,bytes){
@@ -120,8 +121,26 @@ const pilotService=createPilotRuntime({
   ownerDemoOrganisationIds:[...pilotProfiles.values()].filter(p=>p.cryptoEnabled===true&&p.ownerDemoEnabled===true).map(p=>p.organisationId),
   audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
 });
+const mailProfile=pilotTenantBySlug.get('tester')||null;
+const mailEmails=mailProfile?.accountEmails||[];
+const gmailEmail=mailEmails.find(value=>value.endsWith('@gmail.com'))||null;
+const icloudEmail=mailEmails.find(value=>value.endsWith('@icloud.com'))||null;
+const mailTokenKey=process.env.WERKZ_PILOT_MAIL_TOKEN_KEY||'';
+const mailTokenStore=mailTokenKey?new EncryptedMailTokenStore({file:path.join(dataDir,'mail-tokens.enc.json'),key:mailTokenKey}):null;
+const gmailAccess=mailProfile&&gmailEmail&&mailTokenStore&&process.env.GOOGLE_OAUTH_CLIENT_ID&&process.env.GOOGLE_OAUTH_CLIENT_SECRET&&process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI
+  ?new GmailOAuthReadAccess({organisationId:mailProfile.organisationId,accountEmail:gmailEmail,clientId:process.env.GOOGLE_OAUTH_CLIENT_ID,clientSecret:process.env.GOOGLE_OAUTH_CLIENT_SECRET,redirectUri:process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI,tokenStore:mailTokenStore})
+  :null;
+const icloudAccess=mailProfile&&icloudEmail&&process.env.WERKZ_PILOT_ICLOUD_APP_PASSWORD
+  ?new ICloudImapReadAccess({organisationId:mailProfile.organisationId,accountEmail:icloudEmail,appPassword:process.env.WERKZ_PILOT_ICLOUD_APP_PASSWORD})
+  :null;
 const exampleMailProvider=pilotService.mail;
-pilotService.mail={listRelevant:({organisationId})=>{const profile=pilotTenantByOrg.get(organisationId);return profile&&profile.accountEmails&&profile.accountEmails.length?Promise.resolve([]):exampleMailProvider.listRelevant({organisationId})}};
+pilotService.mail={async listRelevant({organisationId}){
+  if(!mailProfile||organisationId!==mailProfile.organisationId)return exampleMailProvider.listRelevant({organisationId});
+  const results=[];
+  if(gmailAccess&&gmailAccess.status({organisationId}).connected)results.push(...await gmailAccess.listRelevant({organisationId}));
+  if(icloudAccess)results.push(...await icloudAccess.listRelevant({organisationId}));
+  return results.sort((a,b)=>String(b.receivedAt||'').localeCompare(String(a.receivedAt||'')));
+}};
 const pilotHandler=createPilotHttpHandler({
   service:pilotService,
   defaultTaxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||'steuerberater@example.invalid',
@@ -432,6 +451,34 @@ const server=http.createServer(async(request,response)=>{
       response.writeHead(401,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','set-cookie':sessionCookie('werkz_session','',0)});
       return response.end(JSON.stringify({error:'ACCESS_EXPIRED',message:'Testzugang ist abgelaufen.'}));
     }
+  }
+  if(url.pathname==='/pilot/api/mail/status'||url.pathname==='/pilot/mail/google/connect'||url.pathname==='/pilot/mail/google/callback'||url.pathname==='/pilot/api/mail/google/disconnect'){
+    const token=cookieTokenFromHeader(request.headers.cookie);
+    const profile=[...pilotProfiles.values()].find(p=>p.token===token);
+    const session=token&&authSessions[token];
+    if(!mailProfile||!profile||profile.organisationId!==mailProfile.organisationId||!session){
+      response.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});
+      return response.end(JSON.stringify({error:'Anmeldung erforderlich'}));
+    }
+    const json=(status,value)=>{response.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});response.end(JSON.stringify(value))};
+    try{
+      if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:gmailEmail,configured:Boolean(gmailAccess),connected:gmailAccess?gmailAccess.status(session).connected:false},icloud:{email:icloudEmail,configured:Boolean(icloudAccess),connected:Boolean(icloudAccess)},readOnly:true});
+      if(url.pathname==='/pilot/mail/google/connect'&&request.method==='GET'){
+        if(!gmailAccess)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
+        response.writeHead(303,{location:gmailAccess.begin(session),'cache-control':'no-store'});return response.end();
+      }
+      if(url.pathname==='/pilot/mail/google/callback'&&request.method==='GET'){
+        if(!gmailAccess)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
+        if(url.searchParams.has('error'))return json(400,{error:'Google-Anmeldung abgebrochen'});
+        await gmailAccess.finish(session,{state:url.searchParams.get('state'),code:url.searchParams.get('code')});
+        response.writeHead(303,{location:'/pilot/?mail=connected','cache-control':'no-store'});return response.end();
+      }
+      if(url.pathname==='/pilot/api/mail/google/disconnect'&&request.method==='POST'){
+        if(!gmailAccess)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
+        return json(200,gmailAccess.disconnect(session));
+      }
+    }catch(error){process.stderr.write(JSON.stringify({kind:'mail-access-error',code:error.code||'MAIL_ERROR'})+'\\n');return json(400,{error:'Postfach-Verbindung fehlgeschlagen',code:error.code||'MAIL_ERROR'})}
+    return json(405,{error:'Methode nicht erlaubt'});
   }
   if(url.pathname.startsWith('/pilot/api/')||url.pathname.startsWith('/pilot/public/')){
     const handled=await pilotHandler(request,response);
