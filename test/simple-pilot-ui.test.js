@@ -90,7 +90,7 @@ test('iOS navigator.onLine never blocks WerkZ network attempts',()=>{
 });
 
 test('local voice orders use tenant-scoped localStorage and fail truthfully',()=>{
-  assert.match(html,/werkzPilotLocalOrders::/);
+  assert.match(html,/werkzPilotLocalOrders::slug:/);
   assert.match(html,/localStorage\.setItem\(localOrderStorageKey\(\),JSON\.stringify\(rows\)\)/);
   assert.match(html,/Lokaler Speicher fehlgeschlagen/);
   assert.match(html,/await localOrderPut\(local\)/);
@@ -134,6 +134,25 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=13'/);
+  assert.match(html,/register\('/pilot\/sw\.js\?v=14'/);
   assert.match(html,/updateViaCache:'none'/);
+});
+
+
+test('local order storage is bound to stable tenant slug before session resolves',()=>{
+  assert.match(html,/urlTenant=\(new URLSearchParams\(location\.search\)\)\.get\('tenant'\)/);
+  assert.match(html,/tenantScope='slug:'\+tenantSlug/);
+  assert.match(html,/localOrderStorageKeyForSlug\(slug\)/);
+  assert.match(html,/localOrderPutSync\(local\)/);
+  const save=html.indexOf('async function saveVoiceNote');
+  const put=html.indexOf('localOrderPutSync(local)',save);
+  const render=html.indexOf('renderLocalOrdersNow(localVoiceStopsSync())',save);
+  const firstAwait=html.indexOf('await ',save);
+  assert.ok(put>save&&render>put&&firstAwait>render);
+});
+
+test('pilot UI exposes v14 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v14/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=14'/);
+  assert.match(sw,/werkz-simple-pilot-v14/);
 });
