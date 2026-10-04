@@ -214,3 +214,5 @@ test('spoken Sorte drei is grade 3 even without weight or location',()=>{
     assert.equal(note.call.status,'neu');
   }
 });
+
+test('completed pickup replay with another mutation id cannot duplicate load cash or receipt',async()=>{const s=svc();const call=await s.recordCall('a',{name:'Müller',topic:'Metall abholen',estimatedWeightKg:420});const first=s.completeCall('a',call.id,{boughtScrap:true,customerPayoutEur:75,receiptPresent:false,addToLoad:true,weightKg:420,materialKey:'mixed-scrap',materialLabel:'Mischschrott',clientMutationId:'complete-first'});const second=s.completeCall('a',call.id,{boughtScrap:false,customerPayoutEur:0,receiptPresent:true,addToLoad:true,weightKg:900,clientMutationId:'complete-second'});assert.equal(second.replayed,true);assert.equal(second.call.id,first.call.id);assert.equal(second.call.customerPayoutEur,75);assert.equal(second.call.actualWeightKg,420);assert.equal(s.listCashEntries('a').length,1);assert.equal(s.listMissingDocuments('a').length,1);assert.equal((await s.vehicleLoadSummary('a')).totalWeightKg,420);assert.equal(s.listCalls('b').length,0)});
