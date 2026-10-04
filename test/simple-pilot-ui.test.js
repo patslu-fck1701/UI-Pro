@@ -108,3 +108,31 @@ test('legacy IndexedDB queue cannot block local order startup',()=>{
   assert.match(html,/migrateQueuedVoiceOrders/);
   assert.match(html,/localStorage\.setItem\(localOrderStorageKey\(\),JSON\.stringify\(rows\)\)/);
 });
+
+
+test('inline Schrotties app JavaScript parses successfully',()=>{
+  const m=html.match(/<script>([\s\S]*)<\/script>/);
+  assert.ok(m&&m[1]);
+  assert.doesNotThrow(()=>new Function(m[1]));
+});
+
+test('voice order is rendered locally before any network sync',()=>{
+  const save=html.indexOf('async function saveVoiceNote');
+  const put=html.indexOf('await localOrderPut(local)',save);
+  const render=html.indexOf('renderLocalOrdersNow(localRows)',save);
+  const post=html.indexOf("queueablePost('/notes'",save);
+  assert.ok(save>=0&&put>save&&render>put&&post>render);
+  assert.match(html,/function renderLocalOrdersNow\(rows\)/);
+  assert.match(html,/auf diesem Gerät gespeichert/);
+});
+
+test('pilot API requests have a hard timeout',()=>{
+  assert.match(html,/setTimeout\(function\(\)\{ctrl\.abort\(\)\},7000\)/);
+  assert.match(html,/cache:'no-store'/);
+  assert.match(html,/credentials:'same-origin'/);
+});
+
+test('PWA update bypasses iOS service worker cache',()=>{
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=13'/);
+  assert.match(html,/updateViaCache:'none'/);
+});
