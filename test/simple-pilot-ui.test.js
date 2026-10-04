@@ -301,7 +301,7 @@ test('P0 tour starts from visible address without app geolocation, material or k
 test('P0 tour blocks all stops when one lacks a target and preserves moved order',()=>{
   const vm=require('node:vm'),start=html.indexOf('function tourDestination('),end=html.indexOf('function completionButton(',start),nodes={tourList:{innerHTML:'',querySelectorAll:()=>[]},tourCount:{textContent:''},tourStart:{disabled:false},tourFeedback:{textContent:''},joinRouteBtn:{disabled:false,textContent:''}};
   const ctx={q:id=>nodes[id.slice(1)],offlineLocation:()=>'',mapsUrl:x=>'single:'+x,esc:x=>String(x),encodeURIComponent,Set,Map,Number,String,Array,localStorage:{getItem:()=>null,setItem:()=>{}},tenantSlug:'pilot',window:{},location:{href:''},api:async()=>({})};vm.createContext(ctx);vm.runInContext(html.slice(start,end),ctx);
-  ctx.renderTourList([{id:'a',location:'Frankfurt'},{id:'b',name:'Ziel unbekannt'}]);assert.match(nodes.tourList.innerHTML,/data-missing-destination="true"/);assert.equal(ctx.openCombinedRoute(),false);assert.equal(ctx.location.href,'');assert.match(nodes.tourFeedback.textContent,/Stopp 2/);
+  ctx.renderTourList([{id:'a',location:'Frankfurt'},{id:'b',name:'Ziel unbekannt'}]);assert.match(nodes.tourList.innerHTML,/data-missing-destination="true"/);assert.equal(nodes.tourStart.disabled,true);assert.match(nodes.tourFeedback.textContent,/Route gesperrt: Stopp 2/);assert.equal(ctx.openCombinedRoute(),false);assert.equal(ctx.location.href,'');assert.match(nodes.tourFeedback.textContent,/Stopp 2/);
   ctx.renderTourList([{id:'b',location:'Berlin'},{id:'a',location:'Frankfurt'},{id:'c',location:'Berlin'}]);const url=new URL(ctx.openCombinedRoute());assert.equal(url.searchParams.get('waypoints'),'Berlin|Frankfurt');assert.equal(url.searchParams.get('destination'),'Berlin');
 });
 
@@ -335,7 +335,7 @@ test('calculator transfer stays explicit and uses normal local order and call sy
   assert.match(html,/localOrderPutSync\(local\)/);
   assert.match(html,/await api\('\/calls'/);
   assert.match(html,/row.manualPayload\?await api\('\/calls'/);
-  assert.match(html,/pickupOrderSaving\|\|pickupOrderSavedId/);
+  assert.match(html,/pickupOrderSaving\|\|pickupOrderSavedId/);assert.match(html,/saveButton\.disabled=false/);assert.match(html,/pickupOrderLocation','pickupOrderName','pickupOrderPhone','pickupOrderDate/);
 });
 
 test('successful server tour response cannot resurrect synced local call absent on server',()=>{
