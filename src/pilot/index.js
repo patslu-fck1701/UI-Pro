@@ -86,7 +86,7 @@ class FilePilotRepository{
   find(org,key,id){this.load();const x=this.state[key].find(v=>v.organisationId===org&&v.id===id);return x?clone(x):null}
 }
 class MemoryPilotRepository{
-  constructor(){this.state={calls:[],documents:[],notes:[],exports:[],pickupEstimates:[],settlements:[],workItems:[],archives:[],customers:[],vehicleLoad:[],cashEntries:[]}}
+  constructor(){this.state={calls:[],documents:[],notes:[],exports:[],pickupEstimates:[],settlements:[],workItems:[],archives:[],customers:[],vehicleLoad:[],cashEntries:[],operatingProfiles:[],routeOrders:[]}}
   list(org,key){return clone(this.state[key].filter(x=>x.organisationId===org))}
   add(key,row){this.state[key].push(clone(row));return clone(row)}
   upsert(org,key,row){const clean={...clone(row),organisationId:org},i=this.state[key].findIndex(v=>v.organisationId===org&&v.id===clean.id);if(i>=0)this.state[key][i]=clean;else this.state[key].push(clean);return clone(clean)}
