@@ -463,10 +463,10 @@ const server=http.createServer(async(request,response)=>{
     const readPost=async()=>{const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>4096)throw Object.assign(new Error('Too large'),{code:'VALIDATION_ERROR'});chunks.push(chunk)}return JSON.parse(Buffer.concat(chunks).toString('utf8'))};
     try{
       const org=profile.organisationId,storedGmail=mailTokenStore?.get(org),storedIcloud=mailTokenStore?.get(org+':icloud');
-      if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:storedGmail?.email||profile.accountEmails?.find(x=>x.endsWith('@gmail.com'))||null,configured:googleClientReady,connected:Boolean(storedGmail?.refreshToken)},icloud:{email:storedIcloud?.email||profile.accountEmails?.find(x=>x.endsWith('@icloud.com'))||null,configured:Boolean(mailTokenStore),connected:Boolean(storedIcloud?.appPassword)},readOnly:true});
+      if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:storedGmail?.email||profile.accountEmails?.[0]||null,configured:googleClientReady,connected:Boolean(storedGmail?.refreshToken)},icloud:{email:storedIcloud?.email||profile.accountEmails?.find(x=>x.endsWith('@icloud.com'))||null,configured:Boolean(mailTokenStore),connected:Boolean(storedIcloud?.appPassword)},readOnly:true});
       if(url.pathname==='/pilot/mail/google/connect'&&request.method==='GET'){
         if(!googleClientReady)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
-        const address=mailEmail(url.searchParams.get('email')||storedGmail?.email||profile.accountEmails?.find(x=>x.endsWith('@gmail.com')));
+        const address=mailEmail(url.searchParams.get('email')||storedGmail?.email||profile.accountEmails?.[0]);
         if(!address)return json(400,{error:'Gültige Gmail-Adresse erforderlich'});
         const access=gmailFor(profile,address);gmailPending.set(org,access);
         response.writeHead(303,{location:access.begin(session),'cache-control':'no-store'});return response.end();
