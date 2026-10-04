@@ -100,3 +100,11 @@ test('connection indicator reflects server reachability, not sync backlog',()=>{
   assert.match(html,/WerkZ verbunden · .*lokal offen/s);
   assert.doesNotMatch(html,/Offline · lokal gespeichert/);
 });
+
+
+test('legacy IndexedDB queue cannot block local order startup',()=>{
+  assert.match(html,/shortTimeout\(offlineAll\(\),800\)/);
+  assert.match(html,/shortTimeout\(offlineCacheGet\('route-plan'\),600\)/);
+  assert.match(html,/migrateQueuedVoiceOrders/);
+  assert.match(html,/localStorage\.setItem\(localOrderStorageKey\(\),JSON\.stringify\(rows\)\)/);
+});
