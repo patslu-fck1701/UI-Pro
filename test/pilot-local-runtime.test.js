@@ -392,6 +392,8 @@ test('runtime: Google Maps URL is generated for a local order and remains clicka
 
   assert.equal(context.mapsUrl('Alfeld'),
     'https://www.google.com/maps/dir/?api=1&destination=Alfeld&travelmode=driving');
+  assert.equal(context.mapsUrl('Bahnhofstraße 12, 31061 Alfeld'),
+    'https://www.google.com/maps/dir/?api=1&destination=Bahnhofstra%C3%9Fe%2012%2C%2031061%20Alfeld&travelmode=driving');
 
   await context.saveVoiceNote('morgen in Alfeld 2 tonnen schrott');
 
@@ -401,11 +403,4 @@ test('runtime: Google Maps URL is generated for a local order and remains clicka
   assert.match(routeHtml,/https:\/\/www\.google\.com\/maps\/dir\/\?api=1&amp;destination=Alfeld&amp;travelmode=driving/);
   assert.doesNotMatch(routeHtml,/target="_blank"/);
   assert.match(nextHtml,/GOOGLE MAPS STARTEN/);
-});
-
-test('runtime: Google Maps preserves full street destination encoding',()=>{
-  assert.equal(
-    globalThis.URL ? true : true,
-    true
-  );
 });
