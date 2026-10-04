@@ -17,8 +17,8 @@ const {
 
 class Auth{
   resolveSession(token){
-    if(token==='a')return {organisationId:'org-a',actorId:'a',capabilities:['pilot.read','pilot.write']};
-    if(token==='b')return {organisationId:'org-b',actorId:'b',capabilities:['pilot.read','pilot.write']};
+    if(token==='a')return {organisationId:'org-a',actorId:'a',role:'owner',capabilities:['pilot.read','pilot.write']};
+    if(token==='b')return {organisationId:'org-b',actorId:'b',role:'owner',capabilities:['pilot.read','pilot.write']};
     throw Object.assign(new Error('bad'),{code:'UNAUTHENTICATED'});
   }
 }
