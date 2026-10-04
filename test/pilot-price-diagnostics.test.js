@@ -50,7 +50,7 @@ function makeService({extractor,scrapPrices}={}){
 }
 
 function htmlFor(url){
-  if(url.endsWith('/')){
+  if(new URL(url).pathname==='/'){
     return '<h2>Stahl-Mischschrott / Scherenschrott (Sorte 3)</h2><p>€ 0,20 - € 0,30 / kg</p>'+
       '<h2>Kupfer Schwer (Neu / E-Kupfer)</h2><p>€ 7,50 - € 8,00 / kg</p>'+
       '<h2>Kupferkabel Datenkabel / Kabelbaum (&lt;40% Cu)</h2><p>€ 1,00 - € 2,00 / kg</p>'+
