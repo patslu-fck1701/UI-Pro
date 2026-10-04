@@ -99,3 +99,69 @@ test('wrong Christian code gets a precise error',async()=>{
   assert.equal(r.status,401);
   assert.match(r.body,/Zugangscode falsch\./);
 });
+
+
+test('login page without a tenant stays empty instead of defaulting to Dirk',async()=>{
+  const r=await request({path:'/pilot/login'});
+  assert.equal(r.status,200);
+  assert.match(r.body,/name="tenant" value=""/);
+  assert.doesNotMatch(r.body,/name="tenant" value="dirk"/);
+});
+
+test('logout from Christian returns to Christian login instead of Dirk',async()=>{
+  const loginBody=new URLSearchParams({
+    tenant:'Christian',
+    code:' chr-sfkpm99yt ',
+    return:'/pilot/'
+  }).toString();
+  const login=await request({method:'POST',path:'/pilot/login',body:loginBody});
+  assert.equal(login.status,303);
+  const cookie=String(login.headers['set-cookie']||'').split(';')[0];
+  assert.match(cookie,/werkz_session=/);
+
+  const logout=await new Promise((resolve,reject)=>{
+    const addr=server.address();
+    const req=http.request({
+      host:'127.0.0.1',
+      port:addr.port,
+      method:'GET',
+      path:'/pilot/logout',
+      headers:{cookie}
+    },res=>{
+      const chunks=[];
+      res.on('data',c=>chunks.push(c));
+      res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString('utf8')}));
+    });
+    req.on('error',reject);
+    req.end();
+  });
+  assert.equal(logout.status,303);
+  assert.equal(logout.headers.location,'/pilot/login?tenant=christian');
+
+  const form=await request({path:logout.headers.location});
+  assert.equal(form.status,200);
+  assert.match(form.body,/name="tenant" value="christian"/);
+  assert.doesNotMatch(form.body,/name="tenant" value="dirk"/);
+});
+
+test('logout redirect preserves whichever tenant was actually signed in',async()=>{
+  for(const tenant of ['christian','tester']){
+    const code=tenant==='christian'?'CHR-SFKPM99YT':'TST-QYJ453EVH';
+    const body=new URLSearchParams({tenant,code,return:'/pilot/'}).toString();
+    const login=await request({method:'POST',path:'/pilot/login',body});
+    assert.equal(login.status,303);
+    const cookie=String(login.headers['set-cookie']||'').split(';')[0];
+
+    const logout=await new Promise((resolve,reject)=>{
+      const addr=server.address();
+      const req=http.request({host:'127.0.0.1',port:addr.port,method:'GET',path:'/pilot/logout',headers:{cookie}},res=>{
+        const chunks=[];
+        res.on('data',c=>chunks.push(c));
+        res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString('utf8')}));
+      });
+      req.on('error',reject);
+      req.end();
+    });
+    assert.equal(logout.headers.location,'/pilot/login?tenant='+tenant);
+  }
+});
