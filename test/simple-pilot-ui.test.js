@@ -78,3 +78,25 @@ test('local orders are retried on app start, reconnect and foreground',()=>{
   assert.match(html,/addEventListener\('online'.*syncLocalVoiceOrders/s);
   assert.match(html,/visibilitychange.*syncLocalVoiceOrders/s);
 });
+
+
+test('iOS navigator.onLine never blocks WerkZ network attempts',()=>{
+  assert.doesNotMatch(html,/serverReachable\(\)\{if\(!navigator\.onLine\)/);
+  assert.doesNotMatch(html,/queueablePost\([^]*?if\(!navigator\.onLine\)/);
+  assert.doesNotMatch(html,/syncLocalVoiceOrders\(\)\{if\(!navigator\.onLine\)/);
+  assert.doesNotMatch(html,/syncOfflineQueue\(\)\{if\([^}]*!navigator\.onLine/);
+  assert.match(html,/fetch\('\/healthz\?ts='/);
+});
+
+test('local voice orders use tenant-scoped localStorage and fail truthfully',()=>{
+  assert.match(html,/werkzPilotLocalOrders::/);
+  assert.match(html,/localStorage\.setItem\(localOrderStorageKey\(\),JSON\.stringify\(rows\)\)/);
+  assert.match(html,/Lokaler Speicher fehlgeschlagen/);
+  assert.match(html,/await localOrderPut\(local\)/);
+});
+
+test('connection indicator reflects server reachability, not sync backlog',()=>{
+  assert.match(html,/dot\.classList\.toggle\('online',connected\)/);
+  assert.match(html,/WerkZ verbunden · .*lokal offen/s);
+  assert.doesNotMatch(html,/Offline · lokal gespeichert/);
+});
