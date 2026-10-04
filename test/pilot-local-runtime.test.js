@@ -133,6 +133,9 @@ test('runtime: voice order is stored and rendered with network completely down',
   assert.match(route.innerHTML,/alfeld/i);
   assert.ok(next);
   assert.match(next.innerHTML,/Mischschrott/);
+  assert.match(next.innerHTML,/AUFTRAG ERLEDIGT/);
+  assert.match(next.innerHTML,/data-complete-local=/);
+  assert.match(route.innerHTML,/AUFTRAG ERLEDIGT/);
 });
 
 
@@ -630,4 +633,99 @@ test('runtime: raw-text Maps fallback still performs real navigation',()=>{
   const opened=context.openMapsDestination(d);
   assert.equal(context.location.href,opened);
   assert.match(opened,/google\.com\/maps\/dir/);
+});
+
+
+test('runtime: local-only order can be completed without waiting for Render sync',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return '2000'},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await context.saveVoiceNote('morgen in Alfeld 2 tonnen Schrott');
+  const key='werkzPilotLocalOrders::slug:tester';
+  let rows=JSON.parse(localStorage.getItem(key)||'[]');
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].status,'open');
+  assert.match(elements.get('#nextJob').innerHTML,/AUFTRAG ERLEDIGT/);
+
+  await context.completeJob('',rows[0].material,rows[0].materialKey,rows[0].estimatedWeightKg,rows[0].id);
+  rows=JSON.parse(localStorage.getItem(key)||'[]');
+  assert.equal(rows[0].status,'completed');
+});
+
+test('runtime: server next job also renders Auftrag erledigt on Start',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async url=>{
+      if(String(url).includes('/pilot/api/route-plan'))return {ok:true,status:200,json:async()=>({stops:[{
+        id:'call-1',entityType:'call',name:'Kunde A',location:'Alfeld',material:'Mischschrott',materialKey:'mixed-scrap',
+        quantity:'1000 kg',estimatedWeightKg:1000,distanceKm:5,scheduledFor:'2026-10-05',source:'call',originalText:'',orders:[]
+      }]})};
+      throw new TypeError('offline');
+    },
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await new Promise(resolve=>setTimeout(resolve,10));
+  await context.routePlan();
+  assert.match(elements.get('#nextJob').innerHTML,/AUFTRAG ERLEDIGT/);
+  assert.match(elements.get('#nextJob').innerHTML,/data-complete-call="call-1"/);
+  assert.match(elements.get('#routePlan').innerHTML,/AUFTRAG ERLEDIGT/);
+});
+
+test('runtime: connected route opens one Google Maps route with multiple stops',()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const context={
+    console,localStorage:makeStorage({werkzPilotTenantSlug:'tester'}),sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('offline')},alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  const url=context.combinedMapsUrl(['Alfeld','Hildesheim','Hameln']);
+  assert.match(url,/destination=Hameln/);
+  assert.match(url,/waypoints=Alfeld%7CHildesheim/);
+  context.routeDestinations=['Alfeld','Hildesheim','Hameln'];
+  const opened=context.openCombinedRoute();
+  assert.equal(context.location.href,opened);
+  assert.equal(opened,url);
 });
