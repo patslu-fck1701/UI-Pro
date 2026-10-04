@@ -70,7 +70,7 @@ test('local-first voice sync is tenant-slug scoped and idempotent',()=>{
   assert.match(html,/function localOrderPutSync\(v\).*tenant:'slug:'\+tenantSlug.*tenantSlug:tenantSlug/s);
   assert.match(html,/clientMutationId:id/);
   assert.match(html,/clientMutationId:row\.clientMutationId\|\|row\.id/);
-  assert.match(html,/serverCallId:res&&res\.call&&res\.call\.id/);
+  assert.match(html,/async function applyVoiceCreateResult\(localId,res\)/);
   assert.match(html,/migrateQueuedVoiceOrders/);
 });
 
@@ -306,7 +306,7 @@ test('P0 tour blocks all stops when one lacks a target and preserves moved order
 });
 
 test('offline and backend target parsers agree for natural zu zum zur and address',()=>{
-  const vm=require('node:vm'),backend=require('../src/pilot'),start=html.indexOf('function offlineLocation('),end=html.indexOf('function localVoiceOrderFromText(',start);
+  const vm=require('node:vm'),backend=require('../src/pilot'),start=html.indexOf('function offlineFreeMaterial('),end=html.indexOf('function localVoiceOrderFromText(',start);
   const parse=vm.runInNewContext(html.slice(start,end)+';({offlineLocation,offlineFreeMaterial})');
   const cases=['Ich will zum Nordpol fahren und Schnee holen.','Ich möchte zum Nordpol.','Zum Nordpol fahren und Schnee holen.','Zum Weihnachtsmann an den Nordpol fahren.','Ich muss zur Firma Müller.','Ich fahre zu Meyer und hole Schrott.','Gallusanlage 7, 60329'];
   for(const raw of cases)assert.equal(parse.offlineLocation(raw),backend.parseOperationalNote(raw).location,raw);
