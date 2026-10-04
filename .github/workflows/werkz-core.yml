@@ -2,7 +2,7 @@ name: WerkZ Core CI
 
 on:
   push:
-    branches: [main, "codex/**"]
+    branches: [main, "codex/**", "test/mobile-assistant-render"]
   pull_request:
 
 permissions:
