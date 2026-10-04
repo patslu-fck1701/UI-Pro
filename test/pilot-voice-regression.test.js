@@ -270,3 +270,13 @@ test('voice diagnostics are opt-in, owner-only, tenant-scoped and redact secrets
   const result=s.deleteCall('a',n.call.id);rows=s.listVoiceDiagnostics('a');assert.equal(rows[0].syncStatus,'deleted');assert.deepEqual(rows[0].removedIds,[n.call.id,n.id,n.workItem.id]);assert.deepEqual(result.removedWorkItemIds,[n.workItem.id]);assert.equal(s.listVoiceDiagnostics('a').length,1);
   const off=svc();assert.throws(()=>off.listVoiceDiagnostics('a'),e=>e.code==='FORBIDDEN');
 });
+
+test('opt-in diagnostics inventories older orphaned voice work without deleting it',()=>{
+  const s=svc(),n=s.addNote('a','Ich will zum Nordpol fahren und Schnee holen.','pre-diagnostic');
+  s.repository.remove('org-a','calls',n.call.id);s.repository.remove('org-a','notes',n.id);
+  s.voiceDiagnosticOrganisationIds.add('org-a');
+  const rows=s.listVoiceDiagnostics('a');
+  assert.equal(rows.length,1);assert.equal(rows[0].syncStatus,'legacy-orphan');assert.equal(rows[0].workItemId,n.workItem.id);
+  assert.ok(s.repository.find('org-a','workItems',n.workItem.id));
+  assert.equal(s.routePlan('a').stops.length,0);
+});
