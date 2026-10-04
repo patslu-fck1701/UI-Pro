@@ -331,14 +331,14 @@ const server=http.createServer(async(request,response)=>{
     if(activeProfile&&requestedTenant&&requestedTenant!==activeSlug){
       response.setHeader('set-cookie',sessionCookie('werkz_session','',0));
     }
-    const tenant=requestedTenant||activeSlug||String(primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
+    const tenant=requestedTenant||activeSlug||'';
     return pilotLoginForm(response,{returnTo,tenant});
   }
   if(url.pathname==='/pilot/login'&&request.method==='POST'){
     const chunks=[];for await(const chunk of request)chunks.push(chunk);
     const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
     const returnTo=safeLocalReturn(params.get('return'),'/pilot/');
-    const tenant=String(params.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
+    const tenant=String(params.get('tenant')||'').trim().toLowerCase();
     const code=normalisePilotAccessCode(params.get('code'));
     const profile=pilotTenantBySlug.get(tenant);
     const expectedHash=profile?.loginCodeHash||null;
@@ -356,7 +356,10 @@ const server=http.createServer(async(request,response)=>{
     return response.end();
   }
   if(url.pathname==='/pilot/logout'&&request.method==='GET'){
-    response.writeHead(303,{location:'/pilot/login','set-cookie':sessionCookie('werkz_session','',0),'cache-control':'no-store'});
+    const activeProfile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));
+    const activeSlug=String(activeProfile?.publicSlug||'').trim().toLowerCase();
+    const location=activeSlug?'/pilot/login?tenant='+encodeURIComponent(activeSlug):'/pilot/login';
+    response.writeHead(303,{location,'set-cookie':sessionCookie('werkz_session','',0),'cache-control':'no-store'});
     return response.end();
   }
   if(url.pathname==='/test-profiles'&&request.method==='GET'){
