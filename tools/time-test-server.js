@@ -347,7 +347,7 @@ const server=http.createServer(async(request,response)=>{
     const expired=profileExpired(profile);
     const submittedHash=crypto.createHash('sha256').update(code).digest('hex');
     const valid=Boolean(profile&&!expired&&(expectedHash?sameSecret(submittedHash,expectedHash):(expected&&sameSecret(code,expected))));
-    process.stdout.write(JSON.stringify({kind:'pilot-login',tenant,profileFound:Boolean(profile),expired,success:valid,submittedHashPrefix:submittedHash.slice(0,8),expectedHashPrefix:expectedHash?expectedHash.slice(0,8):null})+'\\n');
+    process.stdout.write(JSON.stringify({kind:'pilot-login',tenant,profileFound:Boolean(profile),expired,success:valid})+'\\n');
     if(!valid){
       const message=!profile?'Betrieb nicht gefunden.':expired?'Testzugang ist abgelaufen.':'Zugangscode falsch.';
       return pilotLoginForm(response,{message,returnTo,tenant});
