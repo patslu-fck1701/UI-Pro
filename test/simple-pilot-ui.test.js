@@ -32,3 +32,20 @@ test('service worker update can reload for every new controller',()=>{
   assert.match(sw,/skipWaiting\(\)/);
   assert.match(sw,/clients\.claim\(\)/);
 });
+
+
+test('live scrap prices expose source, manual refresh and timed refresh',()=>{
+  assert.match(html,/id="priceMeta"/);
+  assert.match(html,/id="priceRefresh"/);
+  assert.match(html,/\?refresh=1/);
+  assert.match(html,/15\*60\*1000/);
+  assert.match(html,/Live.*Preisquelle|x\.live\?'Live':'Fallback'/s);
+});
+
+test('weigh-slip upload learns dealer prices and refreshes dependent calculations',()=>{
+  assert.match(html,/async function learnWeighSlip\(doc\)/);
+  assert.match(html,/sourceDocumentId:doc&&doc\.id/);
+  assert.match(html,/async function refreshAfterWeighSlip\(\)/);
+  assert.match(html,/dealerPrices\(\),vehicleLoad\(\),showDealerOptions\(\),dailyClose\(\)/);
+  assert.match(html,/Händlerpreis gelernt/);
+});
