@@ -253,8 +253,8 @@ test('Auftrag erledigt is rendered on Start, overview and local-first orders',()
   assert.match(html,/function completionButton\(o\)/);
   assert.match(html,/AUFTRAG ERLEDIGT/);
   assert.match(html,/data-complete-local=/);
-  assert.match(html,/bindCompletionButtons\(q\('#nextJob'\)\)/);
-  assert.match(html,/bindCompletionButtons\(q\('#routePlan'\)\)/);
+  assert.match(html,/bindOrderActionButtons\(q\('#nextJob'\)\)/);
+  assert.match(html,/bindOrderActionButtons\(q\('#routePlan'\)\)/);
   assert.match(html,/localOrderPatch\(localOrderId,\{status:'completed'/);
 });
 
@@ -263,7 +263,7 @@ test('Auftrag löschen is a permanent cross-platform core action',()=>{
   assert.match(html,/AUFTRAG LÖSCHEN/);
   assert.match(html,/function deleteOrderButton\(o\)/);
   assert.match(html,/function deleteOrder\(callId,localOrderId\)/);
-  assert.match(html,/\/calls\/\'+encodeURIComponent\(callId\)\+'\/delete/);
+  assert.match(html,/queueablePost\('\/calls\/'\+encodeURIComponent\(callId\)\+'\/delete'/);
   assert.match(html,/status:'deleted'/);
   assert.match(html,/x\.status!==\'completed\'&&x\.status!==\'deleted\'/);
   assert.match(html,/deletedCallStorageKey\(\)/);
