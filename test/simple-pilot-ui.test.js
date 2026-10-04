@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=20'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=21'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v20/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=20'/);
-  assert.match(sw,/werkz-simple-pilot-v20/);
+  assert.match(html,/· v21/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=21'/);
+  assert.match(sw,/werkz-simple-pilot-v21/);
 });
 
 
@@ -211,4 +211,16 @@ test('Direkt los stays removed because Google Maps is the only navigation action
 test('route merge keeps richer local address when server copy is blank',()=>{
   assert.match(html,/function enrichServerRow\(r\)/);
   assert.match(html,/copy\.location=copy\.location\|\|best\.location/);
+});
+
+
+test('mobile controls use shared cross-platform typography and button appearance',()=>{
+  assert.match(html,/button,input,textarea\{font-family:inherit;font-size:inherit;line-height:inherit\}/);
+  assert.match(html,/button\{-webkit-appearance:none;appearance:none\}/);
+});
+
+test('old server voice rows are reparsed before Maps rendering',()=>{
+  assert.match(html,/function repairRouteFields\(row\)/);
+  assert.match(html,/offlineLocation\(raw\)/);
+  assert.match(html,/serverRows=\(x\.stops\|\|\[\]\)\.map\(enrichServerRow\)/);
 });
