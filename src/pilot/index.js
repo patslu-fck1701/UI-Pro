@@ -122,6 +122,36 @@ class WerkZSimplePilotService{
   sessionInfo(token){const s=this.session(token);return {organisationId:s.organisationId,actorId:s.actorId,actorLabel:s.actorLabel||s.actorId,organisationLabel:s.organisationLabel||s.organisationId,publicSlug:s.publicSlug||null,role:s.role||'owner',modules:{cryptoMonitor:this.entitlements.isActive(s.organisationId,'werkz.crypto-monitor')}}}
   event(s,type,id,payload={}){this.audit({organisationId:s.organisationId,actorId:s.actorId,eventType:type,entityType:'pilot',entityId:id,source:'werkz.simple',payload})}
   summary(token){const s=this.session(token),calls=this.repository.list(s.organisationId,'calls'),docs=this.repository.list(s.organisationId,'documents'),missing=this.missingDocumentsForSession(s),load=this.repository.list(s.organisationId,'vehicleLoad'),customers=this.repository.list(s.organisationId,'customers');const m=this.clock().toISOString().slice(0,7);return {open:calls.filter(x=>x.status!=='erledigt').length,callbacks:calls.filter(x=>x.status==='neu'||x.status==='Rückruf').length,documentsThisMonth:docs.filter(x=>x.receivedAt.slice(0,7)===m).length,missingDocuments:missing.length,vehicleWeightKg:money(load.reduce((n,x)=>n+(Number(x.weightKg)||0),0)),customers:customers.length}}
+  createInquiryRow(organisationId,input={}){
+    const now=this.clock().toISOString();
+    const topic=String(input.topic||input.anliegen||input.reason||'').trim().slice(0,1200);
+    const material=String(input.material||input.materialLabel||'').trim().slice(0,160);
+    const estimatedRaw=input.estimatedWeightKg??input.weightKg;
+    const estimatedWeightKg=estimatedRaw==null||estimatedRaw===''?null:money(estimatedRaw);
+    const distanceRaw=input.distanceKm;
+    const distanceKm=distanceRaw==null||distanceRaw===''?null:money(distanceRaw);
+    return {
+      id:uid('call'),
+      organisationId:req(organisationId,'organisationId'),
+      createdAt:now,
+      updatedAt:now,
+      customerId:input.customerId||null,
+      source:String(input.source||'manual').trim().slice(0,80)||'manual',
+      sourceNoteId:input.sourceNoteId||null,
+      name:String(input.name||input.contactName||'Unbekannt').trim().slice(0,160)||'Unbekannt',
+      phone:String(input.phone||'').trim().slice(0,80),
+      location:String(input.location||input.address||'').trim().slice(0,240),
+      topic,
+      category:String(input.category||classifyInquiry({topic,material})).trim().slice(0,80),
+      status:String(input.status||'neu').trim().slice(0,40),
+      material,
+      materialKey:String(input.materialKey||'').trim().slice(0,120),
+      quantity:String(input.quantity||'').trim().slice(0,160),
+      estimatedWeightKg,
+      distanceKm,
+      scheduledFor:input.scheduledFor?String(input.scheduledFor).slice(0,40):null
+    };
+  }
   async recordCall(token,input={}){const s=this.session(token,'pilot.write'),x=input.providerPayload?await this.voice.accept({payload:input.providerPayload}):input,row=this.createInquiryRow(s.organisationId,x);if(row.name&&row.name!=='Unbekannt'&&row.name!=='Sprachnotiz'){const customer=this.upsertCustomerRow(s,{name:row.name,phone:row.phone,location:row.location,material:row.material,preserveExistingLocation:true});row.customerId=customer.id;row.phone=row.phone||customer.phone||'';row.location=row.location||customer.location||''}this.repository.add('calls',row);this.event(s,'pilot.call.created',row.id,{source:row.source,customerId:row.customerId||null});return row}
   publicInquiry(organisationId,input={}){if(input.company)throw Object.assign(new Error('spam denied'),{code:'SPAM_DENIED'});if(input.consent!==true)throw Object.assign(new Error('consent required'),{code:'VALIDATION_ERROR'});const clean={name:req(input.name,'name'),phone:req(input.phone,'phone'),topic:req(input.topic||input.reason,'topic'),location:String(input.location||input.address||'').trim(),material:String(input.material||'').trim(),quantity:String(input.quantity||'').trim(),source:'website-contact'},s={organisationId:req(organisationId,'organisationId')},customer=this.upsertCustomerRow(s,{name:clean.name,phone:clean.phone,location:clean.location,material:clean.material,preserveExistingLocation:true}),row=this.createInquiryRow(s.organisationId,{...clean,customerId:customer.id,location:clean.location||customer.location,phone:clean.phone||customer.phone});this.repository.add('calls',row);this.audit({organisationId:row.organisationId,actorId:'public-website',eventType:'pilot.public-inquiry.created',entityType:'pilot',entityId:row.id,source:'werkz.simple',payload:{source:row.source,customerId:customer.id}});return {id:row.id,status:row.status,received:true,customerId:customer.id}}
   listCalls(token){const s=this.session(token);return this.repository.list(s.organisationId,'calls').sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}
@@ -268,7 +298,7 @@ function createPilotHttpHandler({service,defaultTaxRecipient='steuerberater@exam
     else if(reqr.method==='GET'&&url.pathname==='/pilot/api/scrap-prices')sendJson(res,200,await service.scrapPriceSnapshot(token));
     else sendJson(res,404,{error:'NOT_FOUND'});
     return true
-  }catch(e){sendJson(res,status(e),{error:e.code||'ERROR',message:e.code==='VALIDATION_ERROR'?e.message:'Request failed'});return true}}
+  }catch(e){process.stdout.write(JSON.stringify({kind:'pilot-api-error',method:reqr.method,path:url.pathname,code:e&&e.code||'ERROR',message:String(e&&e.message||'Request failed').slice(0,300)})+'\\n');sendJson(res,status(e),{error:e.code||'ERROR',message:e.code==='VALIDATION_ERROR'?e.message:'Request failed'});return true}}
 }
 
 function parseSnapshot(value){if(!value)return {};try{const x=JSON.parse(value);return x&&typeof x==='object'?x:{}}catch{return {}}}
