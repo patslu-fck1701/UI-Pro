@@ -291,10 +291,22 @@ test('calculator transfer creates one normal tenant-scoped call with planned pay
   assert.equal(row.sourcePickupEstimateId,estimate.id);assert.equal(s.routePlan('a').stops[0].id,row.id);
   assert.equal(s.monthlyEconomics('a','2026-10').pickupPayoutEur,0);assert.equal(s.listCashEntries('a').length,0);
   assert.equal(s.listCalls('b').length,0);
-  await assert.rejects(s.recordCall('b',payload),e=>e.code==='VALIDATION_ERROR');
+  const other=await s.recordCall('b',{...payload,name:'Tenant B'});assert.notEqual(other.id,row.id);assert.equal(other.organisationId,'org-b');assert.equal(other.sourcePickupEstimateId,null);assert.equal(s.listCalls('b').length,1);
   s.deleteCall('a',row.id);assert.equal(s.routePlan('a').stops.length,0);
   await assert.rejects(s.recordCall('a',payload),e=>e.code==='CONFLICT');
 });
+test('calculator retry dedupes from persisted call even if mutation marker is missing',async()=>{
+  const s=svc(),payload={clientMutationId:'calc-marker-gap',source:'pickup-calculator',category:'Abholung',name:'Kunde',location:'Alfeld',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:250,distanceKm:9,plannedCustomerPayoutEur:20};
+  const first=await s.recordCall('a',payload);s.repository.remove('org-a','callMutations',payload.clientMutationId);assert.equal(s.repository.list('org-a','callMutations').length,0);
+  const replay=await s.recordCall('a',payload);assert.equal(replay.id,first.id);assert.equal(replay.replayed,true);assert.equal(s.listCalls('a').length,1);assert.equal(s.repository.list('org-a','callMutations').length,1);
+});
+test('calculator order keeps optional estimate reference only when it belongs to the current tenant',async()=>{
+  const s=svc(),base={source:'pickup-calculator',category:'Abholung',name:'Kunde',location:'Alfeld',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:100,distanceKm:7};
+  const stale=await s.recordCall('a',{...base,clientMutationId:'calc-stale-estimate',sourcePickupEstimateId:'pickup-missing'});assert.equal(stale.sourcePickupEstimateId,null);
+  const estimate={id:'pickup-owned',organisationId:'org-a',createdAt:'2026-10-04T08:00:00Z'};s.repository.add('pickupEstimates',estimate);
+  const linked=await s.recordCall('a',{...base,clientMutationId:'calc-owned-estimate',sourcePickupEstimateId:estimate.id});assert.equal(linked.sourcePickupEstimateId,estimate.id);
+});
+
 test('calculator transfer requires a usable destination before creating any call',async()=>{
   const s=svc(),base={clientMutationId:'calc-no-target',source:'pickup-calculator',category:'Abholung',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:100,distanceKm:7};
   await assert.rejects(s.recordCall('a',base),e=>e.code==='VALIDATION_ERROR');
