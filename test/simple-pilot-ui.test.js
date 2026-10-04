@@ -24,10 +24,11 @@ test('local voice orders survive server loss and are merged into the route plan'
   assert.match(html,/auf diesem Gerät gespeichert/);
 });
 
-test('logout stays visible while server sync failures do not delete local orders',()=>{
+test('logout stays visible while server sync failures keep the local order',()=>{
   assert.match(html,/class="logoutbtn" href="\/pilot\/logout">Abmelden</);
-  assert.match(html,/Server-Sync später/);
+  assert.match(html,/Auf dem Gerät gespeichert/);
   assert.match(html,/syncLocalVoiceOrders/);
+  assert.doesNotMatch(html,/localStorage\.removeItem\(localOrderStorageKey\(\)\)/);
 });
 
 test('service worker update can reload for every new controller',()=>{
