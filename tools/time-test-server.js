@@ -37,7 +37,8 @@ const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
 const actorLabel=process.env.WERKZ_TEST_ACTOR_LABEL||'Manager';
 const primarySessionToken=runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
-const primaryPilotSessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim()||crypto.createHmac('sha256',primarySessionToken).update('werkz-pilot-primary').digest('base64url');
+const primaryPilotSessionSeed=String(process.env.WERKZ_PILOT_LOGIN_CODE_SHA256||process.env.WERKZ_PILOT_LOGIN_CODE||'').trim();
+const primaryPilotSessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim()||(primaryPilotSessionSeed?crypto.createHmac('sha256',primaryPilotSessionSeed).update('werkz-pilot-primary-session').digest('base64url'):crypto.createHmac('sha256',primarySessionToken).update('werkz-pilot-primary').digest('base64url'));
 function parseExtraPilotTenants(){
   const raw=process.env.WERKZ_PILOT_TENANTS_JSON;
   if(!raw)return [];
