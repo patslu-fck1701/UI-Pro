@@ -112,3 +112,17 @@ test('specific materials win over generic scrap words',()=>{
   assert.equal(s.addNote('a','Kupferkabel 100 kg in alfeld','voice-material-2').call.materialKey,'cable');
   assert.equal(s.addNote('a','Schwerschrott 100 kg in alfeld','voice-material-3').call.materialKey,'grade-3');
 });
+
+
+test('reconcile reparses existing voice orders with missing material and location',()=>{
+  const s=svc();
+  const note=s.addNote('a','morgen 2500 kilo eisenschrott in alfeld abholen','voice-old-1');
+  s.repository.update('org-a','calls',note.call.id,{materialKey:'',material:'',location:''});
+  const result=s.reconcileContacts('a');
+  const call=s.listCalls('a').find(x=>x.id===note.call.id);
+  assert.ok(result.reparsedCalls>=1);
+  assert.equal(call.materialKey,'mixed-scrap');
+  assert.equal(call.material,'Mischschrott');
+  assert.equal(call.location,'alfeld');
+  assert.equal(result.createdCustomers,0);
+});
