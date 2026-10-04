@@ -914,6 +914,14 @@ test('runtime: calculator transfer is local-first, deduplicated and routes as no
   let created=0;context.fetch=async url=>{const u=String(url);if(u.includes('/pilot/api/calls')){created++;return {ok:true,status:201,json:async()=>({id:'call-calc',location:'Gallusanlage 7, 60329'})}}return {ok:true,status:200,json:async()=>({})}};
   await context.syncLocalVoiceOrders();await context.syncLocalVoiceOrders();assert.equal(created,1);
   const synced=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');assert.equal(synced[0].serverCallId,'call-calc');
+
+  getEl('#pickupOrderLocation').value='ALTE ADRESSE';getEl('#pickupOrderName').value='Alter Kunde';getEl('#pickupOrderPhone').value='0999';getEl('#pickupOrderDate').value='2026-10-06';
+  getEl('#pickupWeight').value='300';getEl('#pickupKm').value='5';getEl('#pickupPay').value='10';
+  let secondCreated=0;context.fetch=async url=>{const u=String(url);if(u.includes('/pilot/api/pickup-estimates'))return {ok:true,status:201,json:async()=>({id:'estimate-2',materialKey:'grade-3',weightKg:300,distanceKm:5,customerPayoutEur:10,decision:'lohnt',gross:150,grossLow:140,grossHigh:160,driveCost:4,handlingCostEur:15,roundTripKm:10,maxCustomerPayout:60,expectedProfit:40,loadPct:25,priceSource:'Test'})};if(u.includes('/pilot/api/calls')){secondCreated++;return {ok:true,status:201,json:async()=>({id:'call-calc-2',location:'Nordpol'})}}return {ok:true,status:200,json:async()=>({})}};
+  await context.pickupCalc();assert.equal(getEl('#pickupOrderSave').disabled,false);assert.equal(getEl('#pickupOrderSave').textContent,'AUFTRAG SPEICHERN');
+  context.openPickupOrderTakeover();assert.equal(getEl('#pickupOrderLocation').value,'');assert.equal(getEl('#pickupOrderName').value,'');assert.equal(getEl('#pickupOrderPhone').value,'');assert.equal(getEl('#pickupOrderDate').value,'');
+  getEl('#pickupOrderLocation').value='Nordpol';getEl('#pickupOrderName').value='Weihnachtsmann';assert.equal(await context.savePickupOrder(),true);assert.equal(secondCreated,1);
+  const two=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');assert.equal(two.length,2);assert.equal(two[1].location,'Nordpol');assert.equal(two[1].plannedCustomerPayoutEur,10);
 });
 
 test('runtime: successful server response keeps remotely deleted synced call out of tour',async()=>{
