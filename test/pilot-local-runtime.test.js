@@ -884,3 +884,31 @@ test('runtime: Android voice button blurs the focused search field and saves Sor
   assert.equal(search.value,'Kyiv, Ukraine, 03115');
   assert.match(elements.get('#nextJob').innerHTML,/Sorte 3/);
 });
+
+test('runtime: calculator transfer is local-first, deduplicated and routes as normal call',async()=>{
+  const elements=new Map(),getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({werkzPilotTenantScope:'slug:tester',werkzPilotTenantSlug:'tester',werkzPilotPage:'home'});
+  const context={console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('offline')},alert(){},confirm(){return true},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null};
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  context.scrapRows=[{key:'grade-3',label:'Sorte 3'}];
+  context.lastPickupEstimate={id:'estimate-1',materialKey:'grade-3',weightKg:500,distanceKm:18,customerPayoutEur:40};
+  assert.equal(JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]').length,0);
+  context.openPickupOrderTakeover();assert.equal(JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]').length,0);
+  assert.equal(await context.savePickupOrder(),false);assert.match(getEl('#pickupOrderError').textContent,/Adresse oder Ort/);
+  getEl('#pickupOrderLocation').value='Gallusanlage 7, 60329';getEl('#pickupOrderName').value='Kunde Eins';getEl('#pickupOrderPhone').value='01234';getEl('#pickupOrderDate').value='2026-10-05';
+  const results=await Promise.all([context.savePickupOrder(),context.savePickupOrder()]);assert.equal(results.filter(Boolean).length,1);
+  const rows=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');assert.equal(rows.length,1);
+  assert.equal(rows[0].manualPayload.materialKey,'grade-3');assert.equal(rows[0].manualPayload.estimatedWeightKg,500);assert.equal(rows[0].manualPayload.distanceKm,18);assert.equal(rows[0].manualPayload.plannedCustomerPayoutEur,40);
+  assert.match(getEl('#nextJob').innerHTML,/Gallusanlage 7, 60329/);assert.match(getEl('#tourList').innerHTML,/Gallusanlage 7, 60329/);
+  const loaded=context.localVoiceStopsSync();assert.equal(loaded.length,1);assert.equal(loaded[0].source,'pickup-calculator-local');
+  let created=0;context.fetch=async url=>{const u=String(url);if(u.includes('/pilot/api/calls')){created++;return {ok:true,status:201,json:async()=>({id:'call-calc',location:'Gallusanlage 7, 60329'})}}return {ok:true,status:200,json:async()=>({})}};
+  await context.syncLocalVoiceOrders();await context.syncLocalVoiceOrders();assert.equal(created,1);
+  const synced=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');assert.equal(synced[0].serverCallId,'call-calc');
+});
