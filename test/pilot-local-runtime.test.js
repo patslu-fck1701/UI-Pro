@@ -171,3 +171,50 @@ test('runtime: tenant slug from URL wins before delayed session response',async(
   assert.match(elements.get('#routePlan').innerHTML,/alfeld/i);
   if(sessionResolve)sessionResolve();
 });
+
+
+test('runtime: SpeechRecognition interim transcript is saved when recognition ends',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  let recognitionInstance=null;
+  class FakeRecognition{
+    constructor(){recognitionInstance=this;this.lang='';this.interimResults=false;this.continuous=false;this.maxAlternatives=1}
+    start(){if(this.onstart)this.onstart()}
+    stop(){if(this.onend)this.onend()}
+  }
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:FakeRecognition};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  const btn=elements.get('#noteBtn');
+  assert.ok(btn&&typeof btn.onclick==='function');
+  btn.onclick();
+  assert.ok(recognitionInstance);
+  const result=[{transcript:'morgen 2500 kilo eisenschrott in alfeld abholen'}];
+  result.isFinal=false;
+  recognitionInstance.onresult({resultIndex:0,results:[result]});
+  recognitionInstance.onend();
+  await new Promise(resolve=>setTimeout(resolve,10));
+  const stored=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');
+  assert.equal(stored.length,1);
+  assert.equal(stored[0].location,'alfeld');
+  assert.equal(stored[0].estimatedWeightKg,2500);
+  assert.match(elements.get('#voiceLast').textContent,/2500 kilo eisenschrott/i);
+  assert.match(elements.get('#routePlan').innerHTML,/Sprachauftrag/);
+});
