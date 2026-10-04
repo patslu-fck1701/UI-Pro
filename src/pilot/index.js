@@ -37,18 +37,21 @@ function normalizeContactText(value=''){return String(value||'').normalize('NFKC
 function notePhone(text=''){const m=String(text||'').match(/(?:\+49|0049|0)\s*(?:\d[\s\/().-]*){6,14}\d/);return m?m[0].replace(/\s+/g,' ').trim():''}
 function noteLocation(text=''){
   const s=String(text||'').trim();
-  const street=s.match(/\b([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .'-]{1,55}(?:straße|strasse|str\.?|weg|platz|allee|gasse|ring|damm|chaussee)\s+\d+[a-zA-Z]?(?:\s*,?\s*\d{5}\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .'-]{1,40})?)/i);
-  if(street)return street[1].replace(/\s+/g,' ').trim();
-  const postal=s.match(/\b(\d{5}\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*(?:\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*){0,2})\b/);
-  if(postal)return postal[1].replace(/\s+/g,' ').trim();
   const stop='(?:[,.;]|$|bei\\b|abholen|holen|einsammeln|mitnehmen|fahren|morgen|übermorgen|heute|am\\s+\\d|\\d+(?:[.,]\\d+)?(?:\\s*(?:kg|kilo(?:gramm)?|t|tonne[n]?|schrott|schritt(?:e|en)?|schrotte?))?|sorte\\s*3|schwerschrott|misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|blech(?:schrott)?|altmetall|schrott|alu(?:minium)?|kupfer|messing|kabel|elektromotor|motoren?|batterie|akku|v\\s*[24]\\s*a|zink|blei)';
+  const full=new RegExp('\\b([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .\\\'-]{0,55}(?:straße|strasse|str\\.?|weg|platz|allee|gasse|ring|damm|chaussee))\\s*[,;:-]?\\s*(?:haus(?:nummer|nr\\.?)\\s*[:,-]?\\s*)?(\\d+[a-zA-Z]?)\\s*[,;:-]?\\s*(?:(?:postleitzahl|plz)\\s*[:,-]?\\s*)?(\\d{5})\\s*[,;:-]?\\s*(?:(?:ort)\\s*[:,-]?\\s*)?([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*(?:\\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*){0,3}?)(?=\\s*'+stop+')','i');
+  const fm=s.match(full);
+  if(fm)return (fm[1]+' '+fm[2]+', '+fm[3]+' '+fm[4]).replace(/\\s+/g,' ').trim();
+  const street=s.match(/\\b([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .'-]{0,55}(?:straße|strasse|str\\.?|weg|platz|allee|gasse|ring|damm|chaussee))\\s*[,;:-]?\\s*(?:haus(?:nummer|nr\\.?)\\s*[:,-]?\\s*)?(\\d+[a-zA-Z]?)(?:\\s*[,;:-]?\\s*(?:(?:postleitzahl|plz)\\s*[:,-]?\\s*)?(\\d{5})\\s*[,;:-]?\\s*(?:(?:ort)\\s*[:,-]?\\s*)?([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*(?:\\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*){0,3}))?/i);
+  if(street)return (street[1]+' '+street[2]+(street[3]&&street[4]?', '+street[3]+' '+street[4]:'')).replace(/\\s+/g,' ').trim();
+  const postal=s.match(/\\b(?:postleitzahl|plz)?\\s*[:,-]?\\s*(\\d{5})\\s*[,;:-]?\\s*(?:ort\\s*[:,-]?\\s*)?([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*(?:\\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*){0,2})\\b/i);
+  if(postal)return (postal[1]+' '+postal[2]).replace(/\\s+/g,' ').trim();
   const explicit=new RegExp('\\b(?:adresse|anschrift|ort)\\s*[:,-]?\\s*([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*(?:\\s+[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*){0,3}?)(?=\\s*'+stop+')','i');
   const explicitMatch=s.match(explicit);
-  if(explicitMatch)return explicitMatch[1].replace(/\s+/g,' ').trim();
+  if(explicitMatch)return explicitMatch[1].replace(/\\s+/g,' ').trim();
   for(const prep of ['in','nach','aus','von']){
     const re=new RegExp('\\b'+prep+'\\s+([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*(?:\\s+[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*){0,3}?)(?=\\s*'+stop+')','i');
     const m=s.match(re);
-    if(m)return m[1].replace(/\s+/g,' ').trim();
+    if(m)return m[1].replace(/\\s+/g,' ').trim();
   }
   return '';
 }
