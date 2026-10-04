@@ -64,7 +64,7 @@ test('runtime: voice order is stored and rendered with network completely down',
   const elements=new Map();
   const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
   const localStorage=makeStorage({
-    werkzPilotTenantScope:'org-schrotties-test-1',
+    werkzPilotTenantScope:'slug:tester',
     werkzPilotTenantLabel:'Tester',
     werkzPilotTenantSlug:'tester',
     werkzPilotPage:'jobs'
@@ -81,9 +81,10 @@ test('runtime: voice order is stored and rendered with network completely down',
       addEventListener(){}
     },
     navigator:{},
-    location:{href:'https://example.invalid/pilot/'},
+    location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},
     history:{},
     URL,
+    URLSearchParams,
     AbortController,
     crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
     fetch:async()=>{throw new TypeError('Load failed')},
@@ -116,7 +117,7 @@ test('runtime: voice order is stored and rendered with network completely down',
   await new Promise(resolve=>setTimeout(resolve,10));
   await context.saveVoiceNote('morgen 2500 kilo eisenschrott in alfeld abholen');
 
-  const key='werkzPilotLocalOrders::org-schrotties-test-1';
+  const key='werkzPilotLocalOrders::slug:tester';
   const stored=JSON.parse(localStorage.getItem(key)||'[]');
   assert.equal(stored.length,1);
   assert.equal(stored[0].materialKey,'mixed-scrap');
@@ -132,4 +133,41 @@ test('runtime: voice order is stored and rendered with network completely down',
   assert.match(route.innerHTML,/alfeld/i);
   assert.ok(next);
   assert.match(next.innerHTML,/Mischschrott/);
+});
+
+
+test('runtime: tenant slug from URL wins before delayed session response',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:dirk',
+    werkzPilotTenantLabel:'Alt',
+    werkzPilotTenantSlug:'dirk',
+    werkzPilotPage:'jobs'
+  });
+  let sessionResolve;
+  const fetch=async url=>{
+    if(String(url).includes('/pilot/api/session'))return new Promise(resolve=>{sessionResolve=()=>resolve({ok:true,status:200,json:async()=>({organisationId:'org-schrotties-test-1',organisationLabel:'Tester',publicSlug:'tester',modules:{}})})});
+    throw new TypeError('Load failed');
+  };
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){}},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},fetch,
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await context.saveVoiceNote('morgen 2500 kilo eisenschrott in alfeld abholen');
+  const key='werkzPilotLocalOrders::slug:tester';
+  const stored=JSON.parse(localStorage.getItem(key)||'[]');
+  assert.equal(stored.length,1);
+  assert.equal(stored[0].tenantSlug,'tester');
+  assert.match(elements.get('#routePlan').innerHTML,/alfeld/i);
+  if(sessionResolve)sessionResolve();
 });
