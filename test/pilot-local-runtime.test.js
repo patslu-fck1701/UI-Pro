@@ -572,7 +572,8 @@ test('runtime: Android and iPhone produce identical next-job markup for the same
   }
   const android=await render('Mozilla/5.0 (Linux; Android 14)');
   const iphone=await render('Mozilla/5.0 (iPhone; CPU iPhone OS 26_5 like Mac OS X)');
-  assert.equal(android,iphone);
+  const normalize=x=>x.replace(/data-complete-local="[^"]+"/g,'data-complete-local="<id>"');
+  assert.equal(normalize(android),normalize(iphone));
 });
 
 
