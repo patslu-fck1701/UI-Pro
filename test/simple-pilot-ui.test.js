@@ -20,7 +20,7 @@ test('local voice orders survive server loss and are merged into the route plan'
   assert.match(html,/createObjectStore\('localOrders'/);
   assert.match(html,/async function localVoiceStops\(\)/);
   assert.match(html,/serverRows\.concat\(local\)/);
-  assert.match(html,/!r\.serverCallId\|\|!serverIds\.has\(r\.serverCallId\)/);
+  assert.match(html,/!r\.serverCallId\|\|!serverRouteLoaded&&\!serverIds\.has\(r\.serverCallId\)/);
   assert.match(html,/auf diesem Gerät gespeichert/);
 });
 
@@ -336,4 +336,9 @@ test('calculator transfer stays explicit and uses normal local order and call sy
   assert.match(html,/await api\('\/calls'/);
   assert.match(html,/row.manualPayload\?await api\('\/calls'/);
   assert.match(html,/pickupOrderSaving\|\|pickupOrderSavedId/);
+});
+
+test('successful server tour response cannot resurrect synced local call absent on server',()=>{
+  assert.match(html,/serverRouteLoaded=true/);
+  assert.match(html,/!r.serverCallId\|\|!serverRouteLoaded&&\!serverIds.has\(r.serverCallId\)/);
 });
