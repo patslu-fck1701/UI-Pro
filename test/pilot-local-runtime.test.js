@@ -574,6 +574,8 @@ test('runtime: Android and iPhone produce identical next-job markup for the same
   const iphone=await render('Mozilla/5.0 (iPhone; CPU iPhone OS 26_5 like Mac OS X)');
   const normalize=x=>x.replace(/data-complete-local="[^"]+"/g,'data-complete-local="<id>"');
   assert.equal(normalize(android),normalize(iphone));
+  assert.match(android,/AUFTRAG LÖSCHEN/);
+  assert.match(iphone,/AUFTRAG LÖSCHEN/);
 });
 
 
@@ -729,4 +731,93 @@ test('runtime: connected route opens one Google Maps route with multiple stops',
   const opened=context.openCombinedRoute();
   assert.equal(context.location.href,opened);
   assert.equal(opened,url);
+});
+
+
+test('runtime: deleting a local-only order hides it immediately and prevents later resync',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  let noteAttempts=0;
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async url=>{if(String(url).includes('/pilot/api/notes'))noteAttempts++;throw new TypeError('offline')},
+    alert(){},confirm(){return true},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  await context.saveVoiceNote('morgen in Alfeld 2 tonnen Schrott');
+  let rows=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');
+  assert.equal(rows.length,1);
+  assert.match(elements.get('#nextJob').innerHTML,/AUFTRAG LÖSCHEN/);
+  const id=rows[0].id;
+
+  await context.deleteOrder('',id);
+  rows=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');
+  assert.equal(rows[0].status,'deleted');
+  assert.match(elements.get('#nextJob').innerHTML,/Keine offenen Aufträge/);
+
+  noteAttempts=0;
+  const sent=await context.syncLocalVoiceOrders();
+  assert.equal(sent,0);
+  assert.equal(noteAttempts,0);
+});
+
+test('runtime: deleting a server order posts delete endpoint and removes it from Start and overview',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  let deleted=false,deletePosts=0;
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async (url,opts)=>{
+      const u=String(url);
+      if(u.includes('/pilot/api/calls/call-delete/delete')){deletePosts++;deleted=true;return {ok:true,status:200,json:async()=>({deleted:true,id:'call-delete'})}}
+      if(u.includes('/pilot/api/route-plan'))return {ok:true,status:200,json:async()=>({stops:deleted?[]:[{
+        id:'call-delete',entityType:'call',name:'Kunde',location:'Alfeld',material:'Mischschrott',materialKey:'mixed-scrap',
+        quantity:'1000 kg',estimatedWeightKg:1000,distanceKm:5,scheduledFor:'2026-10-05',source:'call',originalText:'',orders:[]
+      }]})};
+      if(u.includes('/healthz'))return {ok:true,status:200,json:async()=>({ok:true})};
+      if(u.includes('/pilot/api/summary'))return {ok:true,status:200,json:async()=>({open:0,callbacks:0,missingDocuments:0})};
+      if(u.includes('/pilot/api/calls'))return {ok:true,status:200,json:async()=>[]};
+      if(u.includes('/pilot/api/documents'))return {ok:true,status:200,json:async()=>[]};
+      if(u.includes('/pilot/api/daily-summary'))return {ok:true,status:200,json:async()=>({date:'2026-10-04',completedJobs:0,documents:0,missingDocuments:0,dealerRevenueEur:0,incomeNotesEur:0,expensesEur:0,privateEur:0,knownResultEur:0})};
+      throw new TypeError('offline');
+    },
+    alert(){},confirm(){return true},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  await new Promise(resolve=>setTimeout(resolve,10));
+  await context.routePlan();
+  assert.match(elements.get('#nextJob').innerHTML,/AUFTRAG LÖSCHEN/);
+
+  await context.deleteOrder('call-delete','');
+  assert.equal(deletePosts,1);
+  assert.match(elements.get('#nextJob').innerHTML,/Keine offenen Aufträge/);
+  assert.equal(elements.get('#routePlan').innerHTML,'Keine offenen Aufträge.');
 });
