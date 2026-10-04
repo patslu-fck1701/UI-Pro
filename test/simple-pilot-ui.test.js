@@ -49,3 +49,11 @@ test('weigh-slip upload learns dealer prices and refreshes dependent calculation
   assert.match(html,/dealerPrices\(\),vehicleLoad\(\),showDealerOptions\(\),dailyClose\(\)/);
   assert.match(html,/Händlerpreis gelernt/);
 });
+
+
+test('stale session responses redirect to the correct tenant login',()=>{
+  assert.match(html,/d\.error==='UNAUTHENTICATED'/);
+  assert.match(html,/VALIDATION_ERROR.*session required/s);
+  assert.match(html,/\/pilot\/login\?tenant=/);
+  assert.match(html,/tenantSlug/);
+});
