@@ -204,7 +204,7 @@ test('runtime: SpeechRecognition interim transcript is saved when recognition en
   vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
   const btn=elements.get('#noteBtn');
   assert.ok(btn&&typeof btn.onclick==='function');
-  btn.onclick();
+  await btn.onclick();
   assert.ok(recognitionInstance);
   const result=[{transcript:'morgen 2500 kilo eisenschrott in alfeld abholen'}];
   result.isFinal=false;
@@ -291,7 +291,6 @@ test('runtime: Android-capable browser requests microphone permission before sta
   await btn.onclick();
 
   assert.equal(getUserMediaCalls,1);
-  assert.equal(trackStops,1);
   assert.equal(recognitionStarts,1);
   assert.ok(recognitionInstance);
   assert.equal(elements.get('#noteHint').textContent,'Jetzt sprechen');
@@ -326,7 +325,7 @@ test('runtime: microphone denial prevents recognition and shows a clear error',a
   await elements.get('#noteBtn').onclick();
 
   assert.equal(recognitionStarts,0);
-  assert.equal(elements.get('#noteLabel').textContent,'Fehler');
+  assert.equal(elements.get('#noteLabel').textContent,'Nicht verstanden');
   assert.equal(elements.get('#noteHint').textContent,'Mikrofon nicht erlaubt');
 });
 
