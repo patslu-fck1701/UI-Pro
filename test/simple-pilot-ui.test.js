@@ -119,10 +119,11 @@ test('inline Schrotties app JavaScript parses successfully',()=>{
 
 test('voice order is rendered locally before any network sync',()=>{
   const save=html.indexOf('async function saveVoiceNote');
-  const put=html.indexOf('await localOrderPut(local)',save);
-  const render=html.indexOf('renderLocalOrdersNow(localRows)',save);
+  const put=html.indexOf('localOrderPutSync(local)',save);
+  const render=html.indexOf('renderLocalOrdersNow(localVoiceStopsSync())',save);
   const post=html.indexOf("queueablePost('/notes'",save);
-  assert.ok(save>=0&&put>save&&render>put&&post>render);
+  const firstAwait=html.indexOf('await ',save);
+  assert.ok(save>=0&&put>save&&render>put&&post>render&&firstAwait>render);
   assert.match(html,/function renderLocalOrdersNow\(rows\)/);
   assert.match(html,/auf diesem Gerät gespeichert/);
 });
@@ -134,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('/pilot\/sw\.js\?v=14'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=14'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
