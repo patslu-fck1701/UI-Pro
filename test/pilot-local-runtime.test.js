@@ -253,3 +253,115 @@ test('runtime: exact screenshot transcript repairs place material and weight loc
   assert.match(elements.get('#routePlan').innerHTML,/Mischschrott/);
   assert.match(elements.get('#routePlan').innerHTML,/2150 kg/);
 });
+
+
+test('runtime: Android-capable browser requests microphone permission before starting recognition',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  let getUserMediaCalls=0,trackStops=0,recognitionStarts=0,recognitionInstance=null;
+  class FakeRecognition{
+    constructor(){recognitionInstance=this}
+    start(){recognitionStarts++;if(this.onstart)this.onstart()}
+    stop(){if(this.onend)this.onend()}
+  }
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{mediaDevices:{getUserMedia:async opts=>{getUserMediaCalls++;assert.deepEqual(opts,{audio:true});return {getTracks:()=>[{stop(){trackStops++}}]}}}},
+    location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:FakeRecognition};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  const btn=elements.get('#noteBtn');
+  assert.ok(btn&&typeof btn.onclick==='function');
+  await btn.onclick();
+
+  assert.equal(getUserMediaCalls,1);
+  assert.equal(trackStops,1);
+  assert.equal(recognitionStarts,1);
+  assert.ok(recognitionInstance);
+  assert.equal(elements.get('#noteHint').textContent,'Jetzt sprechen');
+});
+
+test('runtime: microphone denial prevents recognition and shows a clear error',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester'
+  });
+  let recognitionStarts=0;
+  class FakeRecognition{start(){recognitionStarts++}}
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{mediaDevices:{getUserMedia:async()=>{throw new Error('denied')}}},
+    location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:FakeRecognition};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  await elements.get('#noteBtn').onclick();
+
+  assert.equal(recognitionStarts,0);
+  assert.equal(elements.get('#noteLabel').textContent,'Fehler');
+  assert.equal(elements.get('#noteHint').textContent,'Mikrofon nicht erlaubt');
+});
+
+test('runtime: unsupported Android speech API explains fallback and accepts typed order',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester'
+  });
+  let promptText='';
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{mediaDevices:{getUserMedia:async()=>{throw new Error('should not be called')}}},
+    location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(msg){promptText=String(msg);return 'morgen in alfeld 2 tonnen schrott'},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  await elements.get('#noteBtn').onclick();
+  await new Promise(resolve=>setTimeout(resolve,10));
+
+  assert.match(promptText,/Spracherkennung nicht verfügbar/);
+  assert.match(elements.get('#voiceLast').textContent,/morgen in alfeld 2 tonnen schrott/i);
+  const stored=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');
+  assert.equal(stored.length,1);
+  assert.equal(stored[0].location,'alfeld');
+  assert.equal(stored[0].estimatedWeightKg,2000);
+});
