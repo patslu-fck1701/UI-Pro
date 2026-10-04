@@ -26,10 +26,10 @@ function noteMaterial(text=''){const t=String(text).toLowerCase(),map=[
   ['stainless-v2a','V2A',/\bv\s*2\s*a\b/],
   ['zinc','Zink',/zink|dachrinn/],
   ['lead','Blei',/\bblei\b/],
-  ['mixed-scrap','Mischschrott',/misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|blech(?:schrott)?|altmetall|\bmetall\b|\bschrott\b/]
+  ['mixed-scrap','Mischschrott',/misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|blech(?:schrott)?|altmetall|\bmetall\b|\bschrott\b|\bschritt(?:e|en)?\b|\bschrotte?\b/]
 ];for(const [key,label,re] of map)if(re.test(t))return {key,label};return {key:null,label:''}}
 function noteNumber(raw){return Number(String(raw||'').replace(/\./g,'').replace(',','.'))}
-function noteWeightKg(text=''){const m=String(text).match(/(\d+(?:[.,]\d+)?)\s*(kg|kilo(?:gramm)?|t|tonne[n]?)/i);if(!m)return null;const n=noteNumber(m[1]);return Number.isFinite(n)?money(/^(t|tonne)/i.test(m[2])?n*1000:n):null}
+function noteWeightKg(text=''){const s=String(text),m=s.match(/(\d+(?:[.,]\d+)?)\s*(kg|kilo(?:gramm)?|t|tonne[n]?)/i);if(m){const n=noteNumber(m[1]);return Number.isFinite(n)?money(/^(t|tonne)/i.test(m[2])?n*1000:n):null}const fuzzy=s.match(/(\d+(?:[.,]\d+)?)\s*(?:schrott|schritt(?:e|en)?|schrotte?)\b/i);if(!fuzzy)return null;const n=noteNumber(fuzzy[1]);return Number.isFinite(n)?money(n<50?n*1000:n):null}
 function noteAmountEur(text=''){const s=String(text),m=s.match(/(?:für|bezahlt|bekommen|erhalten|preis)?\s*(\d+(?:[.,]\d+)?)\s*(?:€|eur|euro)/i);if(!m)return null;const n=noteNumber(m[1]);return Number.isFinite(n)?money(n):null}
 function noteDate(text='',now=new Date()){const t=String(text).toLowerCase(),base=new Date(now);base.setHours(12,0,0,0);if(/übermorgen/.test(t)){base.setDate(base.getDate()+2);return base.toISOString().slice(0,10)}if(/morgen/.test(t)){base.setDate(base.getDate()+1);return base.toISOString().slice(0,10)}if(/heute/.test(t))return base.toISOString().slice(0,10);const m=t.match(/\b(\d{1,2})\.(\d{1,2})\.(?:(\d{2,4}))?\b/);if(m){let y=m[3]?Number(m[3]):base.getFullYear();if(y<100)y+=2000;const d=new Date(Date.UTC(y,Number(m[2])-1,Number(m[1]),12));if(Number.isFinite(d.getTime()))return d.toISOString().slice(0,10)}return null}
 function normalizePhone(value=''){const raw=String(value||'').trim(),digits=raw.replace(/\D/g,'');if(!digits)return '';if(digits.startsWith('0049'))return '0'+digits.slice(4);if(raw.startsWith('+49')&&digits.startsWith('49'))return '0'+digits.slice(2);return digits}
@@ -41,7 +41,7 @@ function noteLocation(text=''){
   if(street)return street[1].replace(/\s+/g,' ').trim();
   const postal=s.match(/\b(\d{5}\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*(?:\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*){0,2})\b/);
   if(postal)return postal[1].replace(/\s+/g,' ').trim();
-  const stop='(?:[,.;]|$|bei\\b|abholen|holen|einsammeln|mitnehmen|fahren|morgen|übermorgen|heute|am\\s+\\d|\\d+(?:[.,]\\d+)?\\s*(?:kg|kilo(?:gramm)?|t|tonne[n]?)|sorte\\s*3|schwerschrott|misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|blech(?:schrott)?|altmetall|schrott|alu(?:minium)?|kupfer|messing|kabel|elektromotor|motoren?|batterie|akku|v\\s*[24]\\s*a|zink|blei)';
+  const stop='(?:[,.;]|$|bei\\b|abholen|holen|einsammeln|mitnehmen|fahren|morgen|übermorgen|heute|am\\s+\\d|\\d+(?:[.,]\\d+)?(?:\\s*(?:kg|kilo(?:gramm)?|t|tonne[n]?|schrott|schritt(?:e|en)?|schrotte?))?|sorte\\s*3|schwerschrott|misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|blech(?:schrott)?|altmetall|schrott|alu(?:minium)?|kupfer|messing|kabel|elektromotor|motoren?|batterie|akku|v\\s*[24]\\s*a|zink|blei)';
   const explicit=new RegExp('\\b(?:adresse|anschrift|ort)\\s*[:,-]?\\s*([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*(?:\\s+[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*){0,3}?)(?=\\s*'+stop+')','i');
   const explicitMatch=s.match(explicit);
   if(explicitMatch)return explicitMatch[1].replace(/\s+/g,' ').trim();
