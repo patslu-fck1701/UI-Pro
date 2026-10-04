@@ -171,6 +171,6 @@ test('iPhone speech handler saves collected transcript on recognition end',()=>{
 
 test('local parser repairs iPhone "2,15 Schritte" transcript',()=>{
   assert.match(html,/schritt\(\?:e\|en\)\?/);
-  assert.match(html,/n<50\?Math\.round\(x\*1000\)/);
+  assert.match(html,/x<50\?Math\.round\(x\*1000\)/);
   assert.match(html,/localVoiceStopsSync\(\).*offlineMaterialInfo\(raw\).*offlineLocation\(raw\)/s);
 });
