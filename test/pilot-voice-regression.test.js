@@ -186,8 +186,8 @@ test('deleteCall removes the order and its source voice note only in the current
   assert.equal(s.routePlan('a').stops.length,0);
   assert.equal(s.listCalls('b').length,1);
   assert.equal(s.routePlan('b').stops[0].id,b.call.id);
-  assert.equal(s.repository.list('org-a','notes').some(x=>x.id===a.note.id),false);
-  assert.equal(s.repository.list('org-b','notes').some(x=>x.id===b.note.id),true);
+  assert.equal(s.repository.list('org-a','notes').some(x=>x.id===a.id),false);
+  assert.equal(s.repository.list('org-b','notes').some(x=>x.id===b.id),true);
 });
 
 test('deleteCall is idempotent when an offline retry reaches an already deleted order',()=>{
