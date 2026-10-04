@@ -26,9 +26,9 @@ jobs:
         run: |
           node --check src/pilot/index.js
           node --check tools/time-test-server.js
-      - name: Schrotties · Voice and tenant isolation
+      - name: Schrotties · Voice, login and tenant isolation
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
-        run: node --test test/pilot-voice-regression.test.js
+        run: node --test test/pilot-voice-regression.test.js test/pilot-login-regression.test.js
       - name: Schrotties · Live prices and weigh-slip recalculation
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
         run: node --test test/pilot-price-diagnostics.test.js
