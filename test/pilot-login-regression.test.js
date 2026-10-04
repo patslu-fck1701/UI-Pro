@@ -6,9 +6,11 @@ const os=require('node:os');
 const path=require('node:path');
 const crypto=require('node:crypto');
 
-const christianCode='CHR-SFKPM99YT';
-const christianHash='c033999e0e51482313a8f207b5012322f94ff698419a9e5d8ea1dc1ddb605d10';
-assert.equal(crypto.createHash('sha256').update(christianCode).digest('hex'),christianHash);
+const christianCode='LOCAL-CHRISTIAN-TEST-ONLY';
+const christianHash=crypto.createHash('sha256').update(christianCode).digest('hex');
+const testerCode='LOCAL-TESTER-TEST-ONLY';
+const testerHash=crypto.createHash('sha256').update(testerCode).digest('hex');
+const dirkHash=crypto.createHash('sha256').update('LOCAL-DIRK-TEST-ONLY').digest('hex');
 
 process.env.PORT='0';
 process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS='1';
@@ -17,7 +19,7 @@ process.env.WERKZ_TIME_DATA_DIR=path.join(os.tmpdir(),'werkz-login-test-'+proces
 process.env.WERKZ_TEST_ORGANISATION_ID='org-dirk-schrotties';
 process.env.WERKZ_PILOT_BUSINESS_NAME='Dirk';
 process.env.WERKZ_PILOT_SLUG='dirk';
-process.env.WERKZ_PILOT_LOGIN_CODE_SHA256='838ae4b182e770b8ee20ff3756b95209abe9400c2bb94a89f2bd84a25d214b2a';
+process.env.WERKZ_PILOT_LOGIN_CODE_SHA256=dirkHash;
 process.env.WERKZ_PILOT_ACCESS_EXPIRES_AT='2026-11-17T23:59:59+01:00';
 process.env.WERKZ_PILOT_TENANTS_JSON=JSON.stringify([
   {
@@ -35,7 +37,7 @@ process.env.WERKZ_PILOT_TENANTS_JSON=JSON.stringify([
     name:'Tester',
     organisationId:'org-schrotties-test-1',
     actorId:'tester-1',
-    loginCodeHash:'6e48eb352b40ec412af3f189fe282a66b011771bdf8a8ec72020e0895d829d91',
+    loginCodeHash:testerHash,
     accessExpiresAt:'2026-11-17T23:59:59+01:00'
   }
 ]);
@@ -80,7 +82,7 @@ test('Christian login form normalizes tenant name and has password visibility to
 test('Christian can login with lowercase or spaced version of the uppercase access code',async()=>{
   const body=new URLSearchParams({
     tenant:'Christian',
-    code:' chr-sfkpm99yt ',
+    code:' local-christian-test-only ',
     return:'/pilot/'
   }).toString();
   const r=await request({method:'POST',path:'/pilot/login',body});
@@ -111,7 +113,7 @@ test('login page without a tenant stays empty instead of defaulting to Dirk',asy
 test('logout from Christian returns to Christian login instead of Dirk',async()=>{
   const loginBody=new URLSearchParams({
     tenant:'Christian',
-    code:' chr-sfkpm99yt ',
+    code:' local-christian-test-only ',
     return:'/pilot/'
   }).toString();
   const login=await request({method:'POST',path:'/pilot/login',body:loginBody});
@@ -146,7 +148,7 @@ test('logout from Christian returns to Christian login instead of Dirk',async()=
 
 test('logout redirect preserves whichever tenant was actually signed in',async()=>{
   for(const tenant of ['christian','tester']){
-    const code=tenant==='christian'?'CHR-SFKPM99YT':'TST-QYJ453EVH';
+    const code=tenant==='christian'?christianCode:testerCode;
     const body=new URLSearchParams({tenant,code,return:'/pilot/'}).toString();
     const login=await request({method:'POST',path:'/pilot/login',body});
     assert.equal(login.status,303);
