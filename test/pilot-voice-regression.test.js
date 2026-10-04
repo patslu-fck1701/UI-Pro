@@ -170,3 +170,32 @@ test('route plan repairs old Android voice call from stored raw topic even when 
   assert.equal(stop.quantity,'2000 kg');
   assert.equal(stop.scheduledFor,'2026-10-05');
 });
+
+
+test('deleteCall removes the order and its source voice note only in the current tenant',()=>{
+  const s=svc();
+  const a=s.addNote('a','morgen in Alfeld 500 kg Schrott','delete-a');
+  const b=s.addNote('b','morgen in Hameln 600 kg Schrott','delete-b');
+  assert.equal(s.listCalls('a').length,1);
+  assert.equal(s.listCalls('b').length,1);
+
+  const result=s.deleteCall('a',a.call.id,{clientMutationId:'delete:'+a.call.id});
+  assert.equal(result.deleted,true);
+  assert.equal(result.sourceNoteRemoved,true);
+  assert.equal(s.listCalls('a').length,0);
+  assert.equal(s.routePlan('a').stops.length,0);
+  assert.equal(s.listCalls('b').length,1);
+  assert.equal(s.routePlan('b').stops[0].id,b.call.id);
+  assert.equal(s.repository.list('org-a','notes').some(x=>x.id===a.note.id),false);
+  assert.equal(s.repository.list('org-b','notes').some(x=>x.id===b.note.id),true);
+});
+
+test('deleteCall is idempotent when an offline retry reaches an already deleted order',()=>{
+  const s=svc();
+  const a=s.addNote('a','morgen in Alfeld 500 kg Schrott','delete-idempotent');
+  assert.equal(s.deleteCall('a',a.call.id).deleted,true);
+  const replay=s.deleteCall('a',a.call.id);
+  assert.equal(replay.deleted,false);
+  assert.equal(replay.missing,true);
+  assert.equal(replay.id,a.call.id);
+});
