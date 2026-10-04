@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=22'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=23'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v22/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=22'/);
-  assert.match(sw,/werkz-simple-pilot-v22/);
+  assert.match(html,/· v23/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=23'/);
+  assert.match(sw,/werkz-simple-pilot-v23/);
 });
 
 
@@ -237,4 +237,23 @@ test('narrow Android search layout cannot push the search button off screen',()=
   assert.match(html,/grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(html,/\.searchbar input\{min-width:0;width:100%/);
   assert.match(html,/\.searchbar button\{max-width:38vw;white-space:nowrap\}/);
+});
+
+
+test('Auftragsübersicht and connected-route action are permanent core UI',()=>{
+  assert.match(html,/Auftragsübersicht/);
+  assert.match(html,/id="joinRouteBtn"/);
+  assert.match(html,/ROUTEN VERBINDEN/);
+  assert.match(html,/function combinedMapsUrl\(destinations\)/);
+  assert.match(html,/function openCombinedRoute\(\)/);
+  assert.match(html,/waypoints=/);
+});
+
+test('Auftrag erledigt is rendered on Start, overview and local-first orders',()=>{
+  assert.match(html,/function completionButton\(o\)/);
+  assert.match(html,/AUFTRAG ERLEDIGT/);
+  assert.match(html,/data-complete-local=/);
+  assert.match(html,/bindCompletionButtons\(q\('#nextJob'\)\)/);
+  assert.match(html,/bindCompletionButtons\(q\('#routePlan'\)\)/);
+  assert.match(html,/localOrderPatch\(localOrderId,\{status:'completed'/);
 });
