@@ -152,10 +152,10 @@ test('local order storage is bound to stable tenant slug before session resolves
   assert.ok(put>save&&render>put&&firstAwait>render);
 });
 
-test('pilot UI exposes v14 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v14/);
+test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v15/);
   assert.match(html,/register\('\/pilot\/sw\.js\?v=14'/);
-  assert.match(sw,/werkz-simple-pilot-v14/);
+  assert.match(sw,/werkz-simple-pilot-v15/);
 });
 
 
