@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=16'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=17'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v16/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=16'/);
-  assert.match(sw,/werkz-simple-pilot-v16/);
+  assert.match(html,/· v17/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=17'/);
+  assert.match(sw,/werkz-simple-pilot-v17/);
 });
 
 
@@ -173,4 +173,17 @@ test('local parser repairs iPhone "2,15 Schritte" transcript',()=>{
   assert.match(html,/schritt\(\?:e\|en\)\?/);
   assert.match(html,/x<50\?Math\.round\(x\*1000\)/);
   assert.match(html,/localVoiceStopsSync\(\).*offlineMaterialInfo\(raw\).*offlineLocation\(raw\)/s);
+});
+
+
+test('Android voice path requests microphone permission before recognition',()=>{
+  assert.match(html,/async function ensureMicrophonePermission\(\)/);
+  assert.match(html,/navigator\.mediaDevices\.getUserMedia\(\{audio:true\}\)/);
+  assert.match(html,/if\(!\(await ensureMicrophonePermission\(\)\)\)return/);
+});
+
+test('unsupported Android browser explains fallback instead of silently opening text input',()=>{
+  assert.match(html,/Spracherkennung in diesem Browser nicht verfügbar/);
+  assert.match(html,/Android: Bitte Chrome verwenden oder Auftrag eintippen\./);
+  assert.match(html,/Spracherkennung nicht verfügbar\. Auftrag stattdessen eintippen:/);
 });
