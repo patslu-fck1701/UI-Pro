@@ -727,7 +727,7 @@ test('runtime: connected route opens one Google Maps route with multiple stops',
   const url=context.combinedMapsUrl(['Alfeld','Hildesheim','Hameln']);
   assert.match(url,/destination=Hameln/);
   assert.match(url,/waypoints=Alfeld%7CHildesheim/);
-  context.routeDestinations=['Alfeld','Hildesheim','Hameln'];
+  context.renderTourList([{id:'a',location:'Alfeld'},{id:'b',location:'Hildesheim'},{id:'c',location:'Hameln'}]);
   const opened=context.openCombinedRoute();
   assert.equal(context.location.href,opened);
   assert.equal(opened,url);
