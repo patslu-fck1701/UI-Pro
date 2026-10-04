@@ -153,3 +153,20 @@ test('plain Android full address without spoken labels is preserved',()=>{
   const note=s.addNote('a','Morgen Teststraße 12 31061 Alfeld 2 Tonnen Schrott abholen','voice-android-address-2');
   assert.equal(note.call.location,'Teststraße 12, 31061 Alfeld');
 });
+
+
+test('route plan repairs old Android voice call from stored raw topic even when parsed fields are blank',()=>{
+  const s=svc();
+  const note=s.addNote('a','Morgen Teststraße 12 31061 Alfeld 2 Tonnen Schrott abholen','voice-old-android-raw');
+  s.repository.update('org-a','calls',note.call.id,{
+    location:'',material:'',materialKey:'',quantity:'',estimatedWeightKg:null,scheduledFor:null
+  });
+  const stop=s.routePlan('a').stops.find(x=>x.id===note.call.id);
+  assert.ok(stop);
+  assert.equal(stop.location,'Teststraße 12, 31061 Alfeld');
+  assert.equal(stop.material,'Mischschrott');
+  assert.equal(stop.materialKey,'mixed-scrap');
+  assert.equal(stop.estimatedWeightKg,2000);
+  assert.equal(stop.quantity,'2000 kg');
+  assert.equal(stop.scheduledFor,'2026-10-05');
+});
