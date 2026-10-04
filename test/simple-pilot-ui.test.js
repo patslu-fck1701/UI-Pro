@@ -157,3 +157,13 @@ test('pilot UI exposes v14 and passes tenant slug through the service worker URL
   assert.match(html,/register\('\/pilot\/sw\.js\?v=14'/);
   assert.match(sw,/werkz-simple-pilot-v14/);
 });
+
+
+test('iPhone speech handler saves collected transcript on recognition end',()=>{
+  assert.match(html,/r\.interimResults=true/);
+  assert.match(html,/function collect\(e\)/);
+  assert.match(html,/function finish\(\)/);
+  assert.match(html,/r\.onend=function\(\)\{finish\(\)\}/);
+  assert.match(html,/Zuletzt erkannt:/);
+  assert.match(html,/id="voiceLast"/);
+});
