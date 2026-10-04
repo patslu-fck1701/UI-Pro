@@ -60,11 +60,13 @@ function parseExtraPilotTenants(){
       id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
       actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
       taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
-      loginCode:tenantLoginCode||null,loginCodeHash:tenantLoginCodeHash||null,accessExpiresAt:String(item.accessExpiresAt||'').trim()||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
+      loginCode:tenantLoginCode||null,loginCodeHash:tenantLoginCodeHash||null,accountEmails:Array.isArray(item.accountEmails)?item.accountEmails.map(value=>String(value).trim().toLowerCase()).filter(value=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)).slice(0,5):[],accessExpiresAt:String(item.accessExpiresAt||'').trim()||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
     };
   });
 }
-const extraPilotTenants=parseExtraPilotTenants();
+const testAccountName=String(process.env.WERKZ_PILOT_TEST_ACCOUNT_NAME||'').trim().slice(0,160);
+const testAccountEmails=String(process.env.WERKZ_PILOT_TEST_ACCOUNT_EMAILS||'').split(',').map(value=>value.trim().toLowerCase()).filter(value=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)).slice(0,5);
+const extraPilotTenants=parseExtraPilotTenants().map(profile=>profile.publicSlug==='tester'?{...profile,organisationLabel:testAccountName||profile.organisationLabel,actorLabel:testAccountName||profile.actorLabel,accountEmails:testAccountEmails.length?testAccountEmails:profile.accountEmails}:profile);
 const loginCode=runtimeLoginCode();
 const allowedOrigins=String(process.env.WERKZ_TEST_ALLOWED_ORIGINS||process.env.WERKZ_TEST_ALLOWED_ORIGIN||'https://project29212.websitepublisher.ai,http://127.0.0.1:8765').split(',').map(value=>value.trim()).filter(Boolean);
 const externalFrontendUrl=process.env.WERKZ_TEST_EXTERNAL_FRONTEND_URL||'';
@@ -91,7 +93,7 @@ if(testProfilesEnabled){
   });
 }
 const authSessions=Object.fromEntries([...testProfiles.values(),...pilotProfiles.values()].map(profile=>[
-  profile.token,{organisationId:profile.organisationId||organisationId,organisationLabel:profile.organisationLabel||organisationLabel,publicSlug:profile.publicSlug||null,actorId:profile.actorId,actorLabel:profile.actorLabel,role:profile.role||'owner',capabilities:profile.capabilities}
+  profile.token,{organisationId:profile.organisationId||organisationId,organisationLabel:profile.organisationLabel||organisationLabel,publicSlug:profile.publicSlug||null,actorId:profile.actorId,actorLabel:profile.actorLabel,accountEmails:profile.accountEmails||[],role:profile.role||'owner',capabilities:profile.capabilities}
 ]));
 const registry=new ModuleRegistry(),entitlements=new EntitlementService({registry});
 entitlements.set({organisationId,moduleId:'werkz.time',catalogVersion:'v0.2'});
