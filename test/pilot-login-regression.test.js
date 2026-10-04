@@ -19,6 +19,8 @@ process.env.WERKZ_TIME_DATA_DIR=path.join(os.tmpdir(),'werkz-login-test-'+proces
 process.env.WERKZ_TEST_ORGANISATION_ID='org-dirk-schrotties';
 process.env.WERKZ_PILOT_BUSINESS_NAME='Dirk';
 process.env.WERKZ_PILOT_SLUG='dirk';
+process.env.WERKZ_PILOT_TEST_ACCOUNT_NAME='Local Test Owner';
+process.env.WERKZ_PILOT_TEST_ACCOUNT_EMAILS='owner@example.invalid,backup@example.invalid';
 process.env.WERKZ_PILOT_LOGIN_CODE_SHA256=dirkHash;
 process.env.WERKZ_PILOT_ACCESS_EXPIRES_AT='2026-11-17T23:59:59+01:00';
 process.env.WERKZ_PILOT_TENANTS_JSON=JSON.stringify([
@@ -167,3 +169,5 @@ test('logout redirect preserves whichever tenant was actually signed in',async()
     assert.equal(logout.headers.location,'/pilot/login?tenant='+tenant);
   }
 });
+
+test('configured test-account mail is not replaced with fake inbox messages',async()=>{const login=await request({method:'POST',path:'/pilot/login',body:new URLSearchParams({tenant:'tester',code:testerCode,return:'/pilot/'}).toString()});assert.equal(login.status,303);const cookie=String(login.headers['set-cookie']||'').split(';')[0];const addr=server.address();async function get(path){return new Promise((resolve,reject)=>{const req=http.request({host:'127.0.0.1',port:addr.port,path,headers:{cookie}},res=>{const chunks=[];res.on('data',chunk=>chunks.push(chunk));res.on('end',()=>resolve({status:res.statusCode,body:Buffer.concat(chunks).toString('utf8')}))});req.on('error',reject);req.end()})}const session=await get('/pilot/api/session');assert.equal(session.status,200);assert.equal(JSON.parse(session.body).organisationLabel,'Local Test Owner');assert.deepEqual(JSON.parse(session.body).accountEmails,['owner@example.invalid','backup@example.invalid']);const mail=await get('/pilot/api/mail');assert.equal(mail.status,200);assert.deepEqual(JSON.parse(mail.body),[])});
