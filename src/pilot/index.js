@@ -278,6 +278,7 @@ class WerkZSimplePilotService{
       phone:parsed.phone||customer&&customer.phone||'',
       location:parsed.location||customer&&customer.location||'',
       topic:'Abholung: '+parsed.raw,
+      materialKey:parsed.materialKey||'',
       material:parsed.materialLabel,
       quantity:parsed.weightKg?parsed.weightKg+' kg':'',
       estimatedWeightKg:parsed.weightKg,
