@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=21'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=22'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v21/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=21'/);
-  assert.match(sw,/werkz-simple-pilot-v21/);
+  assert.match(html,/· v22/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=22'/);
+  assert.match(sw,/werkz-simple-pilot-v22/);
 });
 
 
@@ -223,4 +223,18 @@ test('old server voice rows are reparsed before Maps rendering',()=>{
   assert.match(html,/function repairRouteFields\(row\)/);
   assert.match(html,/offlineLocation\(raw\)/);
   assert.match(html,/serverRows=\(x\.stops\|\|\[\]\)\.map\(enrichServerRow\)/);
+});
+
+
+test('Maps button has raw-text fallback when parsed location is empty',()=>{
+  assert.match(html,/function mapsDestination\(destination,rawText\)/);
+  assert.match(html,/return offlineLocation\(raw\)\|\|raw/);
+  assert.match(html,/mapsAction\(r\.location,'ZU DIESEM STOPP NAVIGIEREN',r\.originalText\)/);
+  assert.match(html,/mapsAction\(first\.location,'GOOGLE MAPS STARTEN',first\.originalText\)/);
+});
+
+test('narrow Android search layout cannot push the search button off screen',()=>{
+  assert.match(html,/grid-template-columns:minmax\(0,1fr\) auto/);
+  assert.match(html,/\.searchbar input\{min-width:0;width:100%/);
+  assert.match(html,/\.searchbar button\{max-width:38vw;white-space:nowrap\}/);
 });
