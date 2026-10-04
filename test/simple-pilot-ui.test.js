@@ -311,7 +311,7 @@ test('offline and backend target parsers agree for natural zu zum zur and addres
   const cases=['Ich will zum Nordpol fahren und Schnee holen.','Ich möchte zum Nordpol.','Zum Nordpol fahren und Schnee holen.','Zum Weihnachtsmann an den Nordpol fahren.','Ich muss zur Firma Müller.','Ich fahre zu Meyer und hole Schrott.','Gallusanlage 7, 60329'];
   for(const raw of cases)assert.equal(parse.offlineLocation(raw),backend.parseOperationalNote(raw).location,raw);
   assert.equal(parse.offlineFreeMaterial(cases[0]),'Schnee');
-  assert.match(html,/row.status==='completed'\|\|row.status==='deleted'/);
+  assert.match(html,/row.status==='deleted'\|\|row.status==='completed'&&\!row.manualPayload/);
   assert.match(html,/await dropQueuedOrderCreate\(localOrderId\)/);
   assert.match(html,/markDeletedCall\(callId\)/);
 });
