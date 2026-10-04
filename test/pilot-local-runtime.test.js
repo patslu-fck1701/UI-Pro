@@ -821,3 +821,62 @@ test('runtime: deleting a server order posts delete endpoint and removes it from
   assert.match(elements.get('#nextJob').innerHTML,/Keine offenen Aufträge/);
   assert.equal(elements.get('#routePlan').innerHTML,'Keine offenen Aufträge.');
 });
+
+
+test('runtime: Android voice button blurs the focused search field and saves Sorte drei as an order',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const search=getEl('#globalSearch');
+  search.value='Kyiv, Ukraine, 03115';
+  let searchBlurred=0;
+  search.blur=()=>{searchBlurred++};
+  let activeBlurred=0;
+  const activeInput={blur(){activeBlurred++}};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  let recognitionInstance=null;
+  class FakeRecognition{
+    constructor(){recognitionInstance=this}
+    start(){if(this.onstart)this.onstart()}
+    stop(){if(this.onend)this.onend()}
+  }
+  const document={
+    hidden:false,activeElement:activeInput,
+    querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)
+  };
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),document,
+    navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}},
+    location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:FakeRecognition};
+  context.window.window=context.window;context.window.document=document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  await elements.get('#noteBtn').onclick();
+  assert.equal(activeBlurred,1);
+  assert.equal(searchBlurred,1);
+  assert.ok(recognitionInstance);
+
+  const result=[{transcript:'Sorte drei abholen'}];
+  result.isFinal=true;
+  recognitionInstance.onresult({resultIndex:0,results:[result]});
+  recognitionInstance.onend();
+  await new Promise(resolve=>setTimeout(resolve,10));
+
+  const stored=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');
+  assert.equal(stored.length,1);
+  assert.equal(stored[0].materialKey,'grade-3');
+  assert.equal(stored[0].material,'Sorte 3');
+  assert.equal(search.value,'Kyiv, Ukraine, 03115');
+  assert.match(elements.get('#nextJob').innerHTML,/Sorte 3/);
+});
