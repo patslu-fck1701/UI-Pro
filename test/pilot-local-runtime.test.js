@@ -218,3 +218,38 @@ test('runtime: SpeechRecognition interim transcript is saved when recognition en
   assert.match(elements.get('#voiceLast').textContent,/2500 kilo eisenschrott/i);
   assert.match(elements.get('#routePlan').innerHTML,/Sprachauftrag/);
 });
+
+
+test('runtime: exact screenshot transcript repairs place material and weight locally',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await context.saveVoiceNote('Morgen in Alfeld 2,15 Schritte');
+  const stored=JSON.parse(localStorage.getItem('werkzPilotLocalOrders::slug:tester')||'[]');
+  assert.equal(stored.length,1);
+  assert.equal(stored[0].location,'Alfeld');
+  assert.equal(stored[0].materialKey,'mixed-scrap');
+  assert.equal(stored[0].estimatedWeightKg,2150);
+  assert.match(elements.get('#routePlan').innerHTML,/Alfeld/);
+  assert.match(elements.get('#routePlan').innerHTML,/Mischschrott/);
+  assert.match(elements.get('#routePlan').innerHTML,/2150 kg/);
+});
