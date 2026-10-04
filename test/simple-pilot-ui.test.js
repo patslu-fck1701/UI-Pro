@@ -322,3 +322,18 @@ test('voice diagnostics are hidden unless session enables them and stay tenant-l
   assert.match(html,/localOrderAllSync\(\)/);
   assert.match(html,/safeDiagnosticText\(raw\)/);
 });
+
+test('calculator transfer stays explicit and uses normal local order and call sync',()=>{
+  assert.match(html,/id="pickupTakeoverBtn"[^>]*hidden/);
+  assert.match(html,/lastPickupEstimate=x;q\('#pickupTakeoverBtn'\).hidden=false/);
+  assert.match(html,/function openPickupOrderTakeover\(\)/);
+  assert.match(html,/async function savePickupOrder\(\)/);
+  assert.match(html,/Bitte Adresse oder Ort eingeben/);
+  assert.match(html,/source:'pickup-calculator'/);
+  assert.match(html,/plannedCustomerPayoutEur:pay/);
+  assert.match(html,/Angegebene Kilometer/);
+  assert.match(html,/localOrderPutSync\(local\)/);
+  assert.match(html,/await api\('\/calls'/);
+  assert.match(html,/row.manualPayload\?await api\('\/calls'/);
+  assert.match(html,/pickupOrderSaving\|\|pickupOrderSavedId/);
+});
