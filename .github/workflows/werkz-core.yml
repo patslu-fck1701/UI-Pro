@@ -35,8 +35,11 @@ jobs:
       - name: Schrotties · Mobile PWA (iPhone + Android) + local-first orders
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
         run: node --test test/simple-pilot-ui.test.js test/pilot-local-runtime.test.js
+      - name: Schrotties · Core regression gate (Maps + address + logout)
+        if: github.ref == 'refs/heads/test/mobile-assistant-render'
+        run: node --test test/pilot-voice-regression.test.js test/pilot-login-regression.test.js test/pilot-local-runtime.test.js test/simple-pilot-ui.test.js
       - name: Schrotties · Failure diagnosis
         if: failure() && github.ref == 'refs/heads/test/mobile-assistant-render'
         run: |
-          echo "::error title=Schrotties CI failed::Check the first failed Schrotties step above: backend syntax, voice/login/tenant, live prices/weigh-slip, or mobile PWA/local-first storage."
+          echo "::error title=Schrotties CI failed::Check the first failed Schrotties step above: backend syntax, voice/login/tenant, live prices/weigh-slip, mobile PWA/local-first storage, or core regressions (Maps/address/logout)."
           echo "Render deployment should not be treated as verified until these checks are green."
