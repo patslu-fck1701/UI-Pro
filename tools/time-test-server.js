@@ -118,6 +118,7 @@ const application=new TimeApplication(new TimeProductionService({
 const timeHandler=createTimeHttpHandler({application,auth,allowedOrigins});
 const pilotService=createPilotRuntime({
   auth,entitlements,dataDir:path.join(dataDir,'simple-pilot'),
+  voiceDiagnosticOrganisationIds:String(process.env.WERKZ_PILOT_VOICE_DIAGNOSTIC_ORGS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).map(x=>pilotTenantBySlug.get(x)?.organisationId||x),
   ownerDemoOrganisationIds:[...pilotProfiles.values()].filter(p=>p.cryptoEnabled===true&&p.ownerDemoEnabled===true).map(p=>p.organisationId),
   audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
 });
