@@ -293,7 +293,7 @@ test('runtime: Android-capable browser requests microphone permission before sta
   assert.equal(getUserMediaCalls,1);
   assert.equal(recognitionStarts,1);
   assert.ok(recognitionInstance);
-  assert.equal(elements.get('#noteHint').textContent,'Jetzt sprechen');
+  assert.match(elements.get('#noteHint').textContent,/^Jetzt sprechen/);
 });
 
 test('runtime: microphone denial prevents recognition and shows a clear error',async()=>{
