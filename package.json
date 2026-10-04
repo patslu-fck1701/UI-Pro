@@ -21,6 +21,7 @@
     "test:local-stack": "node tools/local-stack-smoke.js",
     "provenance:check": "node tools/provenance-audit.js --check"
   },
+  "dependencies": {"imapflow":"^1.0.0"},
   "engines": {
     "node": ">=20"
   }
