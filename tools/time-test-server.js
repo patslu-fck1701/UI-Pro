@@ -140,6 +140,14 @@ function safeLocalReturn(value,fallback='/'){
     return url.pathname+url.search;
   }catch{return fallback;}
 }
+function pilotReturnWithTenant(value,tenant){
+  const safe=safeLocalReturn(value,'/pilot/');
+  try{
+    const u=new URL(safe,'http://werkz.invalid');
+    if(u.pathname.startsWith('/pilot'))u.searchParams.set('tenant',String(tenant||'').trim().toLowerCase());
+    return u.pathname+u.search;
+  }catch{return safe;}
+}
 
 function hubSecurityHeaders(response){
   response.setHeader('content-security-policy',"default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
@@ -313,7 +321,7 @@ const server=http.createServer(async(request,response)=>{
     const activeToken=cookieTokenFromHeader(request.headers.cookie),activeProfile=pilotProfileByToken(activeToken);
     const activeSlug=String(activeProfile?.publicSlug||'').trim().toLowerCase();
     if(activeProfile&&!profileExpired(activeProfile)&&(!requestedTenant||requestedTenant===activeSlug)){
-      response.writeHead(303,{location:returnTo,'cache-control':'no-store'});
+      response.writeHead(303,{location:pilotReturnWithTenant(returnTo,activeSlug||requestedTenant),'cache-control':'no-store'});
       return response.end();
     }
     if(activeProfile&&requestedTenant&&requestedTenant!==activeSlug){
@@ -335,7 +343,7 @@ const server=http.createServer(async(request,response)=>{
     const valid=Boolean(profile&&!expired&&(expectedHash?sameSecret(crypto.createHash('sha256').update(code).digest('hex'),expectedHash):(expected&&sameSecret(code,expected))));
     process.stdout.write(JSON.stringify({kind:'pilot-login',tenant,profileFound:Boolean(profile),expired,success:valid})+'\\n');
     if(!valid)return pilotLoginForm(response,{message:expired?'Testzugang ist abgelaufen.':'Anmeldung nicht möglich.',returnTo,tenant});
-    response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
+    response.writeHead(303,{location:pilotReturnWithTenant(returnTo,tenant),'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
     return response.end();
   }
   if(url.pathname==='/pilot/logout'&&request.method==='GET'){
