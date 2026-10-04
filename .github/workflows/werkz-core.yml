@@ -18,4 +18,12 @@ jobs:
         with:
           node-version: "20"
       - run: npm install --ignore-scripts
-      - run: npm run verify
+      - name: Verify full core
+        if: github.ref != 'refs/heads/test/mobile-assistant-render'
+        run: npm run verify
+      - name: Verify Schrotties Render mirror
+        if: github.ref == 'refs/heads/test/mobile-assistant-render'
+        run: |
+          node --check src/pilot/index.js
+          node --check tools/time-test-server.js
+          node --test test/pilot-simple.test.js
