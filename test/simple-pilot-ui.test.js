@@ -7,21 +7,27 @@ const path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'..','apps','simple-pilot','index.html'),'utf8');
 const sw=fs.readFileSync(path.join(__dirname,'..','apps','simple-pilot','sw.js'),'utf8');
 
-test('Schrotties voice control is explicitly an order action',()=>{
+test('Schrotties voice control saves locally before syncing to Render',()=>{
   assert.match(html,/id="noteLabel">Auftrag sprechen</);
+  assert.match(html,/localOrderPut\(local\)/);
   assert.match(html,/queueablePost\('\/notes'/);
-  assert.match(html,/Als offenen Auftrag hinzugefügt|Als offener Auftrag hinzugefügt/);
+  assert.ok(html.indexOf('await localOrderPut(local)') < html.indexOf("await queueablePost('/notes'"));
+  assert.match(html,/Auf dem Gerät gespeichert/);
 });
 
-test('queued voice notes are shown as orders without pickup keywords',()=>{
-  assert.match(html,/async function offlineVoiceStops\(\)/);
-  assert.match(html,/x\.path==='\/notes'.*String\(x\.payload\.text\|\|''\)\.trim\(\)/s);
-  assert.doesNotMatch(html,/offlineVoiceStops\(\).*abholen\|holen\|einsammeln\|mitnehmen/s);
+test('local voice orders survive server loss and are merged into the route plan',()=>{
+  assert.match(html,/indexedDB\.open\('werkz-simple-pilot',3\)/);
+  assert.match(html,/createObjectStore\('localOrders'/);
+  assert.match(html,/async function localVoiceStops\(\)/);
+  assert.match(html,/serverRows\.concat\(local\)/);
+  assert.match(html,/!r\.serverCallId\|\|!serverIds\.has\(r\.serverCallId\)/);
+  assert.match(html,/auf diesem Gerät gespeichert/);
 });
 
-test('logout and actionable voice errors are visible',()=>{
+test('logout stays visible while server sync failures do not delete local orders',()=>{
   assert.match(html,/class="logoutbtn" href="\/pilot\/logout">Abmelden</);
-  assert.match(html,/Speichern: /);
+  assert.match(html,/Server-Sync später/);
+  assert.match(html,/syncLocalVoiceOrders/);
 });
 
 test('service worker update can reload for every new controller',()=>{
@@ -56,4 +62,19 @@ test('stale session responses redirect to the correct tenant login',()=>{
   assert.match(html,/VALIDATION_ERROR.*session required/s);
   assert.match(html,/\/pilot\/login\?tenant=/);
   assert.match(html,/tenantSlug/);
+});
+
+
+test('local-first voice sync is tenant scoped and idempotent',()=>{
+  assert.match(html,/function localOrderPut\(v\).*tenant:tenantScope/s);
+  assert.match(html,/clientMutationId:id/);
+  assert.match(html,/clientMutationId:row\.clientMutationId\|\|row\.id/);
+  assert.match(html,/serverCallId:res&&res\.call&&res\.call\.id/);
+  assert.match(html,/migrateQueuedVoiceOrders/);
+});
+
+test('local orders are retried on app start, reconnect and foreground',()=>{
+  assert.match(html,/await syncLocalVoiceOrders\(\)\.catch/);
+  assert.match(html,/addEventListener\('online'.*syncLocalVoiceOrders/s);
+  assert.match(html,/visibilitychange.*syncLocalVoiceOrders/s);
 });
