@@ -571,3 +571,63 @@ test('runtime: Android and iPhone produce identical next-job markup for the same
   const iphone=await render('Mozilla/5.0 (iPhone; CPU iPhone OS 26_5 like Mac OS X)');
   assert.equal(android,iphone);
 });
+
+
+test('runtime: Android voice row still shows Maps button when server location parsing failed',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:christian',
+    werkzPilotTenantLabel:'Christian',
+    werkzPilotTenantSlug:'christian',
+    werkzPilotPage:'home'
+  });
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{userAgent:'Mozilla/5.0 (Linux; Android 14)'},location:{href:'https://example.invalid/pilot/?tenant=christian',search:'?tenant=christian'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async url=>{
+      if(String(url).includes('/pilot/api/route-plan'))return {ok:true,status:200,json:async()=>({stops:[{
+        id:'call-android-unparsed',entityType:'call',name:'Sprachauftrag',location:'',material:'',materialKey:'',quantity:'',
+        estimatedWeightKg:null,distanceKm:0,scheduledFor:null,source:'voice-note',
+        originalText:'Christian Schimmeck 17 31061 Alfeld Schrott abholen',orders:[]
+      }]})};
+      throw new TypeError('offline');
+    },
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await new Promise(resolve=>setTimeout(resolve,10));
+  await context.routePlan();
+
+  const next=elements.get('#nextJob').innerHTML;
+  assert.match(next,/GOOGLE MAPS STARTEN/);
+  assert.match(next,/data-maps-destination="Christian Schimmeck 17 31061 Alfeld Schrott abholen"/);
+});
+
+test('runtime: raw-text Maps fallback still performs real navigation',()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const context={
+    console,localStorage:makeStorage(),sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/',search:''},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('offline')},alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  const d=context.mapsDestination('', 'Christian Schimmeck 17 31061 Alfeld Schrott abholen');
+  assert.equal(d,'Christian Schimmeck 17 31061 Alfeld Schrott abholen');
+  const opened=context.openMapsDestination(d);
+  assert.equal(context.location.href,opened);
+  assert.match(opened,/google\.com\/maps\/dir/);
+});
