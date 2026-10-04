@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=24'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=25'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v24/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=24'/);
-  assert.match(sw,/werkz-simple-pilot-v24/);
+  assert.match(html,/· v25/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=25'/);
+  assert.match(sw,/werkz-simple-pilot-v25/);
 });
 
 
@@ -269,4 +269,14 @@ test('Auftrag löschen is a permanent cross-platform core action',()=>{
   assert.match(html,/deletedCallStorageKey\(\)/);
   assert.match(html,/data-delete-call=/);
   assert.match(html,/data-delete-local=/);
+});
+
+
+test('Android voice capture clears input focus before recognition',()=>{
+  const click=html.indexOf("q('#noteBtn').onclick=async function()");
+  const blur=html.indexOf("document.activeElement",click);
+  const speech=html.indexOf("window.SpeechRecognition||window.webkitSpeechRecognition",click);
+  assert.ok(click>=0&&blur>click&&speech>blur);
+  assert.match(html,/search&&typeof search\.blur==='function'/);
+  assert.match(html,/sorte\\s\*\(\?:\(\?:nummer\|nr/);
 });
