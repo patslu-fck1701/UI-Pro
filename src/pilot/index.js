@@ -15,18 +15,18 @@ function scrapValue(item,weightKg,price){if(!Number.isFinite(price))return null;
 function classifyInquiry(value={}){const text=[value.topic,value.anliegen,value.reason,value.material].filter(Boolean).join(' ').toLowerCase();if(/abhol|abholung|abholen|container/.test(text))return 'Abholung';if(/angebot|preis|ankauf|verkauf|schrott|metall|kupfer|stahl|alu/.test(text))return 'Ankauf / Material';if(/termin/.test(text))return 'Termin';return 'Rückruf'}
 function classifyExpense(ex={},input={}){const manual=String(input.expenseClass||'').toLowerCase();if(['betrieblich','privat','pruefen'].includes(manual))return {expenseClass:manual,expenseReason:'manuell gewählt'};const category=String(input.receiptCategory||'').toLowerCase(),categoryMap={privat:['privat','Kategorie: Privat'],tanken:['pruefen','Kategorie: Tanken – betriebliche Nutzung prüfen'],schrottkauf:['betrieblich','Kategorie: Schrottkauf'],werkzeug:['betrieblich','Kategorie: Werkzeug / Betrieb'],wiegeschein:['betrieblich','Kategorie: Wiegeschein / Verkauf'],sonstiges:['pruefen','Kategorie: Sonstiges']};if(categoryMap[category])return {expenseClass:categoryMap[category][0],expenseReason:categoryMap[category][1]};const type=String(ex.type||'').toLowerCase(),marked=input.businessMarked===true||ex.businessMarked===true||(Array.isArray(ex.highlightedBusinessItems)&&ex.highlightedBusinessItems.length>0);if(type.includes('wiegeschein'))return {expenseClass:'betrieblich',expenseReason:'Wiegeschein / Materialgeschäft'};return marked?{expenseClass:'pruefen',expenseReason:'betrieblicher Posten markiert'}:{expenseClass:'pruefen',expenseReason:'ohne manuelle Zuordnung zu prüfen'}}
 function noteMaterial(text=''){const t=String(text).toLowerCase(),map=[
-  ['grade-3','Sorte 3',/sorte\s*3|schwer(?:er|en)?\s+(?:stahl|schrott)/],
-  ['mixed-scrap','Mischschrott',/misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|altmetall|\bschrott\b/],
-  ['aluminium','Aluminium',/\balu(?:minium)?\b/],
+  ['grade-3','Sorte 3',/sorte\s*3|schwerschrott|schwer(?:er|en)?\s+(?:stahl|schrott)/],
+  ['cable','Kabel',/kabel/],
   ['copper','Kupfer',/kupfer/],
   ['brass','Messing',/messing/],
-  ['cable','Kabel',/kabel/],
+  ['aluminium','Aluminium',/\balu(?:minium)?\b/],
   ['motors','Elektromotoren',/elektromotor|\bmotoren?\b/],
   ['batteries','Bleibatterien',/batterie|akku/],
   ['stainless-v4a','V4A',/\bv\s*4\s*a\b/],
   ['stainless-v2a','V2A',/\bv\s*2\s*a\b/],
   ['zinc','Zink',/zink|dachrinn/],
-  ['lead','Blei',/\bblei\b/]
+  ['lead','Blei',/\bblei\b/],
+  ['mixed-scrap','Mischschrott',/misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|blech(?:schrott)?|altmetall|\bmetall\b|\bschrott\b/]
 ];for(const [key,label,re] of map)if(re.test(t))return {key,label};return {key:null,label:''}}
 function noteNumber(raw){return Number(String(raw||'').replace(/\./g,'').replace(',','.'))}
 function noteWeightKg(text=''){const m=String(text).match(/(\d+(?:[.,]\d+)?)\s*(kg|kilo(?:gramm)?|t|tonne[n]?)/i);if(!m)return null;const n=noteNumber(m[1]);return Number.isFinite(n)?money(/^(t|tonne)/i.test(m[2])?n*1000:n):null}
@@ -35,7 +35,23 @@ function noteDate(text='',now=new Date()){const t=String(text).toLowerCase(),bas
 function normalizePhone(value=''){const raw=String(value||'').trim(),digits=raw.replace(/\D/g,'');if(!digits)return '';if(digits.startsWith('0049'))return '0'+digits.slice(4);if(raw.startsWith('+49')&&digits.startsWith('49'))return '0'+digits.slice(2);return digits}
 function normalizeContactText(value=''){return String(value||'').normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase('de-DE')}
 function notePhone(text=''){const m=String(text||'').match(/(?:\+49|0049|0)\s*(?:\d[\s\/().-]*){6,14}\d/);return m?m[0].replace(/\s+/g,' ').trim():''}
-function noteLocation(text=''){const s=String(text||'').trim(),street=s.match(/\b([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .'-]{1,55}(?:straße|strasse|str\.?|weg|platz|allee|gasse|ring|damm|chaussee)\s+\d+[a-zA-Z]?(?:\s*,?\s*\d{5}\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .'-]{1,40})?)/i);if(street)return street[1].replace(/\s+/g,' ').trim();const explicit=s.match(/\b(?:adresse|anschrift|ort)\s*[:,-]?\s*([^.;\n]{3,120})/i);if(explicit)return explicit[1].trim();const stop='(?:[,.;]|$|abholen|holen|einsammeln|mitnehmen|fahren|morgen|übermorgen|heute|am\\s+\\d|\\d+(?:[.,]\\d+)?\\s*(?:kg|kilo(?:gramm)?|t|tonne[n]?)|sorte\\s*3|misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|altmetall|schrott|alu(?:minium)?|kupfer|messing|kabel|elektromotor|motoren?|batterie|akku|v\\s*[24]\\s*a|zink|blei)';for(const prep of ['in','nach','aus','von']){const re=new RegExp('\\b'+prep+'\\s+([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*(?:\\s+[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*){0,3}?)(?=\\s*'+stop+')','i'),m=s.match(re);if(m)return m[1].replace(/\s+/g,' ').trim()}return ''}
+function noteLocation(text=''){
+  const s=String(text||'').trim();
+  const street=s.match(/\b([A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .'-]{1,55}(?:straße|strasse|str\.?|weg|platz|allee|gasse|ring|damm|chaussee)\s+\d+[a-zA-Z]?(?:\s*,?\s*\d{5}\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß .'-]{1,40})?)/i);
+  if(street)return street[1].replace(/\s+/g,' ').trim();
+  const postal=s.match(/\b(\d{5}\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*(?:\s+[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß-]*){0,2})\b/);
+  if(postal)return postal[1].replace(/\s+/g,' ').trim();
+  const stop='(?:[,.;]|$|bei\\b|abholen|holen|einsammeln|mitnehmen|fahren|morgen|übermorgen|heute|am\\s+\\d|\\d+(?:[.,]\\d+)?\\s*(?:kg|kilo(?:gramm)?|t|tonne[n]?)|sorte\\s*3|schwerschrott|misch(?:s?ch?rott|rot)|mischrott|eisen(?:schrott)?|stahl(?:schrott)?|blech(?:schrott)?|altmetall|schrott|alu(?:minium)?|kupfer|messing|kabel|elektromotor|motoren?|batterie|akku|v\\s*[24]\\s*a|zink|blei)';
+  const explicit=new RegExp('\\b(?:adresse|anschrift|ort)\\s*[:,-]?\\s*([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*(?:\\s+[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*){0,3}?)(?=\\s*'+stop+')','i');
+  const explicitMatch=s.match(explicit);
+  if(explicitMatch)return explicitMatch[1].replace(/\s+/g,' ').trim();
+  for(const prep of ['in','nach','aus','von']){
+    const re=new RegExp('\\b'+prep+'\\s+([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*(?:\\s+[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]*){0,3}?)(?=\\s*'+stop+')','i');
+    const m=s.match(re);
+    if(m)return m[1].replace(/\s+/g,' ').trim();
+  }
+  return '';
+}
 function noteContactName(text=''){const s=String(text||'').trim(),marked=s.match(/\b(?:kunde|kundin|herr|frau)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß.'-]+(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß.'-]+){0,2})/);if(marked)return marked[1].trim();const at=s.match(/\bbei\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß.'-]+(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß.'-]+){0,2})(?=\s*(?:,|in\b|$))/);return at?at[1].trim():''}
 function parseOperationalNote(text,now=new Date()){const raw=req(text,'text').slice(0,4000),t=raw.toLowerCase(),material=noteMaterial(t),weightKg=noteWeightKg(t),amountEur=noteAmountEur(t),date=noteDate(t,now),dealer='',contactName=noteContactName(raw),phone=notePhone(raw),location=noteLocation(raw),planned=/(?:soll|muss|werde|will|möchte|moechte|noch|kann).{0,60}(?:abholen|holen|einsammeln|mitnehmen)|(?:abholen|holen|einsammeln|mitnehmen).{0,40}(?:morgen|übermorgen|heute|am\s+\d|nächste|naechste)/.test(t),sold=/verkauft|abgegeben|angeliefert|(?:zum|zu einem|bei einem)\s+händler\s+(?:gebracht|gefahren)|zum\s+händler\s+gebracht/.test(t),fuel=/getankt|tanken|tankstelle/.test(t),tool=/werkzeug|handschuh|schraub|trennscheib|bohrer|maschine/.test(t)&&/gekauft|geholt|bezahlt/.test(t),bought=/(?:schrott|metall|kupfer|messing|alu|minium|kabel|motor|batterie|v2a|v4a).{0,40}(?:gekauft|bezahlt)|(?:gekauft|bezahlt).{0,40}(?:schrott|metall|kupfer|messing|alu|minium|kabel|motor|batterie|v2a|v4a)/.test(t),collected=/\b(?:habe|hab|heute)?\s*(?:abgeholt|geholt|eingesammelt)\b/.test(t)&&!planned;let action='notiz',expectedCategory=null,documentExpected=false,completed=false;if(planned){action='abholung-geplant';expectedCategory='schrottkauf'}else if(sold){action='verkauf';expectedCategory='wiegeschein';documentExpected=true;completed=true}else if(fuel){action='tanken';expectedCategory='tanken';documentExpected=true;completed=true}else if(tool){action='werkzeugkauf';expectedCategory='werkzeug';documentExpected=true;completed=true}else if(bought||collected){action=bought?'schrottkauf':'abholung-erledigt';expectedCategory='schrottkauf';documentExpected=true;completed=true}return {action,materialKey:material.key,materialLabel:material.label,weightKg,amountEur,date,dealer,contactName,phone,location,expectedCategory,documentExpected,completed,raw}}
 function sameDayOrNear(a,b){if(!a||!b)return true;const da=new Date(a+'T12:00:00Z'),db=new Date(b+'T12:00:00Z');return Number.isFinite(da.getTime())&&Number.isFinite(db.getTime())?Math.abs(da-db)<=3*86400000:true}
