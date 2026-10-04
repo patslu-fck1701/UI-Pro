@@ -126,3 +126,14 @@ test('reconcile reparses existing voice orders with missing material and locatio
   assert.equal(call.location,'alfeld');
   assert.equal(result.createdCustomers,0);
 });
+
+
+test('iPhone misrecognition "Schritte" still yields Alfeld, scrap and tonnes',()=>{
+  const s=svc();
+  const note=s.addNote('a','Morgen in Alfeld 2,15 Schritte','voice-ios-steps-1');
+  assert.equal(note.call.location,'Alfeld');
+  assert.equal(note.call.materialKey,'mixed-scrap');
+  assert.equal(note.call.material,'Mischschrott');
+  assert.equal(note.call.estimatedWeightKg,2150);
+  assert.equal(note.call.scheduledFor,'2026-10-05');
+});
