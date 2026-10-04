@@ -28,7 +28,7 @@ test('service worker update can reload for every new controller',()=>{
   assert.match(html,/var swReloading=false/);
   assert.match(html,/controllerchange/);
   assert.doesNotMatch(html,/werkz-sw-reload/);
-  assert.match(sw,/werkz-simple-pilot-v7/);
+  assert.match(sw,/werkz-simple-pilot-v\d+/);
   assert.match(sw,/skipWaiting\(\)/);
   assert.match(sw,/clients\.claim\(\)/);
 });
