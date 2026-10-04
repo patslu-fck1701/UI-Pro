@@ -21,6 +21,7 @@ class Auth{
   }
 }
 class Ent{
+  isActive(){return false;}
   require(org,moduleId){
     if(!['werkz.simple','werkz.documents','werkz.billing-prep','werkz.channel.gmail','werkz.crypto-monitor'].includes(moduleId)){
       throw Object.assign(new Error('denied'),{code:'ENTITLEMENT_DENIED'});
