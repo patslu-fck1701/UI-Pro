@@ -504,3 +504,70 @@ test('runtime: blank server location cannot erase richer local Christian address
   assert.match(elements.get('#routePlan').innerHTML,/Teststraße 12, 31061 Alfeld/);
   assert.match(elements.get('#routePlan').innerHTML,/data-maps-destination="Teststraße 12, 31061 Alfeld"/);
 });
+
+
+test('runtime: old Android server row reparses raw voice text and shows the same Maps button as iPhone',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:christian',
+    werkzPilotTenantLabel:'Christian',
+    werkzPilotTenantSlug:'christian',
+    werkzPilotPage:'home'
+  });
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{userAgent:'Mozilla/5.0 (Linux; Android 14)'},location:{href:'https://example.invalid/pilot/?tenant=christian',search:'?tenant=christian'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async url=>{
+      if(String(url).includes('/pilot/api/route-plan'))return {ok:true,status:200,json:async()=>({stops:[{
+        id:'call-old',entityType:'call',name:'Sprachauftrag',location:'',material:'',materialKey:'',quantity:'',
+        estimatedWeightKg:null,distanceKm:0,scheduledFor:null,source:'voice-note',
+        originalText:'Abholung: Morgen Teststraße 12 31061 Alfeld 2 Tonnen Schrott abholen',orders:[]
+      }]})};
+      throw new TypeError('offline');
+    },
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+  await new Promise(resolve=>setTimeout(resolve,10));
+  await context.routePlan();
+
+  const next=elements.get('#nextJob').innerHTML;
+  assert.match(next,/Teststraße 12, 31061 Alfeld/);
+  assert.match(next,/Mischschrott/);
+  assert.match(next,/2000 kg/);
+  assert.match(next,/data-maps-destination="Teststraße 12, 31061 Alfeld"/);
+  assert.match(next,/GOOGLE MAPS STARTEN/);
+});
+
+test('runtime: Android and iPhone produce identical next-job markup for the same parsed order',async()=>{
+  async function render(ua){
+    const elements=new Map();
+    const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+    const localStorage=makeStorage({werkzPilotTenantScope:'slug:tester',werkzPilotTenantLabel:'Tester',werkzPilotTenantSlug:'tester',werkzPilotPage:'home'});
+    const context={
+      console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+      document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+      navigator:{userAgent:ua},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+      URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+      fetch:async()=>{throw new TypeError('offline')},alert(){},confirm(){return false},prompt(){return null},
+      btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+      FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+    };
+    context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+    context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+    vm.createContext(context);vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+    await context.saveVoiceNote('morgen in Alfeld 2 tonnen Schrott');
+    return elements.get('#nextJob').innerHTML;
+  }
+  const android=await render('Mozilla/5.0 (Linux; Android 14)');
+  const iphone=await render('Mozilla/5.0 (iPhone; CPU iPhone OS 26_5 like Mac OS X)');
+  assert.equal(android,iphone);
+});
