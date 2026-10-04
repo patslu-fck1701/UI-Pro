@@ -100,7 +100,7 @@ class DraftMailProvider extends OutboundMailPort{
 }
 class StaticMarketProvider extends MarketDataPort{constructor(value=null,ownerDemoOrganisationIds=[]){super();this.value=value;this.ownerDemoOrganisationIds=new Set(ownerDemoOrganisationIds)}async snapshot({organisationId}={}){return this.value&&this.ownerDemoOrganisationIds.has(organisationId)?{...this.value,source:'owner-demo-snapshot',live:false}:{source:'demo',live:false,symbol:'BTC/EUR',price:null,change24h:null,change30d:null,note:'Keine freigegebenen Marktdaten für diesen Betrieb.'}}}
 class StaticPortfolioProvider extends PortfolioReadPort{constructor(value=null,ownerDemoOrganisationIds=[]){super();this.value=value;this.ownerDemoOrganisationIds=new Set(ownerDemoOrganisationIds)}async portfolio({organisationId}={}){return this.value&&this.ownerDemoOrganisationIds.has(organisationId)?{...this.value,source:'owner-demo-snapshot',live:false}:{source:'demo',live:false,asset:'BTC',quantity:null,marketValueEur:null,costBasisEur:null,pnlEur:null,note:'Für diesen Betrieb ist kein Portfolio freigegeben.'}}}
-class StaticScrapPriceProvider extends ScrapPricePort{constructor(value=null){super();this.value=value}async snapshot(){return this.value||{source:'demo',asOf:null,items:[
+class StaticScrapPriceProvider extends ScrapPricePort{constructor(value=null){super();this.value=value}async snapshot(){return this.value||{source:'fallback',live:false,asOf:null,items:[
   {key:'mixed-scrap',label:'Mischschrott',unit:'EUR/t',price:null},
   {key:'grade-3',label:'Sorte 3',unit:'EUR/t',price:null},
   {key:'shredder-feed',label:'Schreddervormaterial',unit:'EUR/t',price:null},
@@ -114,7 +114,68 @@ class StaticScrapPriceProvider extends ScrapPricePort{constructor(value=null){su
   {key:'batteries',label:'Bleibatterien',unit:'EUR/t',price:null},
   {key:'stainless-v2a',label:'V2A Edelstahl',unit:'EUR/t',price:null},
   {key:'stainless-v4a',label:'V4A Edelstahl',unit:'EUR/t',price:null}
-],note:'Tagespreise / Richtwerte. Händlerpreis kann abweichen.'}}}
+],note:'Kein Live-Preis verfügbar.'}}}
+
+function livePriceText(html){return String(html||'').replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,' ').replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/&euro;|&#8364;/gi,'€').replace(/&amp;/gi,'&').replace(/\\s+/g,' ').trim()}
+function livePriceNumber(value){const n=Number(String(value||'').replace(/\\./g,'').replace(',','.'));return Number.isFinite(n)?n:null}
+function livePriceRange(text,labels){for(const label of labels){const i=text.toLowerCase().indexOf(String(label).toLowerCase());if(i<0)continue;const part=text.slice(i,i+360),m=part.match(/€\\s*([0-9]+(?:[.,][0-9]+)?)(?:\\s*[-–]\\s*€?\\s*([0-9]+(?:[.,][0-9]+)?))?\\s*\\/\\s*kg/i);if(!m)continue;const a=livePriceNumber(m[1]),b=livePriceNumber(m[2]);if(Number.isFinite(a))return {min:a,max:Number.isFinite(b)?b:a}}return null}
+function liveItem(key,label,unit,range,note='Deutschland-Marktwert'){if(!range)return {key,label,unit,price:null,note};const mul=unit==='EUR/t'?1000:1,min=money(range.min*mul),max=money(range.max*mul);return Math.abs(min-max)<0.0001?{key,label,unit,price:min,note}:{key,label,unit,priceMin:min,priceMax:max,note}}
+
+class LiveScrapPriceProvider extends ScrapPricePort{
+  constructor({fallback=null,fetchFn=globalThis.fetch,ttlMs=15*60*1000,cacheFile=null,baseUrl='https://lokaleschrottplatz.de'}={}){super();this.fallback=new StaticScrapPriceProvider(fallback);this.fetchFn=fetchFn;this.ttlMs=ttlMs;this.cacheFile=cacheFile;this.baseUrl=baseUrl.replace(/\\/$/,'');this.cache=null;this.cacheAt=0;this.loadCache()}
+  loadCache(){if(!this.cacheFile)return;try{const x=JSON.parse(fs.readFileSync(this.cacheFile,'utf8'));if(x&&Array.isArray(x.items)){this.cache=x;this.cacheAt=Date.parse(x.generatedAt||x.asOf)||0}}catch{}}
+  saveCache(value){if(!this.cacheFile)return;try{fs.mkdirSync(path.dirname(this.cacheFile),{recursive:true});const tmp=this.cacheFile+'.tmp';fs.writeFileSync(tmp,JSON.stringify(value));fs.renameSync(tmp,this.cacheFile)}catch{}}
+  async fetchPage(url){if(typeof this.fetchFn!=='function')throw new Error('fetch unavailable');const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),8000);try{const r=await this.fetchFn(url,{headers:{accept:'text/html,application/xhtml+xml','user-agent':'WerkZ-Schrotties/1.0 (+price refresh)'},signal:ctrl.signal});if(!r.ok)throw new Error('price source HTTP '+r.status);return livePriceText(await r.text())}finally{clearTimeout(timer)}}
+  async snapshot({force=false}={}){
+    const now=Date.now();
+    if(!force&&this.cache&&now-this.cacheAt<this.ttlMs)return {...clone(this.cache),cache:'fresh'};
+    try{
+      const urls={
+        home:this.baseUrl+'/',
+        aluminium:this.baseUrl+'/search/aluminiumhaendler/',
+        lead:this.baseUrl+'/search/bleischrotthaendler/',
+        stainless:this.baseUrl+'/search/edelstahlhaendler/',
+        brass:this.baseUrl+'/search/messingschrotthaendler/',
+        zinc:this.baseUrl+'/search/zinkschrotthaendler/',
+        motors:this.baseUrl+'/search/elektromotoren-haendler/'
+      };
+      const keys=Object.keys(urls),texts=await Promise.all(keys.map(k=>this.fetchPage(urls[k]))),page=Object.fromEntries(keys.map((k,i)=>[k,texts[i]]));
+      const mixed=livePriceRange(page.home,['Stahl-Mischschrott / Scherenschrott (Sorte 3)']);
+      const copper=livePriceRange(page.home,['Kupfer Schwer (Neu / E-Kupfer)','Kupfer Millberry (Klasse 1A)']);
+      const cableLow=livePriceRange(page.home,['Kupferkabel Datenkabel / Kabelbaum (<40% Cu)']);
+      const cableHigh=livePriceRange(page.home,['Kupferkabel Haushaltskabel (40-70% Cu)']);
+      const cable=cableLow&&cableHigh?{min:Math.min(cableLow.min,cableHigh.min),max:Math.max(cableLow.max,cableHigh.max)}:(cableHigh||cableLow);
+      const value={
+        source:'LokaleSchrottplatz.de',
+        sourceUrl:this.baseUrl+'/',
+        live:true,
+        asOf:new Date().toISOString(),
+        refreshAfterSeconds:Math.round(this.ttlMs/1000),
+        items:[
+          liveItem('mixed-scrap','Mischschrott','EUR/t',mixed),
+          liveItem('grade-3','Sorte 3','EUR/t',mixed),
+          liveItem('shredder-feed','Schreddervormaterial','EUR/t',null,'Noch kein belastbarer Live-Wert'),
+          liveItem('copper','Kupfer','EUR/kg',copper),
+          liveItem('brass','Messing','EUR/kg',livePriceRange(page.brass,['Messing Schwer'])),
+          liveItem('lead','Blei','EUR/kg',livePriceRange(page.lead,['Weichblei (Sorte 1 / Sauber)'])),
+          liveItem('zinc','Zink','EUR/kg',livePriceRange(page.zinc,['Altzink (Sorte 1 / Zinkblech)'])),
+          liveItem('aluminium','Aluminium','EUR/kg',livePriceRange(page.aluminium,['Aluminium Mischschrott (Sorte 2)'])),
+          liveItem('cable','Kabel','EUR/kg',cable),
+          liveItem('motors','Elektromotoren','EUR/t',livePriceRange(page.motors,['Elektromotoren (Sauber / Standard)','Elektromotore'])),
+          liveItem('batteries','Bleibatterien','EUR/t',livePriceRange(page.lead,['Batterien Pb','Blei-Akkumulatoren'])),
+          liveItem('stainless-v2a','V2A Edelstahl','EUR/t',livePriceRange(page.stainless,['Edelstahl V2A Chargierfähig (bis 1,5m)','Edelstahl V2A Neu / Sauber'])),
+          liveItem('stainless-v4a','V4A Edelstahl','EUR/t',livePriceRange(page.stainless,['Edelstahl V4A (Chrom-Nickel-Molybdän)']))
+        ],
+        note:'Deutschland-Marktwerte. Tatsächlicher Händlerpreis kann regional abweichen.'
+      };
+      if(!value.items.some(x=>Number.isFinite(Number(x.price))||Number.isFinite(Number(x.priceMin))))throw new Error('price source returned no parsable values');
+      this.cache=value;this.cacheAt=now;this.saveCache(value);return clone(value);
+    }catch(error){
+      if(this.cache)return {...clone(this.cache),live:false,stale:true,note:'Live-Aktualisierung fehlgeschlagen – letzter gültiger Stand. '+String(error.message||error).slice(0,120)};
+      const fallback=await this.fallback.snapshot();return {...fallback,live:false,stale:true,source:fallback.source||'fallback',note:(fallback.note||'Fallback')+' Live-Aktualisierung derzeit nicht erreichbar.'};
+    }
+  }
+}
 
 class WerkZSimplePilotService{
   constructor({auth,entitlements,repository,storage,voice,mail,extractor,outbound,market,portfolio,scrapPrices,pickupDefaults={},clock=()=>new Date(),audit=()=>{}}){Object.assign(this,{auth,entitlements,repository,storage,voice,mail,extractor,outbound,market,portfolio,scrapPrices,clock,audit});this.pickupDefaults={vehicleCostPerKm:0.45,handlingCostEur:15,minimumProfitEur:50,targetMarginPct:15,vehiclePayloadKg:1200,...pickupDefaults}}
@@ -241,7 +302,7 @@ class WerkZSimplePilotService{
   restoreDocument(token,input={}){const s=this.session(token,'pilot.write');if(input.confirm!==true)throw Object.assign(new Error('confirmation required'),{code:'CONFIRMATION_REQUIRED'});const doc=input.document||{},id=req(doc.id,'document.id'),fileName=req(doc.storage&&doc.storage.fileName||input.fileName,'fileName'),mime=String(doc.storage&&doc.storage.mime||input.mime||'application/octet-stream'),bytes=Buffer.from(req(input.dataBase64,'dataBase64'),'base64');if(bytes.length>12*1024*1024)throw Object.assign(new Error('too large'),{code:'PAYLOAD_TOO_LARGE'});const stored=this.storage.put({organisationId:s.organisationId,id,fileName,mime,bytes}),row={...doc,id,organisationId:s.organisationId,storage:stored};this.repository.upsert(s.organisationId,'documents',row);this.event(s,'pilot.backup.document-restored',id,{size:stored.size});return row}
   backupHealth(token){const s=this.session(token),summary=this.summary(token);return {ok:true,at:this.clock().toISOString(),organisationId:s.organisationId,summary}}
   async marketSnapshot(token){const s=this.session(token);this.entitlements.require(s.organisationId,'werkz.crypto-monitor');const [market,portfolio]=await Promise.all([this.market.snapshot({organisationId:s.organisationId}),this.portfolio.portfolio({organisationId:s.organisationId})]);return {label:'Demo-Portfolio',readOnly:true,market,portfolio,generatedAt:this.clock().toISOString()}}
-  async scrapPriceSnapshot(token){const s=this.session(token);const snap=await this.scrapPrices.snapshot({organisationId:s.organisationId});return {...snap,items:Array.isArray(snap.items)?snap.items.map(x=>({...x,displayUnit:x.unit==='EUR/t'?'€/t':'€/kg'})):[],generatedAt:this.clock().toISOString()}}
+  async scrapPriceSnapshot(token,{force=false}={}){const s=this.session(token);const snap=await this.scrapPrices.snapshot({organisationId:s.organisationId,force});return {...snap,items:Array.isArray(snap.items)?snap.items.map(x=>({...x,displayUnit:x.unit==='EUR/t'?'€/t':'€/kg'})):[],generatedAt:this.clock().toISOString()}}
 }
 
 function cookieValue(cookie,name){const x=String(cookie||'').split(';').map(v=>v.trim()).find(v=>v.startsWith(name+'='));return x?decodeURIComponent(x.slice(name.length+1)):null}
@@ -295,13 +356,13 @@ function createPilotHttpHandler({service,defaultTaxRecipient='steuerberater@exam
     else if(reqr.method==='POST'&&url.pathname==='/pilot/api/backup/restore-document'){const b=await readBody(reqr,18*1024*1024);sendJson(res,200,service.restoreDocument(token,b))}
     else if(reqr.method==='GET'&&url.pathname==='/pilot/api/health')sendJson(res,200,service.backupHealth(token));
     else if(reqr.method==='GET'&&url.pathname==='/pilot/api/market')sendJson(res,200,await service.marketSnapshot(token));
-    else if(reqr.method==='GET'&&url.pathname==='/pilot/api/scrap-prices')sendJson(res,200,await service.scrapPriceSnapshot(token));
+    else if(reqr.method==='GET'&&url.pathname==='/pilot/api/scrap-prices')sendJson(res,200,await service.scrapPriceSnapshot(token,{force:url.searchParams.get('refresh')==='1'}));
     else sendJson(res,404,{error:'NOT_FOUND'});
     return true
   }catch(e){process.stdout.write(JSON.stringify({kind:'pilot-api-error',method:reqr.method,path:url.pathname,code:e&&e.code||'ERROR',message:String(e&&e.message||'Request failed').slice(0,300)})+'\\n');sendJson(res,status(e),{error:e.code||'ERROR',message:e.code==='VALIDATION_ERROR'?e.message:'Request failed'});return true}}
 }
 
 function parseSnapshot(value){if(!value)return {};try{const x=JSON.parse(value);return x&&typeof x==='object'?x:{}}catch{return {}}}
-function createPilotRuntime({auth,entitlements,dataDir,ownerDemoOrganisationIds=[],audit=()=>{}}){const snap=parseSnapshot(process.env.WERKZ_DEMO_CRYPTO_SNAPSHOT),scrap=parseSnapshot(process.env.WERKZ_SCRAP_PRICE_SNAPSHOT),pickupDefaults=parseSnapshot(process.env.WERKZ_PICKUP_DEFAULTS);return new WerkZSimplePilotService({auth,entitlements,repository:new FilePilotRepository(path.join(dataDir,'pilot.json')),storage:new PilotDocumentStorage(path.join(dataDir,'documents')),voice:new FakeVoiceProvider(),mail:new FakeMailProvider(),extractor:new FakeExtractor(),outbound:new DraftMailProvider(),market:new StaticMarketProvider(snap.market||null,ownerDemoOrganisationIds),portfolio:new StaticPortfolioProvider(snap.portfolio||null,ownerDemoOrganisationIds),scrapPrices:new StaticScrapPriceProvider(scrap.items?scrap:null),pickupDefaults,audit})}
+function createPilotRuntime({auth,entitlements,dataDir,ownerDemoOrganisationIds=[],audit=()=>{}}){const snap=parseSnapshot(process.env.WERKZ_DEMO_CRYPTO_SNAPSHOT),scrap=parseSnapshot(process.env.WERKZ_SCRAP_PRICE_SNAPSHOT),pickupDefaults=parseSnapshot(process.env.WERKZ_PICKUP_DEFAULTS);return new WerkZSimplePilotService({auth,entitlements,repository:new FilePilotRepository(path.join(dataDir,'pilot.json')),storage:new PilotDocumentStorage(path.join(dataDir,'documents')),voice:new FakeVoiceProvider(),mail:new FakeMailProvider(),extractor:new FakeExtractor(),outbound:new DraftMailProvider(),market:new StaticMarketProvider(snap.market||null,ownerDemoOrganisationIds),portfolio:new StaticPortfolioProvider(snap.portfolio||null,ownerDemoOrganisationIds),scrapPrices:new LiveScrapPriceProvider({fallback:scrap.items?scrap:null,cacheFile:path.join(dataDir,'scrap-prices-cache.json'),ttlMs:15*60*1000}),pickupDefaults,audit})}
 
-module.exports={VoiceProviderPort,MailProviderPort,DocumentExtractionPort,OutboundMailPort,MarketDataPort,PortfolioReadPort,ScrapPricePort,FilePilotRepository,MemoryPilotRepository,PilotDocumentStorage,FakeVoiceProvider,FakeMailProvider,FakeExtractor,DraftMailProvider,StaticMarketProvider,StaticPortfolioProvider,StaticScrapPriceProvider,WerkZSimplePilotService,createPilotHttpHandler,createPilotRuntime,parseSnapshot,classifyInquiry,classifyExpense,parseOperationalNote};
+module.exports={VoiceProviderPort,MailProviderPort,DocumentExtractionPort,OutboundMailPort,MarketDataPort,PortfolioReadPort,ScrapPricePort,FilePilotRepository,MemoryPilotRepository,PilotDocumentStorage,FakeVoiceProvider,FakeMailProvider,FakeExtractor,DraftMailProvider,StaticMarketProvider,StaticPortfolioProvider,StaticScrapPriceProvider,LiveScrapPriceProvider,WerkZSimplePilotService,createPilotHttpHandler,createPilotRuntime,parseSnapshot,classifyInquiry,classifyExpense,parseOperationalNote};
