@@ -280,3 +280,30 @@ test('opt-in diagnostics inventories older orphaned voice work without deleting 
   assert.ok(s.repository.find('org-a','workItems',n.workItem.id));
   assert.equal(s.routePlan('a').stops.length,0);
 });
+
+test('calculator transfer creates one normal tenant-scoped call with planned payout only',async()=>{
+  const s=svc(),estimate={id:'pickup-calc-1',organisationId:'org-a',createdAt:'2026-10-04T08:00:00Z'};
+  s.repository.add('pickupEstimates',estimate);
+  const payload={clientMutationId:'calc-one',source:'pickup-calculator',sourcePickupEstimateId:estimate.id,category:'Abholung',name:'Kunde Eins',phone:'01234',location:'Gallusanlage 7, 60329',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:500,quantity:'500 kg',distanceKm:18,scheduledFor:'2026-10-05',plannedCustomerPayoutEur:40};
+  const row=await s.recordCall('a',payload),replayed=await s.recordCall('a',payload);
+  assert.equal(replayed.id,row.id);assert.equal(replayed.replayed,true);assert.equal(s.listCalls('a').length,1);
+  assert.equal(row.plannedCustomerPayoutEur,40);assert.equal(row.distanceKm,18);assert.equal(row.estimatedWeightKg,500);
+  assert.equal(row.sourcePickupEstimateId,estimate.id);assert.equal(s.routePlan('a').stops[0].id,row.id);
+  assert.equal(s.monthlyEconomics('a','2026-10').pickupPayoutEur,0);assert.equal(s.listCashEntries('a').length,0);
+  assert.equal(s.listCalls('b').length,0);
+  await assert.rejects(s.recordCall('b',payload),e=>e.code==='VALIDATION_ERROR');
+  s.deleteCall('a',row.id);assert.equal(s.routePlan('a').stops.length,0);
+  await assert.rejects(s.recordCall('a',payload),e=>e.code==='CONFLICT');
+});
+test('calculator transfer requires a usable destination before creating any call',async()=>{
+  const s=svc(),base={clientMutationId:'calc-no-target',source:'pickup-calculator',category:'Abholung',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:100,distanceKm:7};
+  await assert.rejects(s.recordCall('a',base),e=>e.code==='VALIDATION_ERROR');
+  assert.equal(s.listCalls('a').length,0);assert.equal(s.repository.list('org-a','callMutations').length,0);
+});
+test('calculator transfer persists idempotency and planned payout after repository restart',async()=>{
+  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),dir=fs.mkdtempSync(path.join(os.tmpdir(),'werkz-calc-call-'));
+  try{const file=path.join(dir,'pilot.json'),a=svc({repository:new FilePilotRepository(file)}),payload={clientMutationId:'calc-persist',source:'pickup-calculator',category:'Abholung',name:'Kunde',location:'Nordpol',materialKey:'grade-3',material:'Sorte 3',estimatedWeightKg:200,distanceKm:12,plannedCustomerPayoutEur:25};
+    const first=await a.recordCall('a',payload),b=svc({repository:new FilePilotRepository(file)}),again=await b.recordCall('a',payload);
+    assert.equal(again.id,first.id);assert.equal(again.replayed,true);assert.equal(again.plannedCustomerPayoutEur,25);assert.equal(b.routePlan('a').stops.length,1)
+  }finally{fs.rmSync(dir,{recursive:true,force:true})}
+});
