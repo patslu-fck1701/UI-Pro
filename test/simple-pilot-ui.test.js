@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=19'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=20'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v19/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=19'/);
-  assert.match(sw,/werkz-simple-pilot-v19/);
+  assert.match(html,/· v20/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=20'/);
+  assert.match(sw,/werkz-simple-pilot-v20/);
 });
 
 
@@ -199,4 +199,16 @@ test('Google Maps navigation is a permanent mobile smoke-test invariant',()=>{
   assert.match(html,/GOOGLE MAPS STARTEN/);
   assert.match(html,/ZU DIESEM STOPP NAVIGIEREN/);
   assert.doesNotMatch(html,/class="mapsgo"[^>]*target="_blank"/);
+});
+
+
+test('Direkt los stays removed because Google Maps is the only navigation action',()=>{
+  assert.doesNotMatch(html,/Direkt los/i);
+  assert.match(html,/GOOGLE MAPS STARTEN/);
+  assert.match(html,/ZU DIESEM STOPP NAVIGIEREN/);
+});
+
+test('route merge keeps richer local address when server copy is blank',()=>{
+  assert.match(html,/function enrichServerRow\(r\)/);
+  assert.match(html,/copy\.location=copy\.location\|\|best\.location/);
 });
