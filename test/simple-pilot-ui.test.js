@@ -135,7 +135,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=23'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=24'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -153,9 +153,9 @@ test('local order storage is bound to stable tenant slug before session resolves
 });
 
 test('pilot UI exposes v15 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v23/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=23'/);
-  assert.match(sw,/werkz-simple-pilot-v23/);
+  assert.match(html,/· v24/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=24'/);
+  assert.match(sw,/werkz-simple-pilot-v24/);
 });
 
 
@@ -256,4 +256,17 @@ test('Auftrag erledigt is rendered on Start, overview and local-first orders',()
   assert.match(html,/bindCompletionButtons\(q\('#nextJob'\)\)/);
   assert.match(html,/bindCompletionButtons\(q\('#routePlan'\)\)/);
   assert.match(html,/localOrderPatch\(localOrderId,\{status:'completed'/);
+});
+
+
+test('Auftrag löschen is a permanent cross-platform core action',()=>{
+  assert.match(html,/AUFTRAG LÖSCHEN/);
+  assert.match(html,/function deleteOrderButton\(o\)/);
+  assert.match(html,/function deleteOrder\(callId,localOrderId\)/);
+  assert.match(html,/\/calls\/\'+encodeURIComponent\(callId\)\+'\/delete/);
+  assert.match(html,/status:'deleted'/);
+  assert.match(html,/x\.status!==\'completed\'&&x\.status!==\'deleted\'/);
+  assert.match(html,/deletedCallStorageKey\(\)/);
+  assert.match(html,/data-delete-call=/);
+  assert.match(html,/data-delete-local=/);
 });
