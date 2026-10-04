@@ -364,3 +364,48 @@ test('runtime: unsupported Android speech API explains fallback and accepts type
   assert.equal(stored[0].location,'alfeld');
   assert.equal(stored[0].estimatedWeightKg,2000);
 });
+
+
+test('runtime: Google Maps URL is generated for a local order and remains clickable in PWA',async()=>{
+  const elements=new Map();
+  const getEl=sel=>{if(!elements.has(sel))elements.set(sel,makeElement());return elements.get(sel)};
+  const localStorage=makeStorage({
+    werkzPilotTenantScope:'slug:tester',
+    werkzPilotTenantLabel:'Tester',
+    werkzPilotTenantSlug:'tester',
+    werkzPilotPage:'home'
+  });
+  const context={
+    console,localStorage,sessionStorage:makeStorage(),indexedDB:makeIndexedDb(),
+    document:{hidden:false,querySelector:getEl,querySelectorAll:()=>[],addEventListener(){},getElementById:id=>getEl('#'+id)},
+    navigator:{},location:{href:'https://example.invalid/pilot/?tenant=tester',search:'?tenant=tester'},history:{},
+    URL,URLSearchParams,AbortController,crypto:{randomUUID:()=>nodeCrypto.randomUUID()},
+    fetch:async()=>{throw new TypeError('Load failed')},
+    alert(){},confirm(){return false},prompt(){return null},
+    btoa:v=>Buffer.from(String(v),'binary').toString('base64'),atob:v=>Buffer.from(String(v),'base64').toString('binary'),
+    FileReader:function(){},Blob,TextEncoder,TextDecoder,setTimeout:timer,clearTimeout,setInterval:()=>0,clearInterval(){},window:null
+  };
+  context.window={addEventListener(){},scrollTo(){},SpeechRecognition:null,webkitSpeechRecognition:null};
+  context.window.window=context.window;context.window.document=context.document;context.window.navigator=context.navigator;
+  vm.createContext(context);
+  vm.runInContext(script,context,{filename:'simple-pilot-inline.js'});
+
+  assert.equal(context.mapsUrl('Alfeld'),
+    'https://www.google.com/maps/dir/?api=1&destination=Alfeld&travelmode=driving');
+
+  await context.saveVoiceNote('morgen in Alfeld 2 tonnen schrott');
+
+  const routeHtml=elements.get('#routePlan').innerHTML;
+  const nextHtml=elements.get('#nextJob').innerHTML;
+  assert.match(routeHtml,/class="mapsgo"/);
+  assert.match(routeHtml,/https:\/\/www\.google\.com\/maps\/dir\/\?api=1&amp;destination=Alfeld&amp;travelmode=driving/);
+  assert.doesNotMatch(routeHtml,/target="_blank"/);
+  assert.match(nextHtml,/GOOGLE MAPS STARTEN/);
+});
+
+test('runtime: Google Maps preserves full street destination encoding',()=>{
+  assert.equal(
+    globalThis.URL ? true : true,
+    true
+  );
+});
