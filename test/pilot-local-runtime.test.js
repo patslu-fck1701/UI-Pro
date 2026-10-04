@@ -773,6 +773,10 @@ test('runtime: deleting a local-only order hides it immediately and prevents lat
   const sent=await context.syncLocalVoiceOrders();
   assert.equal(sent,0);
   assert.equal(noteAttempts,0);
+  context.fetch=async url=>{if(String(url).includes('/pilot/api/notes'))noteAttempts++;if(String(url).includes('/pilot/api/route-plan'))return {ok:true,status:200,json:async()=>({stops:[]})};return {ok:true,status:200,json:async()=>({})}};
+  await context.syncOfflineQueue();await context.syncLocalVoiceOrders();await context.routePlan();
+  assert.equal(noteAttempts,0);
+  assert.match(elements.get('#nextJob').innerHTML,/Keine offenen Aufträge/);
 });
 
 test('runtime: deleting a server order posts delete endpoint and removes it from Start and overview',async()=>{
