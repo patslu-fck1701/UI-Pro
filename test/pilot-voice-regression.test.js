@@ -137,3 +137,19 @@ test('iPhone misrecognition "Schritte" still yields Alfeld, scrap and tonnes',()
   assert.equal(note.call.estimatedWeightKg,2150);
   assert.equal(note.call.scheduledFor,'2026-10-05');
 });
+
+
+test('Android-style spoken full address keeps street house number postcode and town',()=>{
+  const s=svc();
+  const note=s.addNote('a','Morgen Teststraße, Hausnummer 12, Postleitzahl 31061, Ort Alfeld, 2 Tonnen Schrott abholen','voice-android-address-1');
+  assert.equal(note.call.location,'Teststraße 12, 31061 Alfeld');
+  assert.equal(note.call.materialKey,'mixed-scrap');
+  assert.equal(note.call.estimatedWeightKg,2000);
+  assert.equal(note.call.scheduledFor,'2026-10-05');
+});
+
+test('plain Android full address without spoken labels is preserved',()=>{
+  const s=svc();
+  const note=s.addNote('a','Morgen Teststraße 12 31061 Alfeld 2 Tonnen Schrott abholen','voice-android-address-2');
+  assert.equal(note.call.location,'Teststraße 12, 31061 Alfeld');
+});
