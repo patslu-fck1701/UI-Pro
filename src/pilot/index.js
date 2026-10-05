@@ -147,10 +147,12 @@ function livePriceText(html){return String(html||'').replace(/<script\b[^>]*>[\s
 function livePriceNumber(value){const n=Number(String(value||'').replace(/\./g,'').replace(',','.'));return Number.isFinite(n)?n:null}
 function livePriceRange(text,labels){for(const label of labels){const i=text.toLowerCase().indexOf(String(label).toLowerCase());if(i<0)continue;const part=text.slice(i,i+360),m=part.match(/€\s*([0-9]+(?:[.,][0-9]+)?)(?:\s*[-–]\s*€?\s*([0-9]+(?:[.,][0-9]+)?))?\s*\/\s*kg/i);if(!m)continue;const a=livePriceNumber(m[1]),b=livePriceNumber(m[2]);if(Number.isFinite(a))return {min:a,max:Number.isFinite(b)?b:a}}return null}
 function liveItem(key,label,unit,range,note='Deutschland-Marktwert'){if(!range)return {key,label,unit,price:null,note};const mul=unit==='EUR/t'?1000:1,min=money(range.min*mul),max=money(range.max*mul);return Math.abs(min-max)<0.0001?{key,label,unit,price:min,note}:{key,label,unit,priceMin:min,priceMax:max,note}}
+function liveItemHasPrice(item){return Boolean(item&&((item.price!=null&&Number.isFinite(Number(item.price)))||(item.priceMin!=null&&Number.isFinite(Number(item.priceMin)))||(item.priceMax!=null&&Number.isFinite(Number(item.priceMax)))))}
+function scrapSnapshotHasPrices(value){return Boolean(value&&Array.isArray(value.items)&&value.items.some(liveItemHasPrice))}
 
 class LiveScrapPriceProvider extends ScrapPricePort{
   constructor({fallback=null,fetchFn=globalThis.fetch,ttlMs=15*60*1000,cacheFile=null,baseUrl='https://lokaleschrottplatz.de'}={}){super();this.fallback=new StaticScrapPriceProvider(fallback);this.fetchFn=fetchFn;this.ttlMs=ttlMs;this.cacheFile=cacheFile;this.baseUrl=baseUrl.replace(/\/$/,'');this.cache=null;this.cacheAt=0;this.loadCache()}
-  loadCache(){if(!this.cacheFile)return;try{const x=JSON.parse(fs.readFileSync(this.cacheFile,'utf8'));if(x&&Array.isArray(x.items)){this.cache=x;this.cacheAt=Date.parse(x.generatedAt||x.asOf)||0}}catch{}}
+  loadCache(){if(!this.cacheFile)return;try{const x=JSON.parse(fs.readFileSync(this.cacheFile,'utf8'));if(scrapSnapshotHasPrices(x)){this.cache=x;this.cacheAt=Date.parse(x.generatedAt||x.asOf)||0}}catch{}}
   saveCache(value){if(!this.cacheFile)return;try{fs.mkdirSync(path.dirname(this.cacheFile),{recursive:true});const tmp=this.cacheFile+'.tmp';fs.writeFileSync(tmp,JSON.stringify(value));fs.renameSync(tmp,this.cacheFile)}catch{}}
   async fetchPage(url){if(typeof this.fetchFn!=='function')throw new Error('fetch unavailable');const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),8000);try{const r=await this.fetchFn(url,{headers:{accept:'text/html,application/xhtml+xml','user-agent':'WerkZ-Schrotties/1.0 (+price refresh)'},signal:ctrl.signal});if(!r.ok)throw new Error('price source HTTP '+r.status);return livePriceText(await r.text())}finally{clearTimeout(timer)}}
   async snapshot({force=false}={}){
@@ -197,10 +199,10 @@ class LiveScrapPriceProvider extends ScrapPricePort{
         failedPages,
         note:'Deutschland-Marktwerte. Tatsächlicher Händlerpreis kann regional abweichen.'+(failedPages.length?' Teilquellen vorübergehend nicht erreichbar: '+failedPages.join(', ')+'.':'')
       };
-      if(!value.items.some(x=>Number.isFinite(Number(x.price))||Number.isFinite(Number(x.priceMin))))throw new Error('price source returned no parsable values');
+      if(!scrapSnapshotHasPrices(value))throw new Error('price source returned no parsable values');
       this.cache=value;this.cacheAt=now;this.saveCache(value);return clone(value);
     }catch(error){
-      if(this.cache)return {...clone(this.cache),live:false,stale:true,note:'Live-Aktualisierung fehlgeschlagen – letzter gültiger Stand. '+String(error.message||error).slice(0,120)};
+      if(scrapSnapshotHasPrices(this.cache))return {...clone(this.cache),live:false,stale:true,note:'Live-Aktualisierung fehlgeschlagen – letzter gültiger Stand. '+String(error.message||error).slice(0,120)};
       const fallback=await this.fallback.snapshot();return {...fallback,live:false,stale:true,source:fallback.source||'fallback',note:(fallback.note||'Fallback')+' Live-Aktualisierung derzeit nicht erreichbar.'};
     }
   }
