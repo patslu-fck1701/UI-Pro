@@ -166,7 +166,7 @@ class LiveScrapPriceProvider extends ScrapPricePort{
         zinc:this.baseUrl+'/search/zinkschrotthaendler/',
         motors:this.baseUrl+'/search/elektromotoren-haendler/'
       };
-      const keys=Object.keys(urls),texts=await Promise.all(keys.map(k=>this.fetchPage(urls[k]))),page=Object.fromEntries(keys.map((k,i)=>[k,texts[i]]));
+      const keys=Object.keys(urls),results=await Promise.allSettled(keys.map(k=>this.fetchPage(urls[k]))),page={},failedPages=[];for(let i=0;i<keys.length;i++){const r=results[i];if(r.status==='fulfilled')page[keys[i]]=r.value;else{page[keys[i]]='';failedPages.push(keys[i])}}
       const mixed=livePriceRange(page.home,['Stahl-Mischschrott / Scherenschrott (Sorte 3)']);
       const copper=livePriceRange(page.home,['Kupfer Schwer (Neu / E-Kupfer)','Kupfer Millberry (Klasse 1A)']);
       const cableLow=livePriceRange(page.home,['Kupferkabel Datenkabel / Kabelbaum (<40% Cu)']);
@@ -193,7 +193,9 @@ class LiveScrapPriceProvider extends ScrapPricePort{
           liveItem('stainless-v2a','V2A Edelstahl','EUR/t',livePriceRange(page.stainless,['Edelstahl V2A Chargierfähig (bis 1,5m)','Edelstahl V2A Neu / Sauber'])),
           liveItem('stainless-v4a','V4A Edelstahl','EUR/t',livePriceRange(page.stainless,['Edelstahl V4A (Chrom-Nickel-Molybdän)']))
         ],
-        note:'Deutschland-Marktwerte. Tatsächlicher Händlerpreis kann regional abweichen.'
+        partial:failedPages.length>0,
+        failedPages,
+        note:'Deutschland-Marktwerte. Tatsächlicher Händlerpreis kann regional abweichen.'+(failedPages.length?' Teilquellen vorübergehend nicht erreichbar: '+failedPages.join(', ')+'.':'')
       };
       if(!value.items.some(x=>Number.isFinite(Number(x.price))||Number.isFinite(Number(x.priceMin))))throw new Error('price source returned no parsable values');
       this.cache=value;this.cacheAt=now;this.saveCache(value);return clone(value);
