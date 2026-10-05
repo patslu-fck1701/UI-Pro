@@ -41,12 +41,17 @@ test('service worker update can reload for every new controller',()=>{
 });
 
 
-test('live scrap prices expose source, manual refresh and timed refresh',()=>{
+test('live scrap prices expose source, manual refresh, age and timed refresh',()=>{
   assert.match(html,/id="priceMeta"/);
   assert.match(html,/id="priceRefresh"/);
   assert.match(html,/\?refresh=1/);
   assert.match(html,/15\*60\*1000/);
-  assert.match(html,/Live.*Preisquelle|x\.live\?'Live':'Fallback'/s);
+  assert.match(html,/Preisstand/);
+  assert.match(html,/geprüft/);
+  assert.match(html,/automatisch alle 15 Min\./);
+  assert.match(html,/Live \(teilweise\)/);
+  assert.match(html,/addEventListener\('online'.*scrap\(false\)/s);
+  assert.match(html,/visibilitychange.*scrap\(false\)/s);
 });
 
 test('weigh-slip upload learns dealer prices and refreshes dependent calculations',()=>{
@@ -152,10 +157,10 @@ test('local order storage is bound to stable tenant slug before session resolves
   assert.ok(put>save&&render>put&&firstAwait>render);
 });
 
-test('pilot UI exposes v28 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v28/);
+test('pilot UI exposes v29 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v29/);
   assert.match(html,/register\('\/pilot\/sw\.js\?v=26'/);
-  assert.match(sw,/werkz-simple-pilot-v28/);
+  assert.match(sw,/werkz-simple-pilot-v29/);
 });
 
 
