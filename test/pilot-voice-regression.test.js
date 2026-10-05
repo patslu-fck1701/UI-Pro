@@ -12,7 +12,8 @@ const {
   DraftMailProvider,
   StaticMarketProvider,
   StaticPortfolioProvider,
-  StaticScrapPriceProvider
+  StaticScrapPriceProvider,
+  LiveScrapPriceProvider
 }=require('../src/pilot');
 
 class Auth{
@@ -47,6 +48,12 @@ function svc({repository=new MemoryPilotRepository(),voiceDiagnosticOrganisation
     clock:()=>new Date('2026-10-04T08:00:00Z')
   });
 }
+
+test('live scrap provider rejects HTTP-success pages with no parsable prices instead of caching zeroes',async()=>{
+  const fallback={source:'WerkZ fallback',live:false,asOf:'2026-10-04T10:40:00Z',items:[{key:'mixed-scrap',label:'Mischschrott',unit:'EUR/t',priceMin:180,priceMax:210},{key:'copper',label:'Kupfer',unit:'EUR/kg',priceMin:9.8,priceMax:10.6}]};
+  const fetchFn=async()=>({ok:true,status:200,text:async()=>'<html><body>temporär keine Preisdaten</body></html>'});
+  const p=new LiveScrapPriceProvider({fetchFn,fallback,ttlMs:900000});const x=await p.snapshot({force:true});assert.equal(x.live,false);assert.equal(x.stale,true);assert.equal(x.items.find(v=>v.key==='mixed-scrap').priceMin,180);assert.equal(x.items.find(v=>v.key==='copper').priceMax,10.6);assert.equal(x.items.some(v=>v.price===0||v.priceMin===0||v.priceMax===0),false);
+});
 
 test('every voice capture creates an open pickup order',()=>{
   const s=svc();
