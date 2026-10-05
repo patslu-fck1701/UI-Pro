@@ -152,10 +152,10 @@ test('local order storage is bound to stable tenant slug before session resolves
   assert.ok(put>save&&render>put&&firstAwait>render);
 });
 
-test('pilot UI exposes v27 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v27/);
+test('pilot UI exposes v28 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v28/);
   assert.match(html,/register\('\/pilot\/sw\.js\?v=26'/);
-  assert.match(sw,/werkz-simple-pilot-v27/);
+  assert.match(sw,/werkz-simple-pilot-v28/);
 });
 
 
@@ -188,6 +188,15 @@ test('unsupported Android browser explains fallback instead of silently opening 
   assert.match(html,/Spracherkennung nicht verfügbar\. Auftrag stattdessen eintippen:/);
 });
 
+
+test('operating base save has a real mobile click handler and visible status',()=>{
+  assert.match(html,/id="operatingBaseSave" type="button">Standort speichern<\/button>/);
+  assert.match(html,/id="operatingBaseStatus" class="note" aria-live="polite"/);
+  assert.match(html,/operatingBaseSave\.addEventListener\('click'/);
+  assert.match(html,/✓ Standort gespeichert/);
+  assert.match(html,/Bitte zuerst einen Betriebsstandort eingeben\./);
+  assert.match(html,/Speichern fehlgeschlagen\. Bitte Verbindung prüfen und erneut versuchen\./);
+});
 
 test('completed-order action uses red background and stays distinct from delete',()=>{
   assert.match(html,/\.taskdone\{[^}]*border:2px solid #743035;[^}]*background:#a9474d;[^}]*color:#fffdf9/);
