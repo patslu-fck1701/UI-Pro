@@ -122,6 +122,8 @@ const pilotService=createPilotRuntime({
   ownerDemoOrganisationIds:[...pilotProfiles.values()].filter(p=>p.cryptoEnabled===true&&p.ownerDemoEnabled===true).map(p=>p.organisationId),
   audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
 });
+async function refreshScrapPrices(reason){try{const x=await pilotService.scrapPrices.snapshot({force:true});process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:x.live===true,stale:x.stale===true,partial:x.partial===true,source:x.source||null,asOf:x.asOf||null,failedPages:Array.isArray(x.failedPages)?x.failedPages:[]})+'\\n')}catch(error){process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:false,error:String(error&&error.message||error).slice(0,160)})+'\\n')}}
+refreshScrapPrices('startup');const scrapPriceTimer=setInterval(function(){refreshScrapPrices('interval')},15*60*1000);if(scrapPriceTimer&&typeof scrapPriceTimer.unref==='function')scrapPriceTimer.unref();
 const mailTokenKey=process.env.WERKZ_PILOT_MAIL_TOKEN_KEY||'';
 const mailDatabaseUrl=process.env.WERKZ_MAIL_DATABASE_URL||'';
 const mailPool=mailTokenKey&&mailDatabaseUrl?new (require('pg').Pool)({connectionString:mailDatabaseUrl,max:2}):null;
