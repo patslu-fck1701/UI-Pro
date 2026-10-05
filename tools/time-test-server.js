@@ -345,6 +345,16 @@ const server=http.createServer(async(request,response)=>{
     response.writeHead(writable?200:503,{'content-type':'application/json','cache-control':'no-store'});
     return response.end(JSON.stringify({ok:writable,storageWritable:writable,error}));
   }
+  if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html')){
+    response.writeHead(303,{location:'/pilot/','cache-control':'no-store'});return response.end();
+  }
+  if(request.method==='GET'&&url.pathname==='/sw.js'){
+    response.writeHead(200,{'content-type':'text/javascript; charset=utf-8','cache-control':'no-store','service-worker-allowed':'/'});
+    return response.end("'use strict';self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('werkz-time-shell-')).map(k=>caches.delete(k)))),self.registration.unregister(),self.clients.matchAll({type:'window',includeUncontrolled:true}).then(cs=>Promise.all(cs.map(c=>c.navigate('/pilot/'))))])));");
+  }
+  if(url.pathname==='/test-login'||url.pathname==='/test-profiles'||url.pathname==='/hub'||url.pathname.startsWith('/hub/')||url.pathname==='/session'||url.pathname.startsWith('/api/')||url.pathname.startsWith('/time/')||['/styles.css','/app.js','/manifest.webmanifest','/icon.svg','/logo_ich_black.png'].includes(url.pathname)){
+    response.writeHead(404,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});return response.end('Not found');
+  }
   if(url.pathname==='/pilot/login'&&request.method==='GET'){
     const returnTo=safeLocalReturn(url.searchParams.get('return'),'/pilot/');
     const requestedTenant=String(url.searchParams.get('tenant')||'').trim().toLowerCase();
