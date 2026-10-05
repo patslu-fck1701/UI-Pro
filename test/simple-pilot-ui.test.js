@@ -152,10 +152,10 @@ test('local order storage is bound to stable tenant slug before session resolves
   assert.ok(put>save&&render>put&&firstAwait>render);
 });
 
-test('pilot UI exposes v26 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v26/);
+test('pilot UI exposes v27 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v27/);
   assert.match(html,/register\('\/pilot\/sw\.js\?v=26'/);
-  assert.match(sw,/werkz-simple-pilot-v26/);
+  assert.match(sw,/werkz-simple-pilot-v27/);
 });
 
 
@@ -188,6 +188,13 @@ test('unsupported Android browser explains fallback instead of silently opening 
   assert.match(html,/Spracherkennung nicht verfügbar\. Auftrag stattdessen eintippen:/);
 });
 
+
+test('completed-order action uses red background and stays distinct from delete',()=>{
+  assert.match(html,/\.taskdone\{[^}]*border:2px solid #743035;[^}]*background:#a9474d;[^}]*color:#fffdf9/);
+  assert.match(html,/\.taskdelete\{[^}]*background:#f6e8e8;[^}]*color:#7b353b/);
+  assert.match(html,/✓ AUFTRAG ERLEDIGT/);
+  assert.match(html,/🗑 AUFTRAG LÖSCHEN/);
+});
 
 test('Google Maps navigation is a permanent mobile smoke-test invariant',()=>{
   assert.match(html,/function mapsUrl\(destination\)/);
