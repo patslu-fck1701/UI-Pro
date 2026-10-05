@@ -41,6 +41,12 @@ test('service worker update can reload for every new controller',()=>{
 });
 
 
+test('missing scrap prices never render as zero',()=>{
+  assert.match(html,/hasMin=r\.priceMin!=null&&r\.priceMin!==''/);
+  assert.match(html,/hasSingle=r\.price!=null&&r\.price!==''/);
+  assert.doesNotMatch(html,/min=Number\(r\.priceMin\),max=Number\(r\.priceMax\),single=Number\(r\.price\)/);
+});
+
 test('live scrap prices expose source, manual refresh, age and timed refresh',()=>{
   assert.match(html,/id="priceMeta"/);
   assert.match(html,/id="priceRefresh"/);
@@ -157,10 +163,10 @@ test('local order storage is bound to stable tenant slug before session resolves
   assert.ok(put>save&&render>put&&firstAwait>render);
 });
 
-test('pilot UI exposes v30 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v30/);
+test('pilot UI exposes v31 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v31/);
   assert.match(html,/register\('\/pilot\/sw\.js\?v=29'/);
-  assert.match(sw,/werkz-simple-pilot-v30/);
+  assert.match(sw,/werkz-simple-pilot-v31/);
 });
 
 
