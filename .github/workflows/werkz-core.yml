@@ -31,12 +31,18 @@ jobs:
           node --check src/pilot/index.js
           node --check tools/time-test-server.js
           node --check src/pilot/mail-access.js
+          node --check src/pilot/twilio-voice.js
+          node --check src/pilot/storage-readiness.js
+          node --check src/pilot/outbound-mail.js
       - name: Schrotties · Voice, login and tenant isolation
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
         run: node --test test/pilot-voice-regression.test.js test/pilot-login-regression.test.js
       - name: Schrotties · Read-only mailbox and tenant isolation
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
         run: node --test test/pilot-mail-access.test.js
+      - name: Schrotties · Provider readiness (Twilio + storage + outbound mail)
+        if: github.ref == 'refs/heads/test/mobile-assistant-render'
+        run: node --test test/pilot-twilio-voice.test.js test/pilot-storage-readiness.test.js test/pilot-outbound-mail.test.js
       - name: Schrotties · Live prices and weigh-slip recalculation
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
         run: node --test test/pilot-price-diagnostics.test.js
