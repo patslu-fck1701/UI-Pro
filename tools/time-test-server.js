@@ -2,7 +2,9 @@
 
 const http=require('node:http'),path=require('node:path'),fs=require('node:fs'),crypto=require('node:crypto');
 const {EncryptedMailTokenStore,PostgresEncryptedMailTokenStore,GmailOAuthReadAccess,ICloudImapReadAccess}=require('../src/pilot/mail-access');
-const {ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,TimeProductionService,TimeApplication,createTimeHttpHandler,createPilotRuntime,createPilotHttpHandler}=require('../src');
+const {createTwilioVoiceWebhookHandler,normalizeTwilioNumber}=require('../src/pilot/twilio-voice');
+const {assertPilotStorageReady}=require('../src/pilot/storage-readiness');
+const {ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,TimeProductionService,TimeApplication,createTimeHttpHandler,createPilotRuntime,createPilotHttpHandler,ResendOutboundMailProvider}=require('../src');
 
 function runtimeSecret(name,bytes){
   const configured=process.env[name];
@@ -29,6 +31,11 @@ function runtimeLoginCode(){
   return value;
 }
 const dataDir=path.resolve(process.env.WERKZ_TIME_DATA_DIR||'./var/time-test');
+const storageReadiness=assertPilotStorageReady({
+  dataDir,
+  persistentRoot:process.env.WERKZ_PILOT_PERSISTENT_ROOT||'',
+  requirePersistent:process.env.WERKZ_PILOT_REQUIRE_PERSISTENT_STORAGE==='1'
+});
 const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
 const hubDir=path.resolve(__dirname,'../demos/demo-hub');
 const pilotDir=path.resolve(__dirname,'../apps/simple-pilot');
@@ -37,9 +44,14 @@ const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ_TEST_ORGANISATION_LABEL||'Pilotbetrieb';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
 const actorLabel=process.env.WERKZ_TEST_ACTOR_LABEL||'Manager';
-const primarySessionToken=runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48);
-const primaryPilotSessionSeed=String(process.env.WERKZ_PILOT_LOGIN_CODE_SHA256||process.env.WERKZ_PILOT_LOGIN_CODE||'').trim();
-const primaryPilotSessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim()||(primaryPilotSessionSeed?crypto.createHmac('sha256',primaryPilotSessionSeed).update('werkz-pilot-primary-session').digest('base64url'):crypto.createHmac('sha256',primarySessionToken).update('werkz-pilot-primary').digest('base64url'));
+const ephemeralMode=process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1';
+const testProfilesEnabled=ephemeralMode||process.env.WERKZ_ENABLE_TEST_PROFILES==='1';
+const configuredPilotSessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim();
+const configuredTestSessionToken=String(process.env.WERKZ_TEST_SESSION_TOKEN||'').trim();
+const primarySessionToken=testProfilesEnabled
+  ? runtimeSecret('WERKZ_TEST_SESSION_TOKEN',48)
+  : (configuredTestSessionToken||configuredPilotSessionToken||runtimeSecret('WERKZ_PILOT_SESSION_TOKEN',48));
+const primaryPilotSessionToken=configuredPilotSessionToken||crypto.createHmac('sha256',primarySessionToken).update('werkz-pilot-primary').digest('base64url');
 function parseExtraPilotTenants(){
   const raw=process.env.WERKZ_PILOT_TENANTS_JSON;
   if(!raw)return [];
@@ -49,30 +61,26 @@ function parseExtraPilotTenants(){
   return list.map((item,index)=>{
     if(!item||typeof item!=='object')throw new Error('pilot tenant '+index+' must be an object');
     const id=String(item.id||item.slug||'tenant-'+(index+1)).trim().replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,64);
-    const aliasOfPrimary=item.aliasOfPrimary===true;
-    const org=String(aliasOfPrimary?organisationId:(item.organisationId||'org-'+id)).trim().slice(0,120);
-    if(!id||!org||(!aliasOfPrimary&&seen.has(org))||(aliasOfPrimary&&org!==organisationId))throw new Error('pilot tenant id/organisationId invalid or duplicate');
-    if(!aliasOfPrimary)seen.add(org);
+    const org=String(item.organisationId||'org-'+id).trim().slice(0,120);
+    if(!id||!org||seen.has(org))throw new Error('pilot tenant id/organisationId invalid or duplicate');
+    seen.add(org);
     const tenantLoginCode=String(item.loginCode||'').trim();
-    const tenantLoginCodeHash=String(item.loginCodeHash||'').trim().toLowerCase();
     const explicitToken=String(item.sessionToken||'').trim();
-    const stableToken=explicitToken||((tenantLoginCode||tenantLoginCodeHash)?crypto.createHmac('sha256',primaryPilotSessionToken).update('werkz-pilot-tenant:'+org+':'+(tenantLoginCode||tenantLoginCodeHash)).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
+    const stableToken=explicitToken||(tenantLoginCode?crypto.createHmac('sha256',primaryPilotSessionToken).update('werkz-pilot-tenant:'+org+':'+tenantLoginCode).digest('base64url'):crypto.randomBytes(48).toString('base64url'));
     return {
       id:'tenant-'+id,organisationId:org,organisationLabel:String(item.name||item.organisationLabel||id).slice(0,160),
       actorId:String(item.actorId||'owner-'+id).slice(0,120),actorLabel:String(item.actorLabel||item.owner||item.name||id).slice(0,160),
       taxRecipient:String(item.taxRecipient||'').trim()||null,publicSlug:String(item.publicSlug||id).trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,64),
-      loginCode:tenantLoginCode||null,loginCodeHash:tenantLoginCodeHash||null,accountEmails:Array.isArray(item.accountEmails)?item.accountEmails.map(value=>String(value).trim().toLowerCase()).filter(value=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)).slice(0,5):[],accessExpiresAt:String(item.accessExpiresAt||'').trim()||null,token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
+      loginCode:tenantLoginCode||null,accountEmails:Array.isArray(item.accountEmails)?item.accountEmails.map(value=>String(value).trim().toLowerCase()).filter(value=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)).slice(0,5):[],token:stableToken,role:'owner',cryptoEnabled:item.cryptoEnabled===true,ownerDemoEnabled:item.ownerDemoEnabled===true
     };
   });
 }
 const testAccountName=String(process.env.WERKZ_PILOT_TEST_ACCOUNT_NAME||'').trim().slice(0,160);
 const testAccountEmails=String(process.env.WERKZ_PILOT_TEST_ACCOUNT_EMAILS||'').split(',').map(value=>value.trim().toLowerCase()).filter(value=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)).slice(0,5);
 const extraPilotTenants=parseExtraPilotTenants().map(profile=>profile.publicSlug==='tester'?{...profile,organisationLabel:testAccountName||profile.organisationLabel,actorLabel:testAccountName||profile.actorLabel,accountEmails:testAccountEmails.length?testAccountEmails:profile.accountEmails}:profile);
-const loginCode=runtimeLoginCode();
+const loginCode=testProfilesEnabled?runtimeLoginCode():null;
 const allowedOrigins=String(process.env.WERKZ_TEST_ALLOWED_ORIGINS||process.env.WERKZ_TEST_ALLOWED_ORIGIN||'https://project29212.websitepublisher.ai,http://127.0.0.1:8765').split(',').map(value=>value.trim()).filter(Boolean);
 const externalFrontendUrl=process.env.WERKZ_TEST_EXTERNAL_FRONTEND_URL||'';
-const ephemeralMode=process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1';
-const testProfilesEnabled=ephemeralMode||process.env.WERKZ_ENABLE_TEST_PROFILES==='1';
 const profileAccessToken=crypto.randomBytes(32).toString('base64url');
 const workerCapabilities=['time.start','time.stop','time.correct','document.upload'];
 const managerCapabilities=[...workerCapabilities,'time.read.all'];
@@ -80,7 +88,7 @@ const pilotCapabilities=['pilot.read','pilot.write','market.read'];
 const testProfiles=new Map([
   ['manager',{id:'manager',organisationId,organisationLabel,actorId,actorLabel,capabilities:managerCapabilities,token:primarySessionToken,role:'manager',kind:'time-manager'}]
 ]);
-const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null,loginCodeHash:String(process.env.WERKZ_PILOT_LOGIN_CODE_SHA256||'').trim().toLowerCase()||null,accessExpiresAt:String(process.env.WERKZ_PILOT_ACCESS_EXPIRES_AT||'').trim()||null,cryptoEnabled:process.env.WERKZ_PILOT_CRYPTO_ENABLED==='1',ownerDemoEnabled:process.env.WERKZ_PILOT_OWNER_DEMO_ENABLED==='1'};
+const primaryPilotProfile={id:'pilot-primary',organisationId,organisationLabel,actorId:'pilot-'+actorId,actorLabel,capabilities:pilotCapabilities,token:primaryPilotSessionToken,role:'owner',kind:'tenant',taxRecipient:process.env.WERKZ_TAX_ADVISER_EMAIL||null,publicSlug:String(process.env.WERKZ_PILOT_SLUG||'primary').toLowerCase().replace(/[^a-z0-9_-]/g,'-'),loginCode:String(process.env.WERKZ_PILOT_LOGIN_CODE||'').trim()||null,cryptoEnabled:process.env.WERKZ_PILOT_CRYPTO_ENABLED==='1',ownerDemoEnabled:process.env.WERKZ_PILOT_OWNER_DEMO_ENABLED==='1'};
 const pilotProfiles=new Map([['primary',primaryPilotProfile]]);
 for(const tenant of extraPilotTenants)pilotProfiles.set(tenant.id,{...tenant,capabilities:pilotCapabilities,kind:'tenant'});
 if(testProfilesEnabled){
@@ -107,8 +115,6 @@ for(const profile of pilotProfiles.values())if(profile.cryptoEnabled===true){
 }
 const pilotTenantByOrg=new Map([...pilotProfiles.values()].map(p=>[p.organisationId||organisationId,p]));
 const pilotTenantBySlug=new Map([...pilotProfiles.values()].map(p=>[p.publicSlug||p.id,p]));
-function profileExpired(profile){if(!profile||!profile.accessExpiresAt)return false;const expires=Date.parse(profile.accessExpiresAt);return Number.isFinite(expires)&&Date.now()>expires}
-function pilotProfileByToken(token){return token?[...pilotProfiles.values()].find(profile=>profile.token===token)||null:null}
 const auth=new LocalAuthPort(authSessions);
 const application=new TimeApplication(new TimeProductionService({
   auth,entitlements,repository:new FileTimeRepository(path.join(dataDir,'time.json')),
@@ -121,6 +127,15 @@ const pilotService=createPilotRuntime({
   voiceDiagnosticOrganisationIds:String(process.env.WERKZ_PILOT_VOICE_DIAGNOSTIC_ORGS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).map(x=>pilotTenantBySlug.get(x)?.organisationId||x),
   ownerDemoOrganisationIds:[...pilotProfiles.values()].filter(p=>p.cryptoEnabled===true&&p.ownerDemoEnabled===true).map(p=>p.organisationId),
   audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
+});
+const outboundResendApiKey=String(process.env.WERKZ_PILOT_RESEND_API_KEY||process.env.RESEND_API_KEY||'').trim();
+const outboundFrom=String(process.env.WERKZ_PILOT_OUTBOUND_FROM||'').trim();
+const outboundAnyConfigured=Boolean(outboundResendApiKey||outboundFrom);
+if(outboundAnyConfigured&&(!outboundResendApiKey||!outboundFrom))throw new Error('outbound mail configuration incomplete');
+if(outboundAnyConfigured)pilotService.outbound=new ResendOutboundMailProvider({
+  apiKey:outboundResendApiKey,
+  from:outboundFrom,
+  storage:pilotService.storage
 });
 async function refreshScrapPrices(reason){try{const x=await pilotService.scrapPrices.snapshot({force:true});process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:x.live===true,stale:x.stale===true,partial:x.partial===true,source:x.source||null,asOf:x.asOf||null,failedPages:Array.isArray(x.failedPages)?x.failedPages:[]})+'\\n')}catch(error){process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:false,error:String(error&&error.message||error).slice(0,160)})+'\\n')}}
 refreshScrapPrices('startup');const scrapPriceTimer=setInterval(function(){refreshScrapPrices('interval')},15*60*1000);if(scrapPriceTimer&&typeof scrapPriceTimer.unref==='function')scrapPriceTimer.unref();
@@ -152,6 +167,39 @@ const pilotHandler=createPilotHttpHandler({
   publicOrganisationResolver:({url})=>{const slug=url.searchParams.get('tenant');if(!slug)return organisationId;return pilotTenantBySlug.get(String(slug).toLowerCase())?.organisationId||null}
 });
 
+function twilioNumberMapping(){
+  const raw=String(process.env.WERKZ_PILOT_TWILIO_NUMBERS_JSON||'').trim();
+  if(!raw)return new Map();
+  let value;try{value=JSON.parse(raw)}catch{throw new Error('WERKZ_PILOT_TWILIO_NUMBERS_JSON must be valid JSON')}
+  if(!value||Array.isArray(value)||typeof value!=='object')throw new Error('WERKZ_PILOT_TWILIO_NUMBERS_JSON must be an object');
+  const map=new Map();
+  for(const [number,slugValue] of Object.entries(value)){
+    const normalized=normalizeTwilioNumber(number),slug=String(slugValue||'').trim().toLowerCase();
+    const profile=pilotTenantBySlug.get(slug);
+    if(!normalized||!profile)throw new Error('Twilio number mapping contains invalid number or tenant slug');
+    if(map.has(normalized))throw new Error('Twilio number mapping contains duplicate number');
+    map.set(normalized,profile);
+  }
+  return map;
+}
+const twilioAuthToken=String(process.env.WERKZ_TWILIO_AUTH_TOKEN||process.env.TWILIO_AUTH_TOKEN||'').trim();
+const twilioPublicBaseUrl=String(process.env.WERKZ_PILOT_TWILIO_BASE_URL||'').trim();
+const twilioNumbers=twilioNumberMapping();
+const twilioAnyConfigured=Boolean(twilioAuthToken||twilioPublicBaseUrl||twilioNumbers.size);
+if(twilioAnyConfigured&&(!twilioAuthToken||!twilioPublicBaseUrl||!twilioNumbers.size))throw new Error('Twilio voice configuration incomplete');
+const twilioVoiceHandler=twilioAnyConfigured?createTwilioVoiceWebhookHandler({
+  authToken:twilioAuthToken,
+  publicBaseUrl:twilioPublicBaseUrl,
+  resolveTenantByCalledNumber:number=>twilioNumbers.get(number)||null,
+  recordSpeech:async({tenant,text,callSid,from})=>{
+    const mutationId='twilio:'+String(callSid||crypto.createHash('sha256').update(text).digest('hex').slice(0,32));
+    const note=pilotService.addNote(tenant.token,text,mutationId);
+    if(note.call&&from)pilotService.repository.update(tenant.organisationId,'calls',note.call.id,{phone:from,provider:'twilio',providerCallSid:callSid||null});
+    process.stdout.write(JSON.stringify({kind:'twilio-voice-intake',organisationId:tenant.organisationId,callSid:callSid||null,replayed:note.replayed===true,callId:note.call&&note.call.id||null})+'\\n');
+    return note;
+  }
+}):null;
+
 const staticFiles=new Map([
   ['/','index.html'],['/index.html','index.html'],['/styles.css','styles.css'],['/app.js','app.js'],
   ['/manifest.webmanifest','manifest.webmanifest'],['/icon.svg','icon.svg'],['/logo_ich_black.png','logo_ich_black.png'],['/sw.js','sw.js']
@@ -165,14 +213,6 @@ function safeLocalReturn(value,fallback='/'){
     if(url.origin!=='http://werkz.invalid'||!url.pathname.startsWith('/')||url.pathname.startsWith('//'))return fallback;
     return url.pathname+url.search;
   }catch{return fallback;}
-}
-function pilotReturnWithTenant(value,tenant){
-  const safe=safeLocalReturn(value,'/pilot/');
-  try{
-    const u=new URL(safe,'http://werkz.invalid');
-    if(u.pathname.startsWith('/pilot'))u.searchParams.set('tenant',String(tenant||'').trim().toLowerCase());
-    return u.pathname+u.search;
-  }catch{return safe;}
 }
 
 function hubSecurityHeaders(response){
@@ -289,13 +329,9 @@ function sameSecret(a,b){
   const right=crypto.createHash('sha256').update(String(b||'')).digest();
   return crypto.timingSafeEqual(left,right);
 }
-function normalisePilotAccessCode(value){
-  return String(value||'').trim().replace(/[‐‑‒–—−]/g,'-').replace(/\s+/g,'').toUpperCase();
-}
-
 function pilotLoginForm(response,{message='',returnTo='/pilot/',tenant='' }={}){
   response.writeHead(message?401:200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});
-  response.end('<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#25292a"><link rel="icon" href="'+PILOT_FACE_URL+'"><link rel="apple-touch-icon" href="'+PILOT_FACE_URL+'"><title>WERKZ – SCHROTTIES</title><style>*{box-sizing:border-box}body{margin:0;background:#e9e6de;color:#222;font-family:Arial,Helvetica,sans-serif;min-height:100vh;padding:22px 14px}.shell{max-width:560px;margin:12px auto}.hero{position:relative;min-height:210px;margin-bottom:-46px;z-index:2}.wordmark{display:block;width:min(72%,390px);max-height:132px;object-fit:contain;object-position:left center;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}.face{position:absolute;right:-8px;top:0;width:190px;height:190px;object-fit:cover;border-radius:30px;border:5px solid #f8f6f1;box-shadow:0 14px 32px rgba(0,0,0,.25);transform:rotate(2deg)}.card{position:relative;background:#f8f6f1;border:1px solid #d8d4ca;border-radius:28px;padding:70px 28px 28px;box-shadow:0 12px 36px rgba(28,28,28,.10)}h1{font-size:clamp(38px,10vw,58px);line-height:.98;margin:0 0 26px;letter-spacing:-.035em}.sub{font-size:25px;font-weight:800;margin:0 0 22px}.error{color:#915f5f;font-size:22px;font-weight:900;margin:0 0 18px}label{display:block;font-size:22px;font-weight:800;margin:16px 0 0}input{display:block;width:100%;margin-top:7px;border:1px solid #d0cec8;border-radius:13px;background:#fff;padding:15px 16px;font-size:22px;min-height:62px;outline:none}input:focus{border-color:#4b7259;box-shadow:0 0 0 3px rgba(63,116,80,.14)}.code-row{position:relative}.code-row input{padding-right:138px}.show-code{position:absolute;right:8px;top:14px;width:auto;min-height:46px;margin:0;padding:0 13px;border:1px solid #b9b5ad;border-radius:10px;background:#ece8df;color:#303638;font-size:14px;font-weight:900;letter-spacing:0}.submit{width:100%;margin-top:24px;min-height:68px;border:0;border-radius:14px;background:#303638;color:#fff;font-size:24px;font-weight:1000;letter-spacing:.025em}.remember{margin:15px 2px 0;color:#625f59;font-size:15px;font-weight:700}.footer{text-align:center;color:#6f6b64;font-size:13px;font-weight:700;margin:18px 0}@media(max-width:480px){body{padding:12px}.hero{min-height:172px;margin-bottom:-37px}.wordmark{width:70%;max-height:105px}.face{width:152px;height:152px;border-radius:25px}.card{padding:59px 20px 23px;border-radius:24px}h1{font-size:41px}.sub{font-size:22px}}</style></head><body><main class="shell"><div class="hero"><img class="wordmark" src="'+PILOT_LOGO_URL+'" alt="WerkZ – Digitale Lösungen für Betriebe"><img class="face" src="'+PILOT_FACE_URL+'" alt="WerkZ Ansprechpartner"></div><section class="card"><h1>WERKZ –<br>SCHROTTIES</h1><p class="sub">Dein Betriebszugang</p>'+(message?'<p class="error">'+html(message)+'</p>':'')+'<form method="post" action="/pilot/login"><input type="hidden" name="return" value="'+html(returnTo)+'"><label>Betrieb<input name="tenant" value="'+html(tenant)+'" autocomplete="username" required autocapitalize="none"></label><label for="pilotCode">Zugangscode</label><div class="code-row"><input id="pilotCode" name="code" type="password" autocomplete="current-password" required autocapitalize="characters" spellcheck="false"><button id="togglePilotCode" class="show-code" type="button" aria-pressed="false">Anzeigen</button></div><button class="submit" type="submit">ANMELDEN</button></form><p class="remember">Einmal anmelden – dieses Gerät bleibt anschließend angemeldet.</p><script>(function(){var i=document.getElementById("pilotCode"),b=document.getElementById("togglePilotCode");if(!i||!b)return;b.addEventListener("click",function(){var show=i.type==="password";i.type=show?"text":"password";b.textContent=show?"Verbergen":"Anzeigen";b.setAttribute("aria-pressed",show?"true":"false")})})();</script></section><p class="footer">WerkZ · Digitale Lösungen für Betriebe</p></main></body></html>');
+  response.end('<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#25292a"><link rel="icon" href="'+PILOT_FACE_URL+'"><link rel="apple-touch-icon" href="'+PILOT_FACE_URL+'"><title>WERKZ – SCHROTTIES</title><style>*{box-sizing:border-box}body{margin:0;background:#e9e6de;color:#222;font-family:Arial,Helvetica,sans-serif;min-height:100vh;padding:22px 14px}.shell{max-width:560px;margin:12px auto}.hero{position:relative;min-height:210px;margin-bottom:-46px;z-index:2}.wordmark{display:block;width:min(72%,390px);max-height:132px;object-fit:contain;object-position:left center;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}.face{position:absolute;right:-8px;top:0;width:190px;height:190px;object-fit:cover;border-radius:30px;border:5px solid #f8f6f1;box-shadow:0 14px 32px rgba(0,0,0,.25);transform:rotate(2deg)}.card{position:relative;background:#f8f6f1;border:1px solid #d8d4ca;border-radius:28px;padding:70px 28px 28px;box-shadow:0 12px 36px rgba(28,28,28,.10)}h1{font-size:clamp(38px,10vw,58px);line-height:.98;margin:0 0 26px;letter-spacing:-.035em}.sub{font-size:25px;font-weight:800;margin:0 0 22px}.error{color:#915f5f;font-size:22px;font-weight:900;margin:0 0 18px}label{display:block;font-size:22px;font-weight:800;margin:16px 0 0}input{display:block;width:100%;margin-top:7px;border:1px solid #d0cec8;border-radius:13px;background:#fff;padding:15px 16px;font-size:22px;min-height:62px;outline:none}input:focus{border-color:#4b7259;box-shadow:0 0 0 3px rgba(63,116,80,.14)}button{width:100%;margin-top:24px;min-height:68px;border:0;border-radius:14px;background:#303638;color:#fff;font-size:24px;font-weight:1000;letter-spacing:.025em}.remember{margin:15px 2px 0;color:#625f59;font-size:15px;font-weight:700}.footer{text-align:center;color:#6f6b64;font-size:13px;font-weight:700;margin:18px 0}@media(max-width:480px){body{padding:12px}.hero{min-height:172px;margin-bottom:-37px}.wordmark{width:70%;max-height:105px}.face{width:152px;height:152px;border-radius:25px}.card{padding:59px 20px 23px;border-radius:24px}h1{font-size:41px}.sub{font-size:22px}}</style></head><body><main class="shell"><div class="hero"><img class="wordmark" src="'+PILOT_LOGO_URL+'" alt="WerkZ – Digitale Lösungen für Betriebe"><img class="face" src="'+PILOT_FACE_URL+'" alt="WerkZ Ansprechpartner"></div><section class="card"><h1>WERKZ –<br>SCHROTTIES</h1><p class="sub">Dein Betriebszugang</p>'+(message?'<p class="error">'+html(message)+'</p>':'')+'<form method="post" action="/pilot/login"><input type="hidden" name="return" value="'+html(returnTo)+'"><label>Betrieb<input name="tenant" value="'+html(tenant)+'" autocomplete="username" required autocapitalize="none"></label><label>Zugangscode<input name="code" type="password" autocomplete="current-password" required></label><button>ANMELDEN</button></form><p class="remember">Einmal anmelden – dieses Gerät bleibt anschließend angemeldet.</p></section><p class="footer">WerkZ · Digitale Lösungen für Betriebe</p></main></body></html>');
 }
 
 function form(response,message='',returnTo='/'){
@@ -340,10 +376,22 @@ const server=http.createServer(async(request,response)=>{
   }
   if(request.method==='GET'&&url.pathname==='/healthz'){
     let writable=true,error=null;
-    try{fs.mkdirSync(dataDir,{recursive:true});fs.accessSync(dataDir,fs.constants.W_OK)}
+    try{fs.accessSync(dataDir,fs.constants.W_OK)}
     catch(e){writable=false;error='storage-unavailable'}
-    response.writeHead(writable?200:503,{'content-type':'application/json','cache-control':'no-store'});
-    return response.end(JSON.stringify({ok:writable,storageWritable:writable,error}));
+    const storageReady=writable&&storageReadiness.ready;
+    response.writeHead(storageReady?200:503,{'content-type':'application/json','cache-control':'no-store'});
+    return response.end(JSON.stringify({
+      ok:storageReady,storageWritable:writable,storageReady,
+      persistentStorageRequired:storageReadiness.requirePersistent,
+      persistentStorageDeclared:storageReadiness.declaredPersistent,
+      storageWriteProbePassed:storageReadiness.writeProbePassed,
+      externalRestartProofRequired:storageReadiness.externalRestartProofRequired,
+      error:error||storageReadiness.error||null
+    }));
+  }
+  if(url.pathname.startsWith('/pilot/provider/twilio/')){
+    if(!twilioVoiceHandler){response.writeHead(404,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});return response.end('Not found')}
+    const handled=await twilioVoiceHandler(request,response);if(handled)return;
   }
   if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html')){
     response.writeHead(303,{location:'/pilot/','cache-control':'no-store'});return response.end();
@@ -357,45 +405,25 @@ const server=http.createServer(async(request,response)=>{
   }
   if(url.pathname==='/pilot/login'&&request.method==='GET'){
     const returnTo=safeLocalReturn(url.searchParams.get('return'),'/pilot/');
-    const requestedTenant=String(url.searchParams.get('tenant')||'').trim().toLowerCase();
-    const activeToken=cookieTokenFromHeader(request.headers.cookie),activeProfile=pilotProfileByToken(activeToken);
-    const activeSlug=String(activeProfile?.publicSlug||'').trim().toLowerCase();
-    if(activeProfile&&!profileExpired(activeProfile)&&(!requestedTenant||requestedTenant===activeSlug)){
-      response.writeHead(303,{location:pilotReturnWithTenant(returnTo,activeSlug||requestedTenant),'cache-control':'no-store'});
-      return response.end();
-    }
-    if(activeProfile&&requestedTenant&&requestedTenant!==activeSlug){
-      response.setHeader('set-cookie',sessionCookie('werkz_session','',0));
-    }
-    const tenant=requestedTenant||activeSlug||'';
+    const activeToken=cookieTokenFromHeader(request.headers.cookie),activeProfile=[...pilotProfiles.values()].find(profile=>profile.token===activeToken);
+    if(activeProfile){response.writeHead(303,{location:returnTo,'cache-control':'no-store'});return response.end()}
+    const tenant=String(url.searchParams.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
     return pilotLoginForm(response,{returnTo,tenant});
   }
   if(url.pathname==='/pilot/login'&&request.method==='POST'){
     const chunks=[];for await(const chunk of request)chunks.push(chunk);
     const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
     const returnTo=safeLocalReturn(params.get('return'),'/pilot/');
-    const tenant=String(params.get('tenant')||'').trim().toLowerCase();
-    const code=normalisePilotAccessCode(params.get('code'));
+    const tenant=String(params.get('tenant')||primaryPilotProfile.publicSlug||'primary').trim().toLowerCase();
+    const code=String(params.get('code')||'');
     const profile=pilotTenantBySlug.get(tenant);
-    const expectedHash=profile?.loginCodeHash||null;
-    const expectedRaw=profile?.loginCode||(profile?.id==='pilot-primary'&&!expectedHash&&testProfilesEnabled?loginCode:null);
-    const expected=normalisePilotAccessCode(expectedRaw);
-    const expired=profileExpired(profile);
-    const submittedHash=crypto.createHash('sha256').update(code).digest('hex');
-    const valid=Boolean(profile&&!expired&&(expectedHash?sameSecret(submittedHash,expectedHash):(expected&&sameSecret(code,expected))));
-    process.stdout.write(JSON.stringify({kind:'pilot-login',tenant,profileFound:Boolean(profile),expired,success:valid})+'\\n');
-    if(!valid){
-      const message=!profile?'Betrieb nicht gefunden.':expired?'Testzugang ist abgelaufen.':'Zugangscode falsch.';
-      return pilotLoginForm(response,{message,returnTo,tenant});
-    }
-    response.writeHead(303,{location:pilotReturnWithTenant(returnTo,tenant),'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
+    const expected=profile?.loginCode||(profile?.id==='pilot-primary'&&testProfilesEnabled?loginCode:null);
+    if(!profile||!expected||!sameSecret(code,expected))return pilotLoginForm(response,{message:'Anmeldung nicht möglich.',returnTo,tenant});
+    response.writeHead(303,{location:returnTo,'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
     return response.end();
   }
   if(url.pathname==='/pilot/logout'&&request.method==='GET'){
-    const activeProfile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));
-    const activeSlug=String(activeProfile?.publicSlug||'').trim().toLowerCase();
-    const location=activeSlug?'/pilot/login?tenant='+encodeURIComponent(activeSlug):'/pilot/login';
-    response.writeHead(303,{location,'set-cookie':sessionCookie('werkz_session','',0),'cache-control':'no-store'});
+    response.writeHead(303,{location:'/pilot/login','set-cookie':sessionCookie('werkz_session','',0),'cache-control':'no-store'});
     return response.end();
   }
   if(url.pathname==='/test-profiles'&&request.method==='GET'){
@@ -458,13 +486,6 @@ const server=http.createServer(async(request,response)=>{
   if(request.method==='GET'&&servePilot(url,response))return;
   if(request.method==='GET'&&serveDemoHub(url,response))return;
   if(request.method==='GET'&&serveStatic(url,response))return;
-  if(url.pathname.startsWith('/pilot/api/')){
-    const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));
-    if(profile&&profileExpired(profile)){
-      response.writeHead(401,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','set-cookie':sessionCookie('werkz_session','',0)});
-      return response.end(JSON.stringify({error:'ACCESS_EXPIRED',message:'Testzugang ist abgelaufen.'}));
-    }
-  }
   if(url.pathname==='/pilot/api/mail/status'||url.pathname==='/pilot/mail/google/connect'||url.pathname==='/pilot/mail/google/callback'||url.pathname==='/pilot/api/mail/google/disconnect'||url.pathname==='/pilot/api/mail/icloud/connect'||url.pathname==='/pilot/api/mail/icloud/disconnect'){
     const token=cookieTokenFromHeader(request.headers.cookie);
     const profile=[...pilotProfiles.values()].find(p=>p.token===token);
@@ -529,7 +550,9 @@ const port=Number(process.env.PORT||8080);
 server.listen(port,'0.0.0.0',()=>{const actualPort=server.address().port;process.stdout.write(JSON.stringify({
   kind:'ready',port:actualPort,hub:'/hub/',time:'/',pilot:'/pilot/',pilotSite:'/pilot/site/',profiles:testProfilesEnabled?'/test-profiles':null,
   profileIds:testProfilesEnabled?[...testProfiles.keys()]:[],pilotTenantSlugs:[...pilotTenantBySlug.keys()],allowedOrigins,sameOriginPwa:true,unifiedLocalStack:true,
-  ephemeralSecrets:ephemeralMode,testProfilesEnabled
+  ephemeralSecrets:ephemeralMode,testProfilesEnabled,
+  persistentStorageRequired:storageReadiness.requirePersistent,persistentStorageDeclared:storageReadiness.declaredPersistent,
+  storageWriteProbePassed:storageReadiness.writeProbePassed,externalRestartProofRequired:storageReadiness.externalRestartProofRequired
 })+'\n')});
 
 module.exports={server,safeLocalReturn,serveDemoHub,servePilot,servePilotSite,testProfiles,profileAccessGranted,sessionCookie};
