@@ -40,7 +40,7 @@ const storageReadiness=assertPilotStorageReady({
 const applicationDatabaseUrl=String(process.env.WERKZ_DATABASE_URL||process.env.WERKZ_MAIL_DATABASE_URL||'').trim();
 const applicationPool=applicationDatabaseUrl?new (require('pg').Pool)({connectionString:applicationDatabaseUrl,max:3}):null;
 const tenantCredentialStore=applicationPool?new PostgresTenantCredentialStore({query:(sql,args)=>applicationPool.query(sql,args)}):new FileTenantCredentialStore({file:path.join(dataDir,'tenant-credentials.json')});
-const durableCustomerSecretStore=Boolean(applicationPool||(storageReadiness.declaredPersistent&&storageReadiness.writeProbePassed)||process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1');
+const durableCustomerSecretStore=Boolean(applicationPool||(storageReadiness.declaredPersistent&&storageReadiness.writeProbePassed)||(process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1'&&process.env.RENDER!=='true'));
 const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
 const hubDir=path.resolve(__dirname,'../demos/demo-hub');
 const pilotDir=path.resolve(__dirname,'../apps/simple-pilot');

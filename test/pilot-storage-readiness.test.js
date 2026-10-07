@@ -37,7 +37,7 @@ test('persistent storage guard requires data directory to live inside an existin
   }finally{fs.rmSync(temp,{recursive:true,force:true})}
 });
 
-function startServer({dataDir,persistentRoot,requirePersistent='1'}){
+function startServer({dataDir,persistentRoot,requirePersistent='1',extraEnv={}}){
   const child=spawn(process.execPath,[path.join(__dirname,'..','tools','time-test-server.js')],{
     cwd:path.join(__dirname,'..'),
     env:{
@@ -46,7 +46,7 @@ function startServer({dataDir,persistentRoot,requirePersistent='1'}){
       WERKZ_PILOT_PERSISTENT_ROOT:persistentRoot||'',
       WERKZ_TEST_SESSION_TOKEN:'storage-manager-session',WERKZ_TEST_LOGIN_CODE:'storage-login-code',
       WERKZ_ENABLE_TEST_PROFILES:'1',WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS:'',
-      WERKZ_PILOT_SESSION_TOKEN:'storage-pilot-session',WERKZ_PILOT_LOGIN_CODE:'storage-pilot-login'
+      WERKZ_PILOT_SESSION_TOKEN:'storage-pilot-session',WERKZ_PILOT_LOGIN_CODE:'storage-pilot-login',...extraEnv
     },stdio:['ignore','pipe','pipe']
   });
   return child;
@@ -83,5 +83,26 @@ test('server refuses production-persistent mode when data directory is outside d
   try{
     const [code]=await once(child,'exit');
     assert.notEqual(code,0);assert.match(stderr,/Pilot storage readiness failed: data-dir-outside-persistent-root/);
+  }finally{await stop(child);fs.rmSync(temp,{recursive:true,force:true})}
+});
+
+
+test('Render ephemeral test mode cannot save customer passwords without durable storage',async()=>{
+  const temp=fs.mkdtempSync(path.join(os.tmpdir(),'werkz-render-credentials-'));
+  const child=startServer({dataDir:temp,requirePersistent:'0',extraEnv:{
+    RENDER:'true',WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS:'1',
+    WERKZ_DATABASE_URL:'',WERKZ_MAIL_DATABASE_URL:'',WERKZ_PILOT_SLUG:'primary'
+  }});
+  try{
+    const ready=await waitReady(child);assert.equal(ready.durableCustomerSecretStore,false);
+    const base='http://127.0.0.1:'+ready.port;
+    const login=await fetch(base+'/pilot/login',{method:'POST',redirect:'manual',body:new URLSearchParams({tenant:'primary',code:'storage-pilot-login'})});
+    assert.equal(login.status,303);
+    const cookie=login.headers.get('set-cookie').split(';')[0];
+    const status=await fetch(base+'/pilot/api/access/status',{headers:{cookie}}).then(r=>r.json());
+    assert.equal(status.durable,false);
+    const save=await fetch(base+'/pilot/api/access/password',{method:'POST',headers:{cookie,origin:'https://127.0.0.1:'+ready.port,'content-type':'application/json'},body:JSON.stringify({newPassword:'Customer password 42!'})});
+    assert.equal(save.status,503);assert.equal((await save.json()).code,'PERSISTENT_CREDENTIAL_STORE_REQUIRED');
+    assert.equal(fs.existsSync(path.join(temp,'tenant-credentials.json')),false);
   }finally{await stop(child);fs.rmSync(temp,{recursive:true,force:true})}
 });
