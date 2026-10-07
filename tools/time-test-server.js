@@ -4,6 +4,7 @@ const http=require('node:http'),path=require('node:path'),fs=require('node:fs'),
 const {EncryptedMailTokenStore,PostgresEncryptedMailTokenStore,GmailOAuthReadAccess,ICloudImapReadAccess}=require('../src/pilot/mail-access');
 const {createTwilioVoiceWebhookHandler,normalizeTwilioNumber}=require('../src/pilot/twilio-voice');
 const {assertPilotStorageReady}=require('../src/pilot/storage-readiness');
+const {FileTenantCredentialStore,PostgresTenantCredentialStore}=require('../src/pilot/tenant-credentials');
 const {ModuleRegistry,EntitlementService,LocalAuthPort,FileTimeRepository,FilePrivateEvidenceStorage,TimeProductionService,TimeApplication,createTimeHttpHandler,createPilotRuntime,createPilotHttpHandler,ResendOutboundMailProvider}=require('../src');
 
 function runtimeSecret(name,bytes){
@@ -36,6 +37,10 @@ const storageReadiness=assertPilotStorageReady({
   persistentRoot:process.env.WERKZ_PILOT_PERSISTENT_ROOT||'',
   requirePersistent:process.env.WERKZ_PILOT_REQUIRE_PERSISTENT_STORAGE==='1'
 });
+const applicationDatabaseUrl=String(process.env.WERKZ_DATABASE_URL||process.env.WERKZ_MAIL_DATABASE_URL||'').trim();
+const applicationPool=applicationDatabaseUrl?new (require('pg').Pool)({connectionString:applicationDatabaseUrl,max:3}):null;
+const tenantCredentialStore=applicationPool?new PostgresTenantCredentialStore({query:(sql,args)=>applicationPool.query(sql,args)}):new FileTenantCredentialStore({file:path.join(dataDir,'tenant-credentials.json')});
+const durableCustomerSecretStore=Boolean(applicationPool||(storageReadiness.declaredPersistent&&storageReadiness.writeProbePassed)||process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1');
 const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
 const hubDir=path.resolve(__dirname,'../demos/demo-hub');
 const pilotDir=path.resolve(__dirname,'../apps/simple-pilot');
@@ -145,13 +150,12 @@ if(outboundAnyConfigured)pilotService.outbound=new ResendOutboundMailProvider({
 async function refreshScrapPrices(reason){try{const x=await pilotService.scrapPrices.snapshot({force:true});process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:x.live===true,stale:x.stale===true,partial:x.partial===true,source:x.source||null,asOf:x.asOf||null,failedPages:Array.isArray(x.failedPages)?x.failedPages:[]})+'\\n')}catch(error){process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:false,error:String(error&&error.message||error).slice(0,160)})+'\\n')}}
 refreshScrapPrices('startup');const scrapPriceTimer=setInterval(function(){refreshScrapPrices('interval')},15*60*1000);if(scrapPriceTimer&&typeof scrapPriceTimer.unref==='function')scrapPriceTimer.unref();
 const mailTokenKey=process.env.WERKZ_PILOT_MAIL_TOKEN_KEY||'';
-const mailDatabaseUrl=process.env.WERKZ_MAIL_DATABASE_URL||'';
-const mailPool=mailTokenKey&&mailDatabaseUrl?new (require('pg').Pool)({connectionString:mailDatabaseUrl,max:2}):null;
+const mailPool=mailTokenKey&&applicationPool?applicationPool:null;
 const mailTokenStore=mailTokenKey?(mailPool?new PostgresEncryptedMailTokenStore({query:(sql,args)=>mailPool.query(sql,args),key:mailTokenKey}):new EncryptedMailTokenStore({file:path.join(dataDir,'mail-tokens.enc.json'),key:mailTokenKey})):null;
-const googleClientReady=Boolean(mailTokenStore&&process.env.GOOGLE_OAUTH_CLIENT_ID&&process.env.GOOGLE_OAUTH_CLIENT_SECRET&&process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI);
+const googleClientReady=Boolean(durableCustomerSecretStore&&mailTokenStore&&process.env.GOOGLE_OAUTH_CLIENT_ID&&process.env.GOOGLE_OAUTH_CLIENT_SECRET&&process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI);
 const gmailPending=new Map();
 function mailEmail(value,domain){const email=String(value||'').trim().toLowerCase();return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)&&(!domain||email.endsWith(domain))?email:null}
-function gmailFor(profile,email){if(!googleClientReady||!email)return null;return new GmailOAuthReadAccess({organisationId:profile.organisationId,accountEmail:email,clientId:process.env.GOOGLE_OAUTH_CLIENT_ID,clientSecret:process.env.GOOGLE_OAUTH_CLIENT_SECRET,redirectUri:process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI,tokenStore:mailTokenStore})}
+function gmailFor(profile,email=null){if(!googleClientReady)return null;return new GmailOAuthReadAccess({organisationId:profile.organisationId,accountEmail:email||null,clientId:process.env.GOOGLE_OAUTH_CLIENT_ID,clientSecret:process.env.GOOGLE_OAUTH_CLIENT_SECRET,redirectUri:process.env.WERKZ_PILOT_GMAIL_REDIRECT_URI,tokenStore:mailTokenStore})}
 async function icloudFor(profile){const row=await mailTokenStore?.get(profile.organisationId+':icloud');return row?.email&&row?.appPassword?new ICloudImapReadAccess({organisationId:profile.organisationId,accountEmail:row.email,appPassword:row.appPassword}):null}
 const exampleMailProvider=pilotService.mail;
 pilotService.mail={async listRelevant({organisationId}){
@@ -349,7 +353,7 @@ function normalisePilotAccessCode(value){
 
 function pilotLoginForm(response,{message='',returnTo='/pilot/',tenant='' }={}){
   response.writeHead(message?401:200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});
-  response.end('<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#25292a"><link rel="icon" href="'+PILOT_FACE_URL+'"><link rel="apple-touch-icon" href="'+PILOT_FACE_URL+'"><title>WERKZ – SCHROTTIES</title><style>*{box-sizing:border-box}body{margin:0;background:#e9e6de;color:#222;font-family:Arial,Helvetica,sans-serif;min-height:100vh;padding:22px 14px}.shell{max-width:560px;margin:12px auto}.hero{position:relative;min-height:210px;margin-bottom:-46px;z-index:2}.wordmark{display:block;width:min(72%,390px);max-height:132px;object-fit:contain;object-position:left center;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}.face{position:absolute;right:-8px;top:0;width:190px;height:190px;object-fit:cover;border-radius:30px;border:5px solid #f8f6f1;box-shadow:0 14px 32px rgba(0,0,0,.25);transform:rotate(2deg)}.card{position:relative;background:#f8f6f1;border:1px solid #d8d4ca;border-radius:28px;padding:70px 28px 28px;box-shadow:0 12px 36px rgba(28,28,28,.10)}h1{font-size:clamp(38px,10vw,58px);line-height:.98;margin:0 0 26px;letter-spacing:-.035em}.sub{font-size:25px;font-weight:800;margin:0 0 22px}.error{color:#915f5f;font-size:22px;font-weight:900;margin:0 0 18px}label{display:block;font-size:22px;font-weight:800;margin:16px 0 0}input{display:block;width:100%;margin-top:7px;border:1px solid #d0cec8;border-radius:13px;background:#fff;padding:15px 16px;font-size:22px;min-height:62px;outline:none}input:focus{border-color:#4b7259;box-shadow:0 0 0 3px rgba(63,116,80,.14)}.code-row{position:relative}.code-row input{padding-right:138px}.show-code{position:absolute;right:8px;top:14px;width:auto;min-height:46px;margin:0;padding:0 13px;border:1px solid #b9b5ad;border-radius:10px;background:#ece8df;color:#303638;font-size:14px;font-weight:900;letter-spacing:0}.submit{width:100%;margin-top:24px;min-height:68px;border:0;border-radius:14px;background:#303638;color:#fff;font-size:24px;font-weight:1000;letter-spacing:.025em}.remember{margin:15px 2px 0;color:#625f59;font-size:15px;font-weight:700}.footer{text-align:center;color:#6f6b64;font-size:13px;font-weight:700;margin:18px 0}@media(max-width:480px){body{padding:12px}.hero{min-height:172px;margin-bottom:-37px}.wordmark{width:70%;max-height:105px}.face{width:152px;height:152px;border-radius:25px}.card{padding:59px 20px 23px;border-radius:24px}h1{font-size:41px}.sub{font-size:22px}}</style></head><body><main class="shell"><div class="hero"><img class="wordmark" src="'+PILOT_LOGO_URL+'" alt="WerkZ – Digitale Lösungen für Betriebe"><img class="face" src="'+PILOT_FACE_URL+'" alt="WerkZ Ansprechpartner"></div><section class="card"><h1>WERKZ –<br>SCHROTTIES</h1><p class="sub">Dein Betriebszugang</p>'+(message?'<p class="error">'+html(message)+'</p>':'')+'<form method="post" action="/pilot/login"><input type="hidden" name="return" value="'+html(returnTo)+'"><label>Betrieb<input name="tenant" value="'+html(tenant)+'" autocomplete="username" required autocapitalize="none"></label><label for="pilotCode">Zugangscode</label><div class="code-row"><input id="pilotCode" name="code" type="password" autocomplete="current-password" required autocapitalize="characters" spellcheck="false"><button id="togglePilotCode" class="show-code" type="button" aria-pressed="false">Anzeigen</button></div><button class="submit" type="submit">ANMELDEN</button></form><p class="remember">Einmal anmelden – dieses Gerät bleibt anschließend angemeldet.</p><script>(function(){var i=document.getElementById("pilotCode"),b=document.getElementById("togglePilotCode");if(!i||!b)return;b.addEventListener("click",function(){var show=i.type==="password";i.type=show?"text":"password";b.textContent=show?"Verbergen":"Anzeigen";b.setAttribute("aria-pressed",show?"true":"false")})})();</script></section><p class="footer">WerkZ · Digitale Lösungen für Betriebe</p></main></body></html>');
+  response.end('<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#25292a"><link rel="icon" href="'+PILOT_FACE_URL+'"><link rel="apple-touch-icon" href="'+PILOT_FACE_URL+'"><title>WERKZ – SCHROTTIES</title><style>*{box-sizing:border-box}body{margin:0;background:#e9e6de;color:#222;font-family:Arial,Helvetica,sans-serif;min-height:100vh;padding:22px 14px}.shell{max-width:560px;margin:12px auto}.hero{position:relative;min-height:210px;margin-bottom:-46px;z-index:2}.wordmark{display:block;width:min(72%,390px);max-height:132px;object-fit:contain;object-position:left center;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}.face{position:absolute;right:-8px;top:0;width:190px;height:190px;object-fit:cover;border-radius:30px;border:5px solid #f8f6f1;box-shadow:0 14px 32px rgba(0,0,0,.25);transform:rotate(2deg)}.card{position:relative;background:#f8f6f1;border:1px solid #d8d4ca;border-radius:28px;padding:70px 28px 28px;box-shadow:0 12px 36px rgba(28,28,28,.10)}h1{font-size:clamp(38px,10vw,58px);line-height:.98;margin:0 0 26px;letter-spacing:-.035em}.sub{font-size:25px;font-weight:800;margin:0 0 22px}.error{color:#915f5f;font-size:22px;font-weight:900;margin:0 0 18px}label{display:block;font-size:22px;font-weight:800;margin:16px 0 0}input{display:block;width:100%;margin-top:7px;border:1px solid #d0cec8;border-radius:13px;background:#fff;padding:15px 16px;font-size:22px;min-height:62px;outline:none}input:focus{border-color:#4b7259;box-shadow:0 0 0 3px rgba(63,116,80,.14)}.code-row{position:relative}.code-row input{padding-right:138px}.show-code{position:absolute;right:8px;top:14px;width:auto;min-height:46px;margin:0;padding:0 13px;border:1px solid #b9b5ad;border-radius:10px;background:#ece8df;color:#303638;font-size:14px;font-weight:900;letter-spacing:0}.submit{width:100%;margin-top:24px;min-height:68px;border:0;border-radius:14px;background:#303638;color:#fff;font-size:24px;font-weight:1000;letter-spacing:.025em}.remember{margin:15px 2px 0;color:#625f59;font-size:15px;font-weight:700}.footer{text-align:center;color:#6f6b64;font-size:13px;font-weight:700;margin:18px 0}@media(max-width:480px){body{padding:12px}.hero{min-height:172px;margin-bottom:-37px}.wordmark{width:70%;max-height:105px}.face{width:152px;height:152px;border-radius:25px}.card{padding:59px 20px 23px;border-radius:24px}h1{font-size:41px}.sub{font-size:22px}}</style></head><body><main class="shell"><div class="hero"><img class="wordmark" src="'+PILOT_LOGO_URL+'" alt="WerkZ – Digitale Lösungen für Betriebe"><img class="face" src="'+PILOT_FACE_URL+'" alt="WerkZ Ansprechpartner"></div><section class="card"><h1>WERKZ –<br>SCHROTTIES</h1><p class="sub">Dein Betriebszugang</p>'+(message?'<p class="error">'+html(message)+'</p>':'')+'<form method="post" action="/pilot/login"><input type="hidden" name="return" value="'+html(returnTo)+'"><label>Betrieb<input name="tenant" value="'+html(tenant)+'" autocomplete="username" required autocapitalize="none"></label><label for="pilotCode">Passwort / Zugangscode</label><div class="code-row"><input id="pilotCode" name="code" type="password" autocomplete="current-password" required autocapitalize="none" spellcheck="false"><button id="togglePilotCode" class="show-code" type="button" aria-pressed="false">Anzeigen</button></div><button class="submit" type="submit">ANMELDEN</button></form><p class="remember">Einmal anmelden – dieses Gerät bleibt anschließend angemeldet.</p><script>(function(){var i=document.getElementById("pilotCode"),b=document.getElementById("togglePilotCode");if(!i||!b)return;b.addEventListener("click",function(){var show=i.type==="password";i.type=show?"text":"password";b.textContent=show?"Verbergen":"Anzeigen";b.setAttribute("aria-pressed",show?"true":"false")})})();</script></section><p class="footer">WerkZ · Digitale Lösungen für Betriebe</p></main></body></html>');
 }
 
 function form(response,message='',returnTo='/'){
@@ -441,17 +445,21 @@ const server=http.createServer(async(request,response)=>{
     const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
     const returnTo=safeLocalReturn(params.get('return'),'/pilot/');
     const tenant=String(params.get('tenant')||'').trim().toLowerCase();
-    const code=normalisePilotAccessCode(params.get('code'));
+    const submitted=String(params.get('code')||'');
+    const code=normalisePilotAccessCode(submitted);
     const profile=pilotTenantBySlug.get(tenant);
+    const selfPasswordConfigured=Boolean(profile&&await tenantCredentialStore.hasPassword(profile.organisationId));
+    const selfPasswordValid=Boolean(profile&&selfPasswordConfigured&&await tenantCredentialStore.verifyPassword(profile.organisationId,submitted));
     const expectedHash=profile?.loginCodeHash||null;
     const expectedRaw=profile?.loginCode||(profile?.id==='pilot-primary'&&!expectedHash&&testProfilesEnabled?loginCode:null);
     const expected=normalisePilotAccessCode(expectedRaw);
     const expired=profileExpired(profile);
     const submittedHash=crypto.createHash('sha256').update(code).digest('hex');
-    const valid=Boolean(profile&&!expired&&(expectedHash?sameSecret(submittedHash,expectedHash):(expected&&sameSecret(code,expected))));
+    const bootstrapValid=Boolean(expectedHash?sameSecret(submittedHash,expectedHash):(expected&&sameSecret(code,expected)));
+    const valid=Boolean(profile&&!expired&&(selfPasswordConfigured?selfPasswordValid:bootstrapValid));
     process.stdout.write(JSON.stringify({kind:'pilot-login',tenant,profileFound:Boolean(profile),expired,success:valid})+'\\n');
     if(!valid){
-      const message=!profile?'Betrieb nicht gefunden.':expired?'Testzugang ist abgelaufen.':'Zugangscode falsch.';
+      const message=!profile?'Betrieb nicht gefunden.':expired?'Testzugang ist abgelaufen.':selfPasswordConfigured?'Passwort falsch.':'Zugangscode falsch.';
       return pilotLoginForm(response,{message,returnTo,tenant});
     }
     response.writeHead(303,{location:pilotReturnWithTenant(returnTo,tenant),'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
@@ -531,7 +539,7 @@ const server=http.createServer(async(request,response)=>{
       return response.end(JSON.stringify({error:'ACCESS_EXPIRED',message:'Testzugang ist abgelaufen.'}));
     }
   }
-  if(url.pathname==='/pilot/api/mail/status'||url.pathname==='/pilot/mail/google/connect'||url.pathname==='/pilot/mail/google/callback'||url.pathname==='/pilot/api/mail/google/disconnect'||url.pathname==='/pilot/api/mail/icloud/connect'||url.pathname==='/pilot/api/mail/icloud/disconnect'){
+  if(url.pathname==='/pilot/api/access/status'||url.pathname==='/pilot/api/access/password'||url.pathname==='/pilot/api/mail/status'||url.pathname==='/pilot/mail/google/connect'||url.pathname==='/pilot/mail/google/callback'||url.pathname==='/pilot/api/mail/google/disconnect'||url.pathname==='/pilot/api/mail/icloud/connect'||url.pathname==='/pilot/api/mail/icloud/disconnect'){
     const token=cookieTokenFromHeader(request.headers.cookie);
     const profile=[...pilotProfiles.values()].find(p=>p.token===token);
     const session=token&&authSessions[token];
@@ -544,12 +552,18 @@ const server=http.createServer(async(request,response)=>{
     const readPost=async()=>{const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>4096)throw Object.assign(new Error('Too large'),{code:'VALIDATION_ERROR'});chunks.push(chunk)}return JSON.parse(Buffer.concat(chunks).toString('utf8'))};
     try{
       const org=profile.organisationId,storedGmail=await mailTokenStore?.get(org),storedIcloud=await mailTokenStore?.get(org+':icloud');
-      if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:storedGmail?.email||profile.accountEmails?.[0]||null,configured:googleClientReady,connected:Boolean(storedGmail?.refreshToken)},icloud:{email:storedIcloud?.email||profile.accountEmails?.find(x=>x.endsWith('@icloud.com'))||null,configured:Boolean(mailTokenStore),connected:Boolean(storedIcloud?.appPassword)},readOnly:true});
+      if(url.pathname==='/pilot/api/access/status'&&request.method==='GET'){const passwordConfigured=await tenantCredentialStore.hasPassword(org);return json(200,{passwordConfigured,mode:passwordConfigured?'customer-password':'bootstrap',durable:durableCustomerSecretStore});}
+      if(url.pathname==='/pilot/api/access/password'&&request.method==='POST'){
+        safePost();if(!durableCustomerSecretStore)return json(503,{error:'Dauerhafter Zugangsspeicher ist noch nicht verbunden',code:'PERSISTENT_CREDENTIAL_STORE_REQUIRED'});const body=await readPost(),configured=await tenantCredentialStore.hasPassword(org);
+        if(configured&&!await tenantCredentialStore.verifyPassword(org,String(body.currentPassword||'')))return json(403,{error:'Aktuelles Passwort ist falsch',code:'PASSWORD_CURRENT_INVALID'});
+        await tenantCredentialStore.setPassword(org,String(body.newPassword||''));
+        return json(200,{passwordConfigured:true,mode:'customer-password'});
+      }
+      if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:storedGmail?.email||null,configured:googleClientReady,connected:Boolean(storedGmail?.refreshToken)},icloud:{email:storedIcloud?.email||null,configured:Boolean(mailTokenStore&&durableCustomerSecretStore),connected:Boolean(storedIcloud?.appPassword)},readOnly:true,durable:durableCustomerSecretStore});
       if(url.pathname==='/pilot/mail/google/connect'&&request.method==='GET'){
         if(!googleClientReady)return json(503,{error:'Google OAuth ist noch nicht konfiguriert'});
-        const address=mailEmail(url.searchParams.get('email')||storedGmail?.email||profile.accountEmails?.[0]);
-        if(!address)return json(400,{error:'Gültige Gmail-Adresse erforderlich'});
-        const access=gmailFor(profile,address);gmailPending.set(org,access);
+        const requested=mailEmail(url.searchParams.get('email'));
+        const access=gmailFor(profile,requested||storedGmail?.email||null);gmailPending.set(org,access);
         response.writeHead(303,{location:access.begin(session),'cache-control':'no-store'});return response.end();
       }
       if(url.pathname==='/pilot/mail/google/callback'&&request.method==='GET'){
@@ -559,10 +573,14 @@ const server=http.createServer(async(request,response)=>{
         response.writeHead(303,{location:'/pilot/?mail=connected','cache-control':'no-store'});return response.end();
       }
       if(url.pathname==='/pilot/api/mail/google/disconnect'&&request.method==='POST'){
-        safePost();await mailTokenStore?.remove(org);gmailPending.delete(org);return json(200,{connected:false});
+        safePost();
+        let result={provider:'gmail',email:storedGmail?.email||null,connected:false,readOnly:true,providerRevocation:'not-needed'};
+        const access=storedGmail?.email?gmailFor(profile,storedGmail.email):null;
+        if(access)result=await access.disconnect(session);else await mailTokenStore?.remove(org);
+        gmailPending.delete(org);return json(200,result);
       }
       if(url.pathname==='/pilot/api/mail/icloud/connect'&&request.method==='POST'){
-        safePost();if(!mailTokenStore)return json(503,{error:'Verschlüsselter Speicher nicht konfiguriert'});
+        safePost();if(!mailTokenStore||!durableCustomerSecretStore)return json(503,{error:'Dauerhafter Mail-Speicher ist noch nicht verbunden'});
         const body=await readPost(),address=mailEmail(body.email,'@icloud.com'),password=String(body.appPassword||'').trim();
         if(!address||password.length<10||password.length>128)return json(400,{error:'iCloud-Adresse und Apple-App-Passwort erforderlich'});
         const access=new ICloudImapReadAccess({organisationId:org,accountEmail:address,appPassword:password});
@@ -597,7 +615,7 @@ server.listen(port,'0.0.0.0',()=>{const actualPort=server.address().port;process
   profileIds:testProfilesEnabled?[...testProfiles.keys()]:[],pilotTenantSlugs:[...pilotTenantBySlug.keys()],allowedOrigins,sameOriginPwa:true,unifiedLocalStack:true,
   ephemeralSecrets:ephemeralMode,testProfilesEnabled,
   persistentStorageRequired:storageReadiness.requirePersistent,persistentStorageDeclared:storageReadiness.declaredPersistent,
-  storageWriteProbePassed:storageReadiness.writeProbePassed,externalRestartProofRequired:storageReadiness.externalRestartProofRequired
+  storageWriteProbePassed:storageReadiness.writeProbePassed,externalRestartProofRequired:storageReadiness.externalRestartProofRequired,durableCustomerSecretStore
 })+'\n')});
 
 module.exports={server,safeLocalReturn,serveDemoHub,servePilot,servePilotSite,testProfiles,profileAccessGranted,sessionCookie};

@@ -146,7 +146,7 @@ test('pilot API requests have a hard timeout',()=>{
 });
 
 test('PWA update bypasses iOS service worker cache',()=>{
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=31'/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=32'/);
   assert.match(html,/updateViaCache:'none'/);
 });
 
@@ -163,10 +163,10 @@ test('local order storage is bound to stable tenant slug before session resolves
   assert.ok(put>save&&render>put&&firstAwait>render);
 });
 
-test('pilot UI exposes v31 and passes tenant slug through the service worker URL',()=>{
-  assert.match(html,/· v31/);
-  assert.match(html,/register\('\/pilot\/sw\.js\?v=31'/);
-  assert.match(sw,/werkz-simple-pilot-v31/);
+test('pilot UI exposes v32 and passes tenant slug through the service worker URL',()=>{
+  assert.match(html,/· v32/);
+  assert.match(html,/register\('\/pilot\/sw\.js\?v=32'/);
+  assert.match(sw,/werkz-simple-pilot-v32/);
 });
 
 
@@ -368,4 +368,31 @@ test('calculator transfer stays explicit and uses normal local order and call sy
 test('successful server tour response cannot resurrect synced local call absent on server',()=>{
   assert.match(html,/serverRouteLoaded=true/);
   assert.match(html,/!r.serverCallId\|\|!serverRouteLoaded&&\!serverIds.has\(r.serverCallId\)/);
+});
+
+
+test('mail accounts can be explicitly disconnected from the mobile UI',()=>{
+  assert.match(html,/id="gmailDisconnect"[^>]*onclick="disconnectGmail\(\)"[^>]*hidden/);
+  assert.match(html,/id="icloudDisconnect"[^>]*onclick="disconnectIcloud\(\)"[^>]*hidden/);
+  assert.match(html,/async function disconnectGmail\(\)/);
+  assert.match(html,/api\('\/mail\/google\/disconnect',\{method:'POST'\}\)/);
+  assert.match(html,/providerRevocation==='failed'/);
+  assert.match(html,/async function disconnectIcloud\(\)/);
+  assert.match(html,/api\('\/mail\/icloud\/disconnect',\{method:'POST'\}\)/);
+  assert.match(html,/gmailDisconnect'\)\.hidden=!status\.gmail\.connected/);
+  assert.match(html,/icloudDisconnect'\)\.hidden=!status\.icloud\.connected/);
+  assert.match(html,/mailConnectControls'\)\.hidden=!\(status\.gmail\.configured\|\|status\.gmail\.connected\|\|status\.icloud\.configured\|\|status\.icloud\.connected\)/);
+});
+
+
+test('customer credentials are self-service in the mobile office UI',()=>{
+  assert.match(html,/id="accessCard" data-page="office"/);
+  assert.match(html,/id="newWerkzPassword"[^>]*autocomplete="new-password"/);
+  assert.match(html,/id="confirmWerkzPassword"/);
+  assert.match(html,/async function saveWerkzPassword\(\)/);
+  assert.match(html,/api\('\/access\/password',\{method:'POST'/);
+  assert.match(html,/Ab der nächsten Anmeldung gilt nur noch dein eigenes Passwort/);
+  assert.match(html,/MIT GOOGLE VERBINDEN/);
+  assert.doesNotMatch(html,/id="gmailAddress"/);
+  assert.match(html,/function connectGmail\(\)\{location\.href='\/pilot\/mail\/google\/connect'\}/);
 });

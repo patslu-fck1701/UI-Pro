@@ -172,4 +172,45 @@ test('logout redirect preserves whichever tenant was actually signed in',async()
 
 test('configured test-account mail is not replaced with fake inbox messages',async()=>{const login=await request({method:'POST',path:'/pilot/login',body:new URLSearchParams({tenant:'tester',code:testerCode,return:'/pilot/'}).toString()});assert.equal(login.status,303);const cookie=String(login.headers['set-cookie']||'').split(';')[0];const addr=server.address();async function get(path){return new Promise((resolve,reject)=>{const req=http.request({host:'127.0.0.1',port:addr.port,path,headers:{cookie}},res=>{const chunks=[];res.on('data',chunk=>chunks.push(chunk));res.on('end',()=>resolve({status:res.statusCode,body:Buffer.concat(chunks).toString('utf8')}))});req.on('error',reject);req.end()})}const session=await get('/pilot/api/session');assert.equal(session.status,200);assert.equal(JSON.parse(session.body).organisationLabel,'Local Test Owner');assert.deepEqual(JSON.parse(session.body).accountEmails,['owner@example.invalid','backup@example.invalid']);const mail=await get('/pilot/api/mail');assert.equal(mail.status,200);assert.deepEqual(JSON.parse(mail.body),[])});
 
-test('mail status is scoped to each tenant session',async()=>{async function signed(tenant,code){const login=await request({method:'POST',path:'/pilot/login',body:new URLSearchParams({tenant,code,return:'/pilot/'}).toString()});const cookie=String(login.headers['set-cookie']||'').split(';')[0];return new Promise((resolve,reject)=>{const req=http.request({host:'127.0.0.1',port:server.address().port,path:'/pilot/api/mail/status',headers:{cookie}},res=>{const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(Buffer.concat(chunks).toString('utf8'))}))});req.on('error',reject);req.end()})}const owner=await signed('tester',testerCode),other=await signed('christian',christianCode);assert.equal(owner.status,200);assert.equal(other.status,200);assert.equal(owner.body.gmail.email,'owner@example.invalid');assert.equal(other.body.gmail.email,null);assert.equal(other.body.icloud.email,null);assert.equal((await request({path:'/pilot/api/mail/status'})).status,401)});
+test('mail status is scoped to each tenant session',async()=>{async function signed(tenant,code){const login=await request({method:'POST',path:'/pilot/login',body:new URLSearchParams({tenant,code,return:'/pilot/'}).toString()});const cookie=String(login.headers['set-cookie']||'').split(';')[0];return new Promise((resolve,reject)=>{const req=http.request({host:'127.0.0.1',port:server.address().port,path:'/pilot/api/mail/status',headers:{cookie}},res=>{const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(Buffer.concat(chunks).toString('utf8'))}))});req.on('error',reject);req.end()})}const owner=await signed('tester',testerCode),other=await signed('christian',christianCode);assert.equal(owner.status,200);assert.equal(other.status,200);assert.equal(owner.body.gmail.email,null);assert.equal(other.body.gmail.email,null);assert.equal(other.body.icloud.email,null);assert.equal((await request({path:'/pilot/api/mail/status'})).status,401)});
+
+
+test('customer can replace bootstrap code with an own case-sensitive WerkZ password inside the app',async()=>{
+  const bootstrap=new URLSearchParams({tenant:'christian',code:christianCode,return:'/pilot/'}).toString();
+  const login=await request({method:'POST',path:'/pilot/login',body:bootstrap});
+  assert.equal(login.status,303);
+  const cookie=String(login.headers['set-cookie']||'').split(';')[0],addr=server.address(),origin='https://127.0.0.1:'+addr.port;
+  async function jsonRequest(method,pathName,value){
+    return new Promise((resolve,reject)=>{
+      const body=value==null?'':JSON.stringify(value);
+      const req=http.request({host:'127.0.0.1',port:addr.port,method,path:pathName,headers:{cookie,origin,'content-type':'application/json','content-length':Buffer.byteLength(body)}},res=>{const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>resolve({status:res.statusCode,body:Buffer.concat(chunks).toString('utf8')}))});req.on('error',reject);if(body)req.write(body);req.end();
+    });
+  }
+  const before=await jsonRequest('GET','/pilot/api/access/status',null);
+  assert.equal(before.status,200);
+  assert.equal(JSON.parse(before.body).passwordConfigured,false);
+  const saved=await jsonRequest('POST','/pilot/api/access/password',{newPassword:'Customer Password 42!'});
+  assert.equal(saved.status,200);
+  assert.equal(JSON.parse(saved.body).passwordConfigured,true);
+  const oldLogin=await request({method:'POST',path:'/pilot/login',body:bootstrap});
+  assert.equal(oldLogin.status,401);
+  assert.match(oldLogin.body,/Passwort falsch\./);
+  const ownPassword=new URLSearchParams({tenant:'christian',code:'Customer Password 42!',return:'/pilot/'}).toString();
+  const newLogin=await request({method:'POST',path:'/pilot/login',body:ownPassword});
+  assert.equal(newLogin.status,303);
+  const wrongCase=new URLSearchParams({tenant:'christian',code:'customer password 42!',return:'/pilot/'}).toString();
+  const rejected=await request({method:'POST',path:'/pilot/login',body:wrongCase});
+  assert.equal(rejected.status,401);
+});
+
+
+test('access status exposes durable customer secret storage in ephemeral test mode',async()=>{
+  const login=await request({method:'POST',path:'/pilot/login',body:new URLSearchParams({tenant:'tester',code:testerCode,return:'/pilot/'}).toString()});
+  assert.equal(login.status,303);
+  const cookie=String(login.headers['set-cookie']||'').split(';')[0];
+  const result=await new Promise((resolve,reject)=>{
+    const req=http.request({host:'127.0.0.1',port:server.address().port,path:'/pilot/api/access/status',headers:{cookie}},res=>{const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(Buffer.concat(chunks).toString('utf8'))}))});req.on('error',reject);req.end();
+  });
+  assert.equal(result.status,200);
+  assert.equal(result.body.durable,true);
+});

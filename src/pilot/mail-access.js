@@ -26,15 +26,28 @@ class PostgresEncryptedMailTokenStore{
 }
 class GmailOAuthReadAccess{
   constructor({organisationId,accountEmail,clientId,clientSecret,redirectUri,tokenStore,http=globalThis.fetch,clock=()=>new Date()}){
-    this.organisationId=String(organisationId);this.accountEmail=email(accountEmail);this.clientId=String(clientId||'');this.clientSecret=String(clientSecret||'');this.redirectUri=String(redirectUri||'');this.tokens=tokenStore;this.http=http;this.clock=clock;
+    this.organisationId=String(organisationId);this.accountEmail=accountEmail?email(accountEmail):null;this.clientId=String(clientId||'');this.clientSecret=String(clientSecret||'');this.redirectUri=String(redirectUri||'');this.tokens=tokenStore;this.http=http;this.clock=clock;
     if(!this.clientId||!this.clientSecret||!this.tokens||!this.redirectUri)failure('MAIL_CONFIG_MISSING','Gmail OAuth configuration missing');
     this.flow=new OAuthAuthorizationFlow({clock,providerConfigs:{google:{id:'google',authorizationEndpoint:'https://accounts.google.com/o/oauth2/v2/auth',redirectUri:this.redirectUri,clientId:this.clientId}}});
   }
-  begin(session){tenant(session,this.organisationId);const result=this.flow.begin({session,provider:'google',connectionKey:this.accountEmail,scopes:GmailReadProvider.oauthScopes});const url=new URL(result.authorizationUrl);url.searchParams.set('access_type','offline');url.searchParams.set('prompt','consent');return url.toString()}
+  begin(session){tenant(session,this.organisationId);const result=this.flow.begin({session,provider:'google',connectionKey:this.accountEmail||'gmail',scopes:GmailReadProvider.oauthScopes});const url=new URL(result.authorizationUrl);url.searchParams.set('access_type','offline');url.searchParams.set('prompt','consent');return url.toString()}
   async exchange(fields){const response=await this.http('https://oauth2.googleapis.com/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams(fields)});const body=await response.json();if(!response.ok)failure('OAUTH_TOKEN_FAILED','Google authorization failed');return body}
-  async finish(session,{state,code}){tenant(session,this.organisationId);const pending=this.flow.consume({session,provider:'google',state,code});const tokens=await this.exchange({grant_type:'authorization_code',code:pending.code,redirect_uri:pending.redirectUri,client_id:this.clientId,client_secret:this.clientSecret,code_verifier:pending.codeVerifier});if(!tokens.access_token||!tokens.refresh_token)failure('OAUTH_TOKEN_FAILED','Google refresh authorization missing');const profile=await this.http('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{authorization:'Bearer '+tokens.access_token}});if(!profile.ok)failure('OAUTH_PROFILE_FAILED','Google account could not be verified');const identity=await profile.json();if(email(identity.emailAddress)!==this.accountEmail)failure('OAUTH_ACCOUNT_MISMATCH','Wrong Google account selected');await this.tokens.set(this.organisationId,{refreshToken:tokens.refresh_token,accessToken:tokens.access_token,expiresAt:this.clock().getTime()+Number(tokens.expires_in||3600)*1000-60000,email:this.accountEmail});return this.status(session)}
-  async status(session){tenant(session,this.organisationId);return {provider:'gmail',email:this.accountEmail,connected:Boolean(await this.tokens.get(this.organisationId)),readOnly:true}}
-  async disconnect(session){tenant(session,this.organisationId);await this.tokens.remove(this.organisationId);return this.status(session)}
+  async finish(session,{state,code}){tenant(session,this.organisationId);const pending=this.flow.consume({session,provider:'google',state,code});const tokens=await this.exchange({grant_type:'authorization_code',code:pending.code,redirect_uri:pending.redirectUri,client_id:this.clientId,client_secret:this.clientSecret,code_verifier:pending.codeVerifier});if(!tokens.access_token||!tokens.refresh_token)failure('OAUTH_TOKEN_FAILED','Google refresh authorization missing');const profile=await this.http('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{authorization:'Bearer '+tokens.access_token}});if(!profile.ok)failure('OAUTH_PROFILE_FAILED','Google account could not be verified');const identity=await profile.json(),verifiedEmail=email(identity.emailAddress);if(this.accountEmail&&verifiedEmail!==this.accountEmail)failure('OAUTH_ACCOUNT_MISMATCH','Wrong Google account selected');this.accountEmail=verifiedEmail;await this.tokens.set(this.organisationId,{refreshToken:tokens.refresh_token,accessToken:tokens.access_token,expiresAt:this.clock().getTime()+Number(tokens.expires_in||3600)*1000-60000,email:verifiedEmail});return this.status(session)}
+  async status(session){tenant(session,this.organisationId);const row=await this.tokens.get(this.organisationId);return {provider:'gmail',email:row?.email||this.accountEmail||null,connected:Boolean(row?.refreshToken),readOnly:true}}
+  async disconnect(session){
+    tenant(session,this.organisationId);
+    const row=await this.tokens.get(this.organisationId);
+    let providerRevocation='not-needed';
+    const token=row?.refreshToken||row?.accessToken||'';
+    if(token){
+      try{
+        const response=await this.http('https://oauth2.googleapis.com/revoke',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({token})});
+        providerRevocation=Number(response?.status)===200||response?.ok===true?'revoked':'failed';
+      }catch{providerRevocation='failed'}
+    }
+    await this.tokens.remove(this.organisationId);
+    return {...await this.status(session),providerRevocation};
+  }
   async accessToken(){let row=await this.tokens.get(this.organisationId);if(!row)failure('MAIL_NOT_CONNECTED','Gmail not connected');if(row.accessToken&&row.expiresAt>this.clock().getTime())return row.accessToken;const result=await this.exchange({grant_type:'refresh_token',refresh_token:row.refreshToken,client_id:this.clientId,client_secret:this.clientSecret});if(!result.access_token)failure('OAUTH_TOKEN_FAILED','Google refresh failed');row={...row,accessToken:result.access_token,expiresAt:this.clock().getTime()+Number(result.expires_in||3600)*1000-60000};await this.tokens.set(this.organisationId,row);return row.accessToken}
   async listRelevant({organisationId}){tenant({organisationId},this.organisationId);const access=await this.accessToken();const provider=new GmailReadProvider({account:{organisationId},resolveAccess:()=>access,http:async request=>{const response=await this.http(request.url,{method:request.method,headers:request.headers});return {status:response.status,body:await response.json()}}});return provider.listRelevant({organisationId})}
 }
