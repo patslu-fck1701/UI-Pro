@@ -35,6 +35,10 @@ function runtimeLoginCode(){
   })+'\n');
   return value;
 }
+const {PostgresBusinessStore}=require('../src/persistence/postgres');
+const {repositories,transactionalHttp}=require('../src/persistence/repositories');
+const {createBackup}=require('../src/persistence/backup');
+const businessStorageEnabled=process.env.WERKZ_BUSINESS_STORAGE==='postgres';
 const dataDir=path.resolve(process.env.WERKZ_TIME_DATA_DIR||'./var/time-test');
 const storageReadiness=assertPilotStorageReady({
   dataDir,
@@ -43,6 +47,9 @@ const storageReadiness=assertPilotStorageReady({
 });
 const applicationDatabaseUrl=String(process.env.WERKZ_DATABASE_URL||process.env.WERKZ_MAIL_DATABASE_URL||'').trim();
 const applicationPool=applicationDatabaseUrl?new (require('pg').Pool)({connectionString:applicationDatabaseUrl,max:3}):null;
+if(businessStorageEnabled&&(!applicationPool||!storageReadiness.declaredPersistent))throw new Error('Postgres business storage requires database and declared persistent file root');
+const businessStore=businessStorageEnabled?new PostgresBusinessStore(applicationPool):null;
+const businessRepositories=businessStore?repositories(businessStore,dataDir):null;
 const tenantCredentialStore=applicationPool?new PostgresTenantCredentialStore({query:(sql,args)=>applicationPool.query(sql,args)}):new FileTenantCredentialStore({file:path.join(dataDir,'tenant-credentials.json')});
 const durableCustomerSecretStore=Boolean(applicationPool||(storageReadiness.declaredPersistent&&storageReadiness.writeProbePassed)||process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1');
 const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
@@ -133,16 +140,16 @@ function profileExpired(profile){if(!profile||!profile.accessExpiresAt)return fa
 function pilotProfileByToken(token){return token?[...pilotProfiles.values()].find(profile=>profile.token===token)||null:null}
 const auth=new LocalAuthPort(authSessions);
 const application=new TimeApplication(new TimeProductionService({
-  auth,entitlements,repository:new FileTimeRepository(path.join(dataDir,'time.json')),
-  storage:new FilePrivateEvidenceStorage(path.join(dataDir,'evidence')),
-  audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\n')
+  auth,entitlements,repository:businessRepositories?.time||new FileTimeRepository(path.join(dataDir,'time.json')),
+  storage:businessRepositories?.evidence||new FilePrivateEvidenceStorage(path.join(dataDir,'evidence')),
+  audit:event=>businessStore?businessStore.audit(event):process.stdout.write(JSON.stringify({kind:'audit',...event})+'\n')
 }));
 const timeHandler=createTimeHttpHandler({application,auth,allowedOrigins});
 const pilotService=createPilotRuntime({
-  auth,entitlements,dataDir:path.join(dataDir,'simple-pilot'),
+  auth,entitlements,dataDir:path.join(dataDir,'simple-pilot'),repository:businessRepositories?.pilot,storage:businessRepositories?.documents,
   voiceDiagnosticOrganisationIds:String(process.env.WERKZ_PILOT_VOICE_DIAGNOSTIC_ORGS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).map(x=>pilotTenantBySlug.get(x)?.organisationId||x),
   ownerDemoOrganisationIds:[...pilotProfiles.values()].filter(p=>p.cryptoEnabled===true&&p.ownerDemoEnabled===true).map(p=>p.organisationId),
-  audit:event=>process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
+  audit:event=>businessStore?businessStore.audit(event):process.stdout.write(JSON.stringify({kind:'audit',...event})+'\\n')
 });
 const outboundResendApiKey=String(process.env.WERKZ_PILOT_RESEND_API_KEY||process.env.RESEND_API_KEY||'').trim();
 const outboundFrom=String(process.env.WERKZ_PILOT_OUTBOUND_FROM||'').trim();
@@ -154,7 +161,7 @@ if(outboundAnyConfigured)pilotService.outbound=new ResendOutboundMailProvider({
   storage:pilotService.storage
 });
 async function refreshScrapPrices(reason){try{const x=await pilotService.scrapPrices.snapshot({force:true});process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:x.live===true,stale:x.stale===true,partial:x.partial===true,source:x.source||null,asOf:x.asOf||null,failedPages:Array.isArray(x.failedPages)?x.failedPages:[]})+'\\n')}catch(error){process.stdout.write(JSON.stringify({kind:'scrap-price-refresh',reason,live:false,error:String(error&&error.message||error).slice(0,160)})+'\\n')}}
-// Handwerk demo has no automatic market-price polling.
+if(process.env.WERKZ_ENABLE_MARKET_POLLING==='1'){refreshScrapPrices('startup');const scrapPriceTimer=setInterval(function(){refreshScrapPrices('interval')},15*60*1000);if(scrapPriceTimer&&typeof scrapPriceTimer.unref==='function')scrapPriceTimer.unref();}
 const mailTokenKey=process.env.WERKZ_PILOT_MAIL_TOKEN_KEY||'';
 const mailPool=mailTokenKey&&applicationPool?applicationPool:null;
 const mailTokenStore=mailTokenKey?(mailPool?new PostgresEncryptedMailTokenStore({query:(sql,args)=>mailPool.query(sql,args),key:mailTokenKey}):new EncryptedMailTokenStore({file:path.join(dataDir,'mail-tokens.enc.json'),key:mailTokenKey})):null;
@@ -401,7 +408,7 @@ function profilePage(request,response,returnTo){
   response.end('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width"><title>WerkZ Testprofile</title><body><main><h1>WerkZ Testprofile</h1><p>Nur für die nicht-produktive WerkZ-Testinstanz.</p><ul>'+links+'</ul></main></body></html>');
 }
 
-const server=http.createServer(async(request,response)=>{
+async function handleRequest(request,response){
   const url=new URL(request.url,'http://werkz.invalid');
   if(request.method==='GET'&&url.pathname==='/pilot/crypto-lab'){
     response.writeHead(302,{location:'https://project23947.websitepublisher.ai/crypto-lab.html','cache-control':'no-store'});
@@ -415,10 +422,12 @@ const server=http.createServer(async(request,response)=>{
     let writable=true,error=null;
     try{fs.accessSync(dataDir,fs.constants.W_OK)}
     catch(e){writable=false;error='storage-unavailable'}
-    const storageReady=writable&&storageReadiness.ready;
+    let databaseReady=!businessStore;
+    if(businessStore)try{await applicationPool.query('SELECT 1');databaseReady=true;}catch{databaseReady=false;}
+    const storageReady=writable&&storageReadiness.ready&&databaseReady;
     response.writeHead(storageReady?200:503,{'content-type':'application/json','cache-control':'no-store'});
     return response.end(JSON.stringify({
-      ok:storageReady,storageWritable:writable,storageReady,
+      ok:storageReady,storageWritable:writable,storageReady,businessStorage:businessStore?'postgres':'file',databaseReady,
       persistentStorageRequired:storageReadiness.requirePersistent,
       persistentStorageDeclared:storageReadiness.declaredPersistent,
       storageWriteProbePassed:storageReadiness.writeProbePassed,
@@ -630,15 +639,35 @@ const server=http.createServer(async(request,response)=>{
   }
   if(url.pathname.startsWith('/api/'))request.url=request.url.slice(4);
   return timeHandler(request,response);
+}
+const server=http.createServer(async(request,response)=>{
+  try{
+    const pathname=new URL(request.url,'http://werkz.invalid').pathname;
+    if(businessStore&&pathname==='/pilot/api/backup/drill-status'&&request.method==='GET'){const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));if(!profile||profileExpired(profile)){response.writeHead(401);return response.end();}response.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return response.end(fs.readFileSync(path.join(dataDir,'storage-drill-latest.json')));}
+    if(businessStore&&pathname==='/pilot/api/backup/encrypted'&&request.method==='GET'){
+      let session;try{session=auth.resolveSession(cookieTokenFromHeader(request.headers.cookie));}catch{response.writeHead(401);return response.end();}
+      const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));
+      if(!session.capabilities.includes('pilot.read')||!profile||profileExpired(profile)){response.writeHead(403);return response.end();}
+      const bytes=await createBackup(businessStore,session.organisationId,dataDir,process.env.WERKZ_BACKUP_KEY);
+      response.writeHead(200,{'content-type':'application/octet-stream','content-disposition':'attachment; filename="werkz-backup.wzbackup"','cache-control':'no-store'});return response.end(bytes);
+    }
+    if(businessStore&&(pathname.startsWith('/pilot/public/')||pathname.startsWith('/pilot/provider/'))){response.writeHead(503,{'content-type':'application/json'});return response.end(JSON.stringify({error:'PUBLIC_INTAKE_NOT_ENABLED'}));}
+    if(businessStore&&(pathname.startsWith('/pilot/api/')||pathname.startsWith('/api/')||pathname.startsWith('/time/')||pathname==='/session')){
+      let session;try{session=auth.resolveSession(cookieTokenFromHeader(request.headers.cookie));}catch{response.writeHead(401,{'content-type':'application/json','cache-control':'no-store'});return response.end(JSON.stringify({error:'UNAUTHENTICATED'}));}
+      return await transactionalHttp(businessStore,session.organisationId,response,out=>handleRequest(request,out));
+    }
+    return await handleRequest(request,response);
+  }catch{response.writeHead(503,{'content-type':'application/json','cache-control':'no-store'});response.end(JSON.stringify({error:'SERVICE_UNAVAILABLE'}));}
 });
 
 const port=Number(process.env.PORT||8080);
-server.listen(port,'0.0.0.0',()=>{const actualPort=server.address().port;process.stdout.write(JSON.stringify({
+function start(){server.listen(port,'0.0.0.0',()=>{const actualPort=server.address().port;process.stdout.write(JSON.stringify({
   kind:'ready',port:actualPort,hub:'/hub/',time:'/',pilot:'/pilot/',pilotSite:'/pilot/site/',profiles:testProfilesEnabled?'/test-profiles':null,
   profileIds:testProfilesEnabled?[...testProfiles.keys()]:[],pilotTenantSlugs:[...pilotTenantBySlug.keys()],allowedOrigins,sameOriginPwa:true,unifiedLocalStack:true,
   ephemeralSecrets:ephemeralMode,testProfilesEnabled,
   persistentStorageRequired:storageReadiness.requirePersistent,persistentStorageDeclared:storageReadiness.declaredPersistent,
   storageWriteProbePassed:storageReadiness.writeProbePassed,externalRestartProofRequired:storageReadiness.externalRestartProofRequired,durableCustomerSecretStore
-})+'\n')});
+})+'\n')});}
+if(businessStore)businessStore.initialize().then(async()=>{if(process.env.WERKZ_RUN_STORAGE_DRILL==='1'){const report=await require('./postgres-business-drill').runDrill({connectionString:applicationDatabaseUrl,root:dataDir,key:process.env.WERKZ_BACKUP_KEY});process.stdout.write(JSON.stringify({kind:'storage-drill',...report})+'\n');}start();}).catch(async()=>{process.stderr.write('Business database initialization failed\n');await applicationPool.end();process.exitCode=1;});else start();
 
 module.exports={server,safeLocalReturn,serveDemoHub,servePilot,servePilotSite,testProfiles,profileAccessGranted,sessionCookie};
