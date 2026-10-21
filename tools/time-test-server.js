@@ -61,6 +61,9 @@ const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
 const hubDir=path.resolve(__dirname,'../demos/demo-hub');
 const pilotDir=path.resolve(__dirname,'../apps/simple-pilot');
 const pilotSiteDir=path.resolve(__dirname,'../apps/simple-site');
+const {HandwerkAccounts}=require('../src/security/handwerk-accounts');
+const {HandwerkService}=require('../src/handwerk/service');
+const {createHandwerkHandler}=require('../src/handwerk/http');
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ_TEST_ORGANISATION_LABEL||'Pilotbetrieb';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
@@ -314,7 +317,7 @@ function servePilotSite(url,response){
 }
 
 function servePilot(url,response){
-  const tradesFiles={'/pilot/handwerk/':'index.html','/pilot/handwerk/app.js':'app.js','/pilot/handwerk/styles.css':'styles.css'};
+  const tradesFiles={'/pilot/handwerk/rollen/':'roles.html','/pilot/handwerk/roles.js':'roles.js','/pilot/handwerk/':'index.html','/pilot/handwerk/app.js':'app.js','/pilot/handwerk/styles.css':'styles.css'};
   const tradesFile=tradesFiles[url.pathname];
   if(tradesFile){
     hubSecurityHeaders(response);
@@ -423,6 +426,8 @@ function profilePage(request,response,returnTo){
   response.end('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width"><title>WerkZ Testprofile</title><body><main><h1>WerkZ Testprofile</h1><p>Nur für die nicht-produktive WerkZ-Testinstanz.</p><ul>'+links+'</ul></main></body></html>');
 }
 
+const handwerkAccounts=businessStore?new HandwerkAccounts({store:businessStore,sessions:browserSessions}):null;
+const handwerkHandler=createHandwerkHandler({accounts:handwerkAccounts,service:businessStore?new HandwerkService({store:businessStore}):null,organisationId});
 const whatsAppWebhook=createWhatsAppWebhook({onEvent:createWhatsAppTestBridge({store:businessStore})});
 const advisorHandler=createAdvisorHandler({store:businessStore,isAdmin:request=>{const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));return Boolean(profile&&!profileExpired(profile)&&profile.role==='owner'&&profile.organisationId===organisationId);}});
 function serveAdvisor(url,response){
@@ -685,6 +690,7 @@ const server=http.createServer(async(request,response)=>{
       request.headers.cookie=otherCookies+(profile&&!profileExpired(profile)?'; werkz_session='+encodeURIComponent(profile.token):'');
     }
     if(request.method==='GET'&&serveAdvisor(requestUrl,response))return;
+    if(await handwerkHandler(request,response))return;
     if(await advisorHandler(request,response))return;
     if(businessStore&&pathname==='/pilot/api/backup/drill-status'&&request.method==='GET'){const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));if(!profile||profileExpired(profile)){response.writeHead(401);return response.end();}response.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return response.end(fs.readFileSync(path.join(dataDir,'storage-drill-latest.json')));}
     if(businessStore&&['/pilot/api/backup/encrypted','/pilot/api/backup/intake-encrypted'].includes(pathname)&&request.method==='GET'){
@@ -713,7 +719,7 @@ function start(){server.listen(port,'0.0.0.0',()=>{const actualPort=server.addre
   persistentStorageRequired:storageReadiness.requirePersistent,persistentStorageDeclared:storageReadiness.declaredPersistent,
   storageWriteProbePassed:storageReadiness.writeProbePassed,externalRestartProofRequired:storageReadiness.externalRestartProofRequired,durableCustomerSecretStore
 })+'\n')});}
-if(businessStore)businessStore.initialize().then(async()=>{await browserSessions.initialize();if(process.env.WERKZ_RUN_STORAGE_DRILL==='1'){const report=await require('./postgres-business-drill').runDrill({connectionString:applicationDatabaseUrl,root:dataDir,key:process.env.WERKZ_BACKUP_KEY});process.stdout.write(JSON.stringify({kind:'storage-drill',...report})+'\n');}start();}).catch(async()=>{process.stderr.write('Business database initialization failed\n');await applicationPool.end();process.exitCode=1;});else start();
+if(businessStore)businessStore.initialize().then(async()=>{await browserSessions.initialize();if(process.env.WERKZ_HANDWERK_TEST_USERS_JSON){const seed=JSON.parse(process.env.WERKZ_HANDWERK_TEST_USERS_JSON);if(seed.organisationId!==organisationId||!organisationId.startsWith('org-werkz-synthetic-'))throw new Error('Test users require the explicit synthetic demo organisation');const seeded=await handwerkAccounts.seedTestUsers(organisationId,seed.users);process.stdout.write(JSON.stringify({kind:'handwerk-test-users-ready',count:seeded.length})+'\n');}if(process.env.WERKZ_RUN_STORAGE_DRILL==='1'){const report=await require('./postgres-business-drill').runDrill({connectionString:applicationDatabaseUrl,root:dataDir,key:process.env.WERKZ_BACKUP_KEY});process.stdout.write(JSON.stringify({kind:'storage-drill',...report})+'\n');}start();}).catch(async()=>{process.stderr.write('Business database initialization failed\n');await applicationPool.end();process.exitCode=1;});else start();
 
 module.exports={server,safeLocalReturn,serveDemoHub,servePilot,servePilotSite,testProfiles,profileAccessGranted,sessionCookie};
 

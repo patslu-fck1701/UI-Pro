@@ -1,0 +1,29 @@
+'use strict';
+const {ROLES}=require('../security/handwerk-policy');
+function json(res,status,value,headers={}){res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff',...headers});res.end(JSON.stringify(value));}
+function token(req){const part=String(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('werkz_handwerk_session='));if(!part)return null;try{return decodeURIComponent(part.slice('werkz_handwerk_session='.length));}catch{return null;}}
+function cookie(value,age=28800){return 'werkz_handwerk_session='+encodeURIComponent(value)+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age='+age;}
+async function body(req){const parts=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>16384)throw Object.assign(Error('Anfrage zu groß.'),{code:'VALIDATION_ERROR'});parts.push(chunk);}const raw=Buffer.concat(parts).toString('utf8');if(String(req.headers['content-type']||'').startsWith('application/x-www-form-urlencoded'))return Object.fromEntries(new URLSearchParams(raw));try{const value=JSON.parse(raw);if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid object');return value;}catch{throw Object.assign(Error('Angaben prüfen.'),{code:'VALIDATION_ERROR'});}}
+function loginPage(res,status=200){res.writeHead(status,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','content-security-policy':"default-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"});res.end('<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WerkZ Handwerk · Persönliche Anmeldung</title><link rel="stylesheet" href="/pilot/handwerk/styles.css"></head><body><main><header><div><p class="eyebrow">WERKZ · HANDWERK</p><h1>Dein Arbeitsbereich.</h1><p>Persönliche Anmeldung · nur synthetische Testdaten</p></div></header><section><h2>Mit deinem Testkonto anmelden</h2>'+(status===401?'<p class="notice" role="alert">Anmeldung nicht möglich. Betrieb, Benutzername und Passwort prüfen.</p>':'')+'<form method="post" action="/handwerk/login"><label>Betrieb<input name="tenant" value="demo" autocomplete="organization" required maxlength="64"></label><label>Benutzername<input name="username" autocomplete="username" autocapitalize="none" required maxlength="64"></label><label>Passwort<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button>Anmelden</button></form></section><footer>WerkZ · Persönliche Rechte werden bei jedem Zugriff geprüft.</footer></main></body></html>');}
+function createHandwerkHandler({accounts,service,organisationId,slug='demo'}){
+  const attempts=new Map();
+  return async(req,res)=>{const path=new URL(req.url,'http://werkz.invalid').pathname;if(!path.startsWith('/handwerk/'))return false;
+    try{
+      if(!accounts||!service){json(res,503,{error:'POSTGRES_REQUIRED',message:'Persönliche Konten sind noch nicht verbunden.'});return true;}
+      if(!['GET','POST'].includes(req.method)){json(res,405,{error:'METHOD_NOT_ALLOWED'});return true;}
+      if(req.method==='POST'){const local=/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.host||'');if(req.headers.origin!==(local?'http://':'https://')+req.headers.host){json(res,403,{error:'FORBIDDEN'});return true;}}
+      if(path==='/handwerk/login'&&req.method==='GET'){loginPage(res);return true;}
+      if(path==='/handwerk/login'&&req.method==='POST'){const input=await body(req),key=String(req.socket?.remoteAddress||'unknown')+':'+String(input.username||'').slice(0,64),now=Date.now(),bucket=attempts.get(key)||{since:now,count:0};if(now-bucket.since>900000){bucket.since=now;bucket.count=0;}attempts.set(key,bucket);if(attempts.size>2000)attempts.delete(attempts.keys().next().value);if(++bucket.count>20){json(res,429,{error:'RATE_LIMITED'});return true;}const session=await accounts.login(organisationId,input.tenant===slug?input.username:'',input.password);if(!session){loginPage(res,401);return true;}res.writeHead(303,{location:'/pilot/handwerk/rollen/','set-cookie':cookie(session.token),'cache-control':'no-store'});res.end();return true;}
+      const sessionToken=token(req),user=await accounts.resolve(sessionToken);if(!user){json(res,401,{error:'UNAUTHENTICATED'});return true;}
+      if(path==='/handwerk/logout'&&req.method==='POST'){await accounts.sessions.revoke(sessionToken);res.writeHead(303,{location:'/handwerk/login','set-cookie':cookie('',0),'cache-control':'no-store'});res.end();return true;}
+      if(path==='/handwerk/api/session'&&req.method==='GET'){json(res,200,{user});return true;}
+      if(path==='/handwerk/api/overview'&&req.method==='GET'){json(res,200,await service.overview(user));return true;}
+      if(path==='/handwerk/api/commands'&&req.method==='POST'){const input=await body(req);json(res,200,await service.command(user,input.operation,input.input));return true;}
+      if(path==='/handwerk/api/users'&&req.method==='GET'){json(res,200,await accounts.list(user));return true;}
+      if(path==='/handwerk/api/roles'&&req.method==='GET'){await accounts.list(user);json(res,200,ROLES);return true;}
+      const match=path.match(/^\/handwerk\/api\/users\/(usr_[a-f0-9-]{36})$/);if(match&&req.method==='POST'){json(res,200,await accounts.update(user,match[1],await body(req)));return true;}
+      json(res,404,{error:'NOT_FOUND'});return true;
+    }catch(e){const status={FORBIDDEN:403,UNAUTHENTICATED:401,NOT_FOUND:404,VALIDATION_ERROR:400,PASSWORD_POLICY:400,REVISION_CONFLICT:409,ACTIVE_TIMER_EXISTS:409}[e.code]||503;json(res,status,{error:e.code||'SERVICE_UNAVAILABLE',message:status===503?'Aktion derzeit nicht möglich.':e.message});return true;}
+  };
+}
+module.exports={createHandwerkHandler};

@@ -80,6 +80,7 @@ function initialState() {
     users: {},
     customers: {},
     orders: {},
+    resources: {},
     timers: {},
     evidence: {},
     approvals: {},
@@ -132,6 +133,8 @@ class InMemoryRepository {
         throw new WerkZError('INTEGRITY_ERROR', 'Invalid collection: ' + name);
       }
     }
+    if (!s.resources) s.resources = {};
+    if (typeof s.resources !== 'object' || Array.isArray(s.resources)) throw new WerkZError('INTEGRITY_ERROR', 'Invalid collection: resources');
     if (!Array.isArray(s.audit)) throw new WerkZError('INTEGRITY_ERROR', 'Invalid audit log');
   }
 }
@@ -205,6 +208,9 @@ class WerkZCore {
         organisationId: context.organisationId,
         customerId: customer.id,
         title: nonEmpty(input.title, 'title'),
+        profileId: input.profileId || null,
+        profileStatus: input.profileStatus || null,
+        profileFields: copy(input.profileFields || {}),
         appointmentAt: input.appointmentAt || null,
         location: input.location || null,
         orgUnitId: input.orgUnitId || null,
