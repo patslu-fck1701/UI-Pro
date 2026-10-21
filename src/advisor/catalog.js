@@ -1,72 +1,63 @@
 'use strict';
-
-const ADVISOR_MODULES=Object.freeze({
- 'werkz.time':{stage:'ready',technical:'PWA + TimeApplication + durable repository/offline queue',title:'Zeit & Einsätze',question:'Soll Arbeitszeit direkt unterwegs erfasst werden?',benefit:'Start, Stopp, Einsatzdaten und Verlauf direkt mobil.',needs:['Mitarbeiter/Rollen','Arbeitszeit-Regeln'],access:[]},
- 'werkz.customers':{stage:'planned',technical:'Module contract/API entitlement present; customer domain UI follows scoped project',title:'Kunden',question:'Sollen Kundendaten zentral verfügbar sein?',benefit:'Kundeninformationen stehen den passenden Abläufen zur Verfügung.',needs:['vorhandene Kundendaten','führendes Kundensystem'],access:[]},
- 'werkz.orders':{stage:'planned',technical:'Module contract with hard customer dependency; order domain UI follows scoped project',title:'Aufträge',question:'Sollen Aufträge mobil angelegt, zugeordnet und abgeschlossen werden?',benefit:'Kunde, Auftrag und Einsatz bleiben verbunden.',needs:['heutiger Auftragsablauf','Auftragsnummern/Status'],access:[]},
- 'werkz.materials':{stage:'planned',technical:'Module entitlement/API boundary registered',title:'Material',question:'Soll Material unterwegs erfasst oder einem Auftrag zugeordnet werden?',benefit:'Materialverbrauch wird direkt am Vorgang festgehalten.',needs:['Materialliste oder heutige Erfassungsart'],access:[]},
- 'werkz.documents':{stage:'foundation',technical:'Private evidence storage exists in Time/Assistant; generic documents API is a module boundary',title:'Dokumente & Fotos',question:'Sollen Fotos, Belege oder Dokumente direkt zum Vorgang?',benefit:'Nachweise landen am richtigen Kunden/Auftrag statt lose auf dem Handy.',needs:['Dokumentarten','Aufbewahrungs-/Löschregeln'],access:[]},
- 'werkz.billing-prep':{stage:'planned',technical:'Entitlement/API boundary; no automatic invoice sending',title:'Abrechnung vorbereiten',question:'Sollen erledigte Arbeiten für die Abrechnung vorbereitet werden?',benefit:'Zeiten, Material und Nachweise können für die Abrechnung zusammengeführt werden.',needs:['heutiger Rechnungsablauf','benötigte Abrechnungsdaten'],access:[]},
- 'werkz.assistant':{stage:'ready',technical:'AssistantService + HTTP + offline-capable PWA test runtime',title:'Mobiler Assistent',question:'Soll WerkZ Wichtiges sammeln und nur zeigen, was gerade Aufmerksamkeit braucht?',benefit:'Aufgaben, Belege, Termine und Signale werden an einer Stelle priorisiert.',needs:['gewünschte Signalquellen'],access:['Zugänge erst bei aktivierter externer Quelle sicher verbinden']},
- 'werkz.analytics':{stage:'foundation',technical:'Analytics entitlement and assistant market snapshots available',title:'Analyse',question:'Soll WerkZ Entwicklungen, Aufwand oder Kennzahlen sichtbar machen?',benefit:'Verläufe und Auffälligkeiten werden aus vorhandenen Daten verständlich.',needs:['gewünschte Kennzahlen','Datenquellen'],access:[]},
- 'werkz.simulation':{stage:'foundation',technical:'Simulation capability separated from production mutations',title:'Simulation',question:'Sollen Varianten durchgespielt werden, ohne echte Daten/Aktionen zu verändern?',benefit:'Was-wäre-wenn bleibt strikt von Produktion getrennt.',needs:['Szenario und Annahmen'],access:[]},
- 'werkz.management':{stage:'foundation',technical:'Management projection/capability boundary available',title:'Chef-Übersicht',question:'Braucht der Chef eine kompakte Team-/Betriebsübersicht?',benefit:'Relevante Betriebsinformationen ohne unnötige Detailflut.',needs:['Rollen und Sichtrechte'],access:[]},
- 'werkz.approvals':{stage:'foundation',technical:'ApprovalChannel contract with explicit human decision boundary',title:'Freigaben',question:'Müssen bestimmte Aktionen erst von einem Menschen bestätigt werden?',benefit:'Kritische Schritte laufen kontrolliert statt automatisch.',needs:['wer darf was freigeben'],access:[]},
- 'werkz.channel.whatsapp':{stage:'planned',technical:'Requires approvals; provider integration/credentials only during customer setup',title:'WhatsApp-Freigaben',question:'Sollen Freigabeanfragen später über WhatsApp erreichbar sein?',benefit:'Freigaben können einen bekannten Kanal nutzen.',needs:['freigegebene Telefonnummer/Kanal','Freigaberegeln'],access:['WhatsApp-/Provider-Zugang erst bei Einrichtung']}
-});
-
-const BUNDLES=Object.freeze([
- {id:'mobile-job',title:'Mobiler Einsatz',modules:['werkz.time','werkz.customers','werkz.orders','werkz.documents'],why:'Zeit, Kunde, Auftrag und Fotos/Nachweise greifen direkt ineinander.'},
- {id:'job-to-billing',title:'Vom Auftrag zur Abrechnung',modules:['werkz.customers','werkz.orders','werkz.materials','werkz.documents','werkz.billing-prep'],why:'Auftragsdaten, Material und Nachweise werden ohne Medienbruch vorbereitet.'},
- {id:'boss',title:'Chef im Blick',modules:['werkz.assistant','werkz.time','werkz.orders','werkz.documents','werkz.analytics','werkz.management'],why:'Der Assistent bündelt vorhandene Betriebsdaten und zeigt Relevantes.'},
- {id:'controlled',title:'Kontrollierte Freigaben',modules:['werkz.approvals','werkz.channel.whatsapp'],why:'Kritische Aktionen bleiben menschlich bestätigt.'}
+const {CommercialCatalog}=require('../commercial/catalog');
+const definition=require('../../config/catalog/werkz-v0.2.json');
+const CATEGORIES=Object.freeze([
+  {key:'customers',label:'Kunden & Anfragen'}, {key:'time',label:'Zeit & Einsatz'},
+  {key:'documents',label:'Belege & Büro'}, {key:'projects',label:'Aufträge & Material'},
+  {key:'communication',label:'Kommunikation & Schnittstellen'}, {key:'team',label:'Team & Steuerung'}
 ]);
-
-function advise(registry,selected=[]){
- const chosen=new Set(selected), required=new Set(), optional=new Set();
- const visit=id=>{const m=registry.get(id);for(const d of m.hardDependencies||[]){if(!chosen.has(d)){required.add(d);visit(d)}}};
- for(const id of chosen)visit(id);
- for(const id of chosen){const m=registry.get(id);for(const d of m.optionalIntegrations||[])if(!chosen.has(d)&&!required.has(d))optional.add(d)}
- const all=new Set([...chosen,...required]);
- const needs=[],access=[];
- for(const id of all){const meta=ADVISOR_MODULES[id];if(!meta)continue;for(const x of meta.needs||[])needs.push({moduleId:id,text:x});for(const x of meta.access||[])access.push({moduleId:id,text:x})}
- const bundles=BUNDLES.map(b=>({...b,selected:b.modules.filter(x=>all.has(x)).length,total:b.modules.length})).filter(b=>b.selected>0).sort((a,b)=>b.selected-a.selected);
- return {selected:[...chosen],required:[...required],optional:[...optional],needs,access,bundles};
+function feature(key,category,label,benefit,moduleId,route,matches,tier='solo'){
+  return Object.freeze({key,category,label,benefit,moduleId,route,matches,minimumPackage:tier,status:route?'demo_verified':'manual_review_required'});
 }
-
-const SCOPE_PRESETS=Object.freeze([
- {id:'solo',title:'WerkZ Solo',setupFromCents:49000,typicalRangeCents:[79000,149000],managedFromCents:7900,fit:'Scharf abgegrenzter Ablauf, meist Einzelperson/kleiner Umfang.'},
- {id:'team',title:'WerkZ Team',setupFromCents:149000,typicalRangeCents:[199000,399000],managedFromCents:17900,fit:'Mehrere Rollen/Mitarbeiter und verbundene Arbeitsabläufe.'},
- {id:'business',title:'WerkZ Business',setupFromCents:249000,typicalRangeCents:[349000,750000],managedFromCents:34900,fit:'Mehrere Abläufe, Integrationen oder höhere Betriebsanforderungen.'},
- {id:'enterprise',title:'Enterprise',setupFromCents:null,typicalRangeCents:null,managedFromCents:null,fit:'Individuelles Angebot/SLA.'}
+const customerRoute='/pilot/handwerk/#customers',inquiryRoute='/pilot/handwerk/#inquiries',documentRoute='/pilot/handwerk/#documents';
+const FEATURES=Object.freeze([
+  feature('customers','customers','Kundenkartei','Kunden und Betriebe zentral erfassen.','werkz.customers',customerRoute,/kunde|kontakt/i),
+  feature('customerPhone','customers','Telefonnummern','Telefonnummern am Kundeneintrag speichern.','werkz.customers',customerRoute,/telefon|kontakt/i),
+  feature('customerAddresses','customers','Einsatzadressen','Adressen zum Kunden und Einsatz festhalten.','werkz.customers',customerRoute,/adresse|einsatzort/i),
+  feature('inquiries','customers','Anfragen erfassen','Neue Anliegen mit Telefon und Einsatzort aufnehmen.','werkz.simple',inquiryRoute,/anfrag|rückruf|rueckruf|zettel/i),
+  feature('callbackQueue','customers','Rückrufliste','Offene Rückrufe an einem Ort sehen.','werkz.simple',inquiryRoute,/rückruf|rueckruf|telefon/i),
+  feature('callbackDone','customers','Rückrufe abschließen','Erledigte Rückrufe nachvollziehbar abhaken.','werkz.simple',inquiryRoute,/rückruf|rueckruf/i),
+  feature('inquiryNotes','customers','Anliegen & Notizen','Das Anliegen schriftlich zur Anfrage festhalten.','werkz.simple',inquiryRoute,/notiz|anliegen|zettel/i),
+  feature('time','time','Arbeitszeiten','Arbeitszeit starten und stoppen.','werkz.time','/pilot/handwerk/#times',/zeit|stund/i),
+  feature('timeAssignment','time','Zeit je Kunde oder Einsatz','Zeitbuchungen einem Kunden oder Einsatz zuordnen.','werkz.time','/pilot/handwerk/#times',/zeit|einsatz|baustell/i),
+  feature('workCalendar','time','Einsatzkalender','Gewünschte Termine und Einsätze gemeinsam planen.',null,null,/termin|kalender/i,'team'),
+  feature('teamAssignment','time','Mitarbeitereinsatzplanung','Teams und Mitarbeitende zu Einsätzen einteilen.','werkz.orders',null,/team|personal|planung/i,'team'),
+  feature('documents','documents','Belegablage','Fotos und PDF-Belege geschützt hochladen.','werkz.documents',documentRoute,/beleg|foto|datei|dokument/i),
+  feature('receiptCategory','documents','Belege kategorisieren','Werkzeug, Tanken, Privat und Sonstiges unterscheiden.','werkz.documents',documentRoute,/beleg|kategor|tanken/i),
+  feature('documentReview','documents','Belege manuell prüfen','Zuordnung und Angaben vor der Übergabe selbst prüfen.','werkz.documents',documentRoute,/beleg|prüf|pruef/i),
+  feature('documentDownload','documents','Belege herunterladen','Eigene abgelegte Belege wieder herunterladen.','werkz.documents',documentRoute,/beleg|datei/i),
+  feature('export','documents','Monatsvorbereitung','Belege zur manuellen Monatsprüfung zusammenstellen.','werkz.billing-prep',documentRoute,/monat|steuer|abrechn/i),
+  feature('exportDownload','documents','Monatsübersicht herunterladen','Die vorbereitete Monatsübersicht als JSON herunterladen.','werkz.billing-prep',documentRoute,/monat|export|steuer/i),
+  feature('quotations','documents','Angebote erstellen','Individuelle Kundenangebote aus Positionen vorbereiten.',null,null,/angebot/i),
+  feature('invoices','documents','Rechnungen erstellen','Rechnungsentwürfe für Leistungen und Material erstellen.',null,null,/rechnung/i),
+  feature('erechnung','documents','E-Rechnung','Strukturierte elektronische Rechnungen verarbeiten.',null,null,/e-rechnung|xrechnung|zugferd/i),
+  feature('accountingExport','documents','Buchhaltungsschnittstelle','Eine automatische Übergabe an die Buchhaltung prüfen.','werkz.billing-prep',null,/datev|buchhalt/i,'team'),
+  feature('recognition','documents','Automatische Belegerkennung','OCR und automatische Zuordnung statt manueller Erfassung prüfen.','werkz.documents',null,/erkenn|ocr/i),
+  feature('reminders','documents','Zahlungserinnerungen','Offene Rechnungen und Zahlungserinnerungen bearbeiten.',null,null,/mahn|zahlung/i),
+  feature('orders','projects','Auftragsplanung','Aufträge vom Eingang bis zum Abschluss organisieren.','werkz.orders',null,/auftrag/i,'team'),
+  feature('checklists','projects','Baustellenchecklisten','Wiederkehrende Prüfpunkte je Einsatz abarbeiten.',null,null,/checklist/i,'team'),
+  feature('projectPhotos','projects','Baustellenfotodokumentation','Projektfotos getrennt von Belegen nach Einsatz organisieren.','werkz.documents',null,/baustellenfoto|fotodoku/i,'team'),
+  feature('digitalAcceptance','projects','Digitale Abnahme','Abnahme und Unterschrift vor Ort dokumentieren.',null,null,/abnahme|unterschrift/i,'team'),
+  feature('materials','projects','Materiallisten','Materialbedarf für einen Auftrag zusammenstellen.','werkz.materials',null,/material/i,'team'),
+  feature('inventory','projects','Lagerbestände','Materialbestände und Entnahmen nachvollziehen.','werkz.materials',null,/lager|bestand/i,'team'),
+  feature('supplierOrders','projects','Lieferantenbestellungen','Nachbestellungen und Lieferantenabläufe bündeln.',null,null,/lieferant|bestell/i,'team'),
+  feature('voice','communication','Telefon-KI','Automatische Gesprächsannahme und Zusammenfassung prüfen.','werkz.channel.voice',null,/telefon-ki|telefonassistent/i),
+  feature('gmail','communication','E-Mail-Sortierung','Relevante E-Mails erkennen und einem Ablauf zuordnen.','werkz.channel.gmail',null,/e-mail|email|postfach/i),
+  feature('whatsapp','communication','WhatsApp-Nachrichten','Benachrichtigungen über einen freigegebenen Kanal prüfen.','werkz.channel.whatsapp',null,/whatsapp/i,'team'),
+  feature('integrations','communication','Programmschnittstellen','Vorhandene Fachprogramme kontrolliert anbinden.',null,null,/schnittstell|verbinden|integration/i,'team'),
+  feature('customerPortal','communication','Kundenportal','Kunden einen eigenen geschützten Einblick geben.',null,null,/portal/i,'team'),
+  feature('roles','team','Individuelle Mitarbeiterzugänge','Persönliche Konten und passende Rechte einrichten.',null,null,/mitarbeiterzugang|rollen|berechtigung/i,'team'),
+  feature('approvals','team','Freigabeabläufe','Entscheidungen vor der Ausführung bestätigen.','werkz.approvals',null,/freigab/i,'team'),
+  feature('analytics','team','Kennzahlen & Auswertung','Betriebliche Kennzahlen und Übersichten auswerten.','werkz.analytics',null,/kennzahl|analyse|auswert/i,'business'),
+  feature('simulation','team','Szenarien & Simulation','Alternative Abläufe und Auswirkungen untersuchen.','werkz.simulation',null,/simulat|szenari/i,'business'),
+  feature('multiLocation','team','Mehrere Standorte','Abläufe verschiedener Standorte zusammenführen.',null,null,/standort|filial/i,'business'),
+  feature('automations','team','Individuelle Automatisierung','Mehrere Schritte zu einem abgestimmten Ablauf verbinden.',null,null,/automat|workflow/i,'business'),
+  feature('offline','team','Erweiterter Offline-Betrieb','Weitere Arbeitsbereiche ohne Verbindung prüfen.',null,null,/offline|funkloch/i,'team')
 ]);
-const DEPLOYMENTS=Object.freeze([
- {id:'managed_cloud',title:'Managed Cloud',setupFromCents:0,opsFromCents:0,note:'Für viele Solo/Team-Szenarien; Shared Hosting im vereinbarten Managed-Rahmen enthalten.',asks:['Sind lokale Systeme zwingend anzubinden?']},
- {id:'dedicated_cloud',title:'Dedicated Cloud',setupFromCents:49000,opsFromCents:9900,note:'Isolierte Kundeninstanz; Providerkosten zusätzlich.',asks:['Ist eine isolierte Instanz erforderlich?']},
- {id:'hybrid_connector',title:'Hybrid + Connector',setupFromCents:69000,opsFromCents:4900,note:'Hosted WerkZ plus outbound-only Connector zu freigegebenen lokalen Systemen.',asks:['Welche lokalen Systeme/APIs müssen verbunden werden?','Wer verwaltet Netzwerk und Freigaben?']},
- {id:'existing_hardware',title:'Vorhandene Hardware',setupFromCents:null,opsFromCents:null,note:'Geeigneten Server/NAS/Mini-PC/Mac zuerst prüfen und möglichst weiterverwenden.',asks:['OS/Patchstand','CPU/RAM/Speicher','Verschlüsselung','Backup/Restore','24/7-Eignung/USV','Remote-Administration']},
- {id:'werkz_box',title:'WerkZ Box',setupFromCents:99000,opsFromCents:9900,note:'Vorbereitetes lokales Gerät; Hardware separat zum aktuellen Preis.',asks:['Ist vorhandene Hardware ungeeignet?','Wer übernimmt Standort/Strom/Netz?']},
- {id:'on_prem',title:'Dedicated / On-Premise',setupFromCents:249000,opsFromCents:24900,note:'Kundeneigene Server-/Virtualisierungsumgebung; höherer Betriebsaufwand.',asks:['Technischer Betreiber','Backup/Restore','Patchen','Monitoring','Netzwerk/Identity']}
-]);
-const INTAKE=Object.freeze([
- {id:'company',title:'Betrieb',prompt:'Was macht der Betrieb und wer arbeitet im betroffenen Ablauf?'},
- {id:'workflow',title:'Heutiger Ablauf',prompt:'Wie läuft es heute Schritt für Schritt?'},
- {id:'friction',title:'Zeit & Fehler',prompt:'Wo entstehen Aufwand, Wartezeit, Doppelerfassung oder Fehler?'},
- {id:'systems',title:'Systeme',prompt:'Welche Software, Geräte, Server/NAS/Cloud und Dienstleister gibt es bereits?'},
- {id:'authority',title:'Datenhoheit',prompt:'Welches System ist für Kunden, Aufträge, Zeiten, Dokumente und Abrechnung führend?'},
- {id:'access',title:'Rollen & Rechte',prompt:'Wer darf was sehen, ändern oder freigeben?'},
- {id:'success',title:'Erfolg',prompt:'Woran merken wir später messbar, dass sich der Ablauf verbessert hat?'}
-]);
-function recommendScope(selected=[]){
- const n=new Set(selected).size;
- if(n<=2)return 'solo';
- if(n<=6)return 'team';
- return 'business';
-}
-function precheck(registry,selected=[],answers={}){
- const base=advise(registry,selected),scopeId=answers.scopeId||recommendScope(selected);
- const scope=SCOPE_PRESETS.find(x=>x.id===scopeId);
- const deployment=DEPLOYMENTS.find(x=>x.id===(answers.deploymentId||'managed_cloud'));
- return {...base,scope,deployment,intake:INTAKE};
-}
-module.exports={ADVISOR_MODULES,BUNDLES,SCOPE_PRESETS,DEPLOYMENTS,INTAKE,advise,recommendScope,precheck};
+const PLANNED=Object.freeze(Object.fromEntries(FEATURES.filter(x=>!x.route).map(x=>[x.key,x.label])));
+const catalog=new CommercialCatalog(definition);
+const PACKAGES=Object.freeze(['solo','team','business'].map((id,index)=>{
+  const suffix=id.toUpperCase(),setup=catalog.item('WZ-SETUP-'+suffix),operation=catalog.item('WZ-OPS-'+suffix);
+  return Object.freeze({id,rank:index,name:'WerkZ '+suffix[0]+suffix.slice(1).toLowerCase(),setupCents:setup.amountCents,monthlyCents:operation.amountCents,typicalSetupRangeCents:setup.typicalRangeCents,priceKind:'from',catalogVersion:definition.version});
+}));
+module.exports={CATEGORIES,FEATURES,PLANNED,PACKAGES,catalog};

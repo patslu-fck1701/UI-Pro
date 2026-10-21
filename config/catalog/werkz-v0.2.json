@@ -2,7 +2,6 @@
   "version": "2026-10-01.v0.2",
   "currency": "EUR",
   "model": "scope_plus_operations_plus_deployment",
-  "note": "Supersedes v0.1 small per-module monthly price seed as the commercial source of truth. Modules remain technical entitlements.",
   "implementation": [
     {
       "sku": "WZ-SETUP-SOLO",
@@ -122,35 +121,5 @@
       "billing": "monthly_from",
       "amountCents": 24900
     }
-  ],
-  "hardwareProcurement": {
-    "publicPricing": "quote_at_current_cost",
-    "internalHandlingRule": {
-      "percent": 15,
-      "minimumCents": 14900
-    },
-    "principles": [
-      "assess existing customer hardware first",
-      "procure only after order",
-      "hardware separate from provisioning",
-      "preserve manufacturer identity and warranty path"
-    ]
-  },
-  "modulePricing": {
-    "policy": "included_or_scoped",
-    "skus": [
-      "WZ-TIME",
-      "WZ-CUSTOMERS",
-      "WZ-ORDERS",
-      "WZ-MATERIAL",
-      "WZ-DOCS",
-      "WZ-BILLINGPREP",
-      "WZ-ANALYTICS",
-      "WZ-SIM",
-      "WZ-MANAGEMENT",
-      "WZ-APPROVALS",
-      "WZ-WHATSAPP"
-    ],
-    "note": "Technical entitlements remain independent. No canonical public 9/19/29 EUR monthly line pricing in v0.2."
-  }
+  ]
 }

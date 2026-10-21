@@ -67,6 +67,7 @@ const actorLabel=process.env.WERKZ_TEST_ACTOR_LABEL||'Manager';
 const ephemeralMode=process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1';
 const testProfilesEnabled=ephemeralMode||process.env.WERKZ_ENABLE_TEST_PROFILES==='1';
 const timeWorkspaceEnabled=process.env.WERKZ_ENABLE_TIME_WORKSPACE==='1';
+const handwerkOnly=process.env.WERKZ_HANDWERK_ONLY==='1';
 const configuredPilotSessionToken=String(process.env.WERKZ_PILOT_SESSION_TOKEN||'').trim();
 const configuredTestSessionToken=String(process.env.WERKZ_TEST_SESSION_TOKEN||'').trim();
 const primaryPilotSessionSeed=String(process.env.WERKZ_PILOT_LOGIN_CODE_SHA256||process.env.WERKZ_PILOT_LOGIN_CODE||'').trim();
@@ -459,10 +460,16 @@ async function handleRequest(request,response){
     if(!twilioVoiceHandler){response.writeHead(404,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});return response.end('Not found')}
     const handled=await twilioVoiceHandler(request,response);if(handled)return;
   }
+  if(handwerkOnly&&request.method==='GET'&&['/','/index.html','/pilot','/pilot/','/pilot/site','/pilot/site/'].includes(url.pathname)){
+    response.writeHead(303,{location:'/pilot/handwerk/','cache-control':'no-store'});return response.end();
+  }
+  if(handwerkOnly&&(url.pathname==='/test-login'||url.pathname==='/test-profiles'||url.pathname==='/hub'||url.pathname.startsWith('/hub/')||['/styles.css','/app.js','/manifest.webmanifest','/icon.svg','/logo_ich_black.png'].includes(url.pathname))){
+    response.writeHead(404,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});return response.end('Not found');
+  }
   if(!timeWorkspaceEnabled&&request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html')){
     response.writeHead(303,{location:'/pilot/','cache-control':'no-store'});return response.end();
   }
-  if(!timeWorkspaceEnabled&&request.method==='GET'&&url.pathname==='/sw.js'){
+  if((handwerkOnly||!timeWorkspaceEnabled)&&request.method==='GET'&&url.pathname==='/sw.js'){
     response.writeHead(200,{'content-type':'text/javascript; charset=utf-8','cache-control':'no-store','service-worker-allowed':'/'});
     return response.end("'use strict';self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('werkz-time-shell-')).map(k=>caches.delete(k)))),self.registration.unregister(),self.clients.matchAll({type:'window',includeUncontrolled:true}).then(cs=>Promise.all(cs.map(c=>c.navigate('/pilot/'))))])));");
   }
@@ -708,3 +715,4 @@ function start(){server.listen(port,'0.0.0.0',()=>{const actualPort=server.addre
 if(businessStore)businessStore.initialize().then(async()=>{await browserSessions.initialize();if(process.env.WERKZ_RUN_STORAGE_DRILL==='1'){const report=await require('./postgres-business-drill').runDrill({connectionString:applicationDatabaseUrl,root:dataDir,key:process.env.WERKZ_BACKUP_KEY});process.stdout.write(JSON.stringify({kind:'storage-drill',...report})+'\n');}start();}).catch(async()=>{process.stderr.write('Business database initialization failed\n');await applicationPool.end();process.exitCode=1;});else start();
 
 module.exports={server,safeLocalReturn,serveDemoHub,servePilot,servePilotSite,testProfiles,profileAccessGranted,sessionCookie};
+
