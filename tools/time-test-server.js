@@ -40,6 +40,7 @@ const {repositories,transactionalHttp}=require('../src/persistence/repositories'
 const {createBackup}=require('../src/persistence/backup');
 const {createAdvisorHandler}=require('../src/advisor/http');
 const {createWhatsAppWebhook}=require('../src/integrations/providers/whatsapp-webhook');
+const {createWhatsAppTestBridge}=require('../src/integrations/providers/whatsapp-test-bridge');
 const {PostgresBrowserSessions,credentialVersion}=require('../src/persistence/browser-sessions');
 const businessStorageEnabled=process.env.WERKZ_BUSINESS_STORAGE==='postgres';
 const dataDir=path.resolve(process.env.WERKZ_TIME_DATA_DIR||'./var/time-test');
@@ -422,7 +423,7 @@ function profilePage(request,response,returnTo){
   response.end('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width"><title>WerkZ Testprofile</title><body><main><h1>WerkZ Testprofile</h1><p>Nur für die nicht-produktive WerkZ-Testinstanz.</p><ul>'+links+'</ul></main></body></html>');
 }
 
-const whatsAppWebhook=createWhatsAppWebhook();
+const whatsAppWebhook=createWhatsAppWebhook({onEvent:createWhatsAppTestBridge({store:businessStore})});
 const advisorHandler=createAdvisorHandler({store:businessStore,isAdmin:request=>{const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));return Boolean(profile&&!profileExpired(profile)&&profile.role==='owner'&&profile.organisationId===organisationId);}});
 function serveAdvisor(url,response){
   if(url.pathname==='/berater'){response.writeHead(308,{location:'/berater/'});response.end();return true;}
