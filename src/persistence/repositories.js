@@ -1,5 +1,6 @@
 'use strict';
 const path=require('node:path');
+const fs=require('node:fs');
 const {MemoryPilotRepository,PilotDocumentStorage}=require('../pilot');
 const {InMemoryTenantTimeRepository}=require('../time/production');
 const {FilePrivateEvidenceStorage}=require('../time/durable');
@@ -26,6 +27,12 @@ function repositories(store,root){
     return result;
   };}});}
   class PersistentDocuments extends PilotDocumentStorage{
+    put(input){
+      let previous;try{previous=super.read(input);}catch(error){if(error.code!=='NOT_FOUND')throw error;}
+      if(previous&&!previous.equals(Buffer.from(input.bytes)))throw Object.assign(new Error('Document bytes are immutable'),{code:'STATE_INVALID'});
+      const result=super.put(input),file=path.join(this.root,result.objectKey),descriptor=fs.openSync(file,'r');
+      try{fs.fsyncSync(descriptor);}finally{fs.closeSync(descriptor);}return result;
+    }
     remove(input){if(input.organisationId!==store.current().org)throw new Error('Cross-tenant document operation');store.current().afterCommit.push(()=>super.remove(input));return true;}
   }
   const documents=new Proxy(new PersistentDocuments(path.join(root,'simple-pilot','documents')), {get(target,name){const value=target[name];if(typeof value!=='function')return value;return input=>{if(input?.organisationId!==store.current().org)throw new Error('Cross-tenant document operation');return value.call(target,input);};}});
