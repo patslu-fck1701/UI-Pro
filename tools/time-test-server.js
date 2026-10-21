@@ -676,11 +676,13 @@ const server=http.createServer(async(request,response)=>{
     if(request.method==='GET'&&serveAdvisor(requestUrl,response))return;
     if(await advisorHandler(request,response))return;
     if(businessStore&&pathname==='/pilot/api/backup/drill-status'&&request.method==='GET'){const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));if(!profile||profileExpired(profile)){response.writeHead(401);return response.end();}response.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return response.end(fs.readFileSync(path.join(dataDir,'storage-drill-latest.json')));}
-    if(businessStore&&pathname==='/pilot/api/backup/encrypted'&&request.method==='GET'){
+    if(businessStore&&['/pilot/api/backup/encrypted','/pilot/api/backup/intake-encrypted'].includes(pathname)&&request.method==='GET'){
       let session;try{session=auth.resolveSession(cookieTokenFromHeader(request.headers.cookie));}catch{response.writeHead(401);return response.end();}
       const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));
       if(!session.capabilities.includes('pilot.read')||!profile||profileExpired(profile)){response.writeHead(403);return response.end();}
-      const bytes=await createBackup(businessStore,session.organisationId,dataDir,process.env.WERKZ_BACKUP_KEY);
+      const intake=pathname.endsWith('/intake-encrypted');
+      if(intake&&(profile.role!=='owner'||profile.organisationId!==organisationId)){response.writeHead(403);return response.end();}
+      const bytes=await createBackup(businessStore,intake?'org-werkz-intake':session.organisationId,dataDir,process.env.WERKZ_BACKUP_KEY);
       response.writeHead(200,{'content-type':'application/octet-stream','content-disposition':'attachment; filename="werkz-backup.wzbackup"','cache-control':'no-store'});return response.end(bytes);
     }
     if(businessStore&&(pathname.startsWith('/pilot/public/')||pathname.startsWith('/pilot/provider/'))){response.writeHead(503,{'content-type':'application/json'});return response.end(JSON.stringify({error:'PUBLIC_INTAKE_NOT_ENABLED'}));}
