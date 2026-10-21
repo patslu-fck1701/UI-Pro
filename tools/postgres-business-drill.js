@@ -9,6 +9,8 @@ const {repositories}=require('../src/persistence/repositories');
 const {createBackup,restoreBackup,decryptBundle}=require('../src/persistence/backup');
 const {ModuleRegistry,EntitlementService,LocalAuthPort,TimeProductionService}=require('../src');
 const {createPilotRuntime}=require('../src/pilot');
+const {PostgresBrowserSessions,credentialVersion}=require('../src/persistence/browser-sessions');
+const {PostgresTenantCredentialStore}=require('../src/pilot/tenant-credentials');
 async function runDrill({connectionString,root,key}){
   const suffix=crypto.randomBytes(8).toString('hex'),sourceSchema='werkz_drill_'+suffix,restoreSchema='werkz_restore_'+suffix;
   const admin=new Pool({connectionString,max:1}),pools=[];const checks=[];
@@ -17,6 +19,14 @@ async function runDrill({connectionString,root,key}){
   try{
     async function make(schema){await admin.query('CREATE SCHEMA '+schema);const pool=new Pool({connectionString,max:3,options:'-c search_path='+schema});pools.push(pool);const store=new PostgresBusinessStore(pool);await store.initialize();return store;}
     const source=await make(sourceSchema),restored=await make(restoreSchema),repos=repositories(source,sourceRoot);
+    const credentials=new PostgresTenantCredentialStore({query:(sql,args)=>source.pool.query(sql,args)}),browser=new PostgresBrowserSessions(source.pool);
+    const browserProfile={id:'synthetic-drill-owner',organisationId:'drill-org-a'},version=async()=>credentialVersion(browserProfile,await credentials.row('drill-org-a'));
+    await credentials.setPassword('drill-org-a','LOCAL-DRILL-PASSWORD-ONE');
+    const browserFirst=await browser.create(browserProfile,await version()),browserSecond=await browser.create(browserProfile,await version());
+    assert.notEqual(browserFirst,browserSecond);assert.equal((await browser.profile(browserFirst,[browserProfile],version)).organisationId,'drill-org-a');
+    await browser.revoke(browserFirst);assert.equal(await browser.resolve(browserFirst),null);
+    await credentials.setPassword('drill-org-a','LOCAL-DRILL-PASSWORD-TWO');assert.equal(await browser.profile(browserSecond,[browserProfile],version),null);
+    checks.push('postgres_random_sessions_logout_and_password_change_revocation');
     const registry=new ModuleRegistry(),entitlements=new EntitlementService({registry}),sessions={};
     for(const org of ['drill-org-a','drill-org-b']){sessions[org]={organisationId:org,actorId:'synthetic-owner',capabilities:['pilot.read','pilot.write','time.start','time.stop','time.read.all','document.upload']};for(const moduleId of ['werkz.simple','werkz.documents','werkz.billing-prep','werkz.time'])entitlements.set({organisationId:org,moduleId,catalogVersion:'drill'});}
     const auth=new LocalAuthPort(sessions),pilot=createPilotRuntime({auth,entitlements,dataDir:sourceRoot,repository:repos.pilot,storage:repos.documents,audit:event=>source.audit(event)});
@@ -39,6 +49,9 @@ async function runDrill({connectionString,root,key}){
     const bytes=await createBackup(source,'drill-org-a',sourceRoot,key);assert.equal(bytes.includes('SYNTHETIC'),false);fs.writeFileSync(path.join(base,'recovery.wzbackup'),bytes,{mode:0o600});
     assert.throws(()=>decryptBundle(bytes,crypto.randomBytes(32).toString('base64')));const corrupted=Buffer.from(bytes);corrupted[corrupted.length-20]^=1;assert.throws(()=>decryptBundle(corrupted,key));checks.push('encrypted_backup_wrong_key_and_tamper_rejected');
     await restoreBackup(restored,bytes,restoreRoot,key);
+    const recoveredCredentials=new PostgresTenantCredentialStore({query:(sql,args)=>restored.pool.query(sql,args)});
+    assert.equal(await recoveredCredentials.verifyPassword('drill-org-a','LOCAL-DRILL-PASSWORD-TWO'),true);
+    assert.equal(await recoveredCredentials.verifyPassword('drill-org-a','LOCAL-DRILL-PASSWORD-ONE'),false);checks.push('encrypted_password_credentials_restored_without_active_sessions');
     const before=await source.withTenant('drill-org-a',state=>structuredClone(state),{write:false}),after=await restored.withTenant('drill-org-a',state=>structuredClone(state),{write:false});assert.deepEqual(after,before);
     assert.equal(fs.readFileSync(path.join(restoreRoot,'simple-pilot/documents',document.storage.objectKey)).toString(),'SYNTHETIC receipt bytes');checks.push('restore_to_empty_postgres_schema_and_new_file_root');
     await assert.rejects(restoreBackup(restored,bytes,restoreRoot,key),/empty/);checks.push('restore_refuses_existing_destination');

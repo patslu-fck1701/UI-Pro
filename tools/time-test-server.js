@@ -39,6 +39,7 @@ const {PostgresBusinessStore}=require('../src/persistence/postgres');
 const {repositories,transactionalHttp}=require('../src/persistence/repositories');
 const {createBackup}=require('../src/persistence/backup');
 const {createAdvisorHandler}=require('../src/advisor/http');
+const {PostgresBrowserSessions,credentialVersion}=require('../src/persistence/browser-sessions');
 const businessStorageEnabled=process.env.WERKZ_BUSINESS_STORAGE==='postgres';
 const dataDir=path.resolve(process.env.WERKZ_TIME_DATA_DIR||'./var/time-test');
 const storageReadiness=assertPilotStorageReady({
@@ -50,6 +51,7 @@ const applicationDatabaseUrl=String(process.env.WERKZ_DATABASE_URL||process.env.
 const applicationPool=applicationDatabaseUrl?new (require('pg').Pool)({connectionString:applicationDatabaseUrl,max:3}):null;
 if(businessStorageEnabled&&(!applicationPool||!storageReadiness.declaredPersistent))throw new Error('Postgres business storage requires database and declared persistent file root');
 const businessStore=businessStorageEnabled?new PostgresBusinessStore(applicationPool):null;
+const browserSessions=businessStore?new PostgresBrowserSessions(applicationPool):null;
 const businessRepositories=businessStore?repositories(businessStore,dataDir):null;
 const tenantCredentialStore=applicationPool?new PostgresTenantCredentialStore({query:(sql,args)=>applicationPool.query(sql,args)}):new FileTenantCredentialStore({file:path.join(dataDir,'tenant-credentials.json')});
 const durableCustomerSecretStore=Boolean(applicationPool||(storageReadiness.declaredPersistent&&storageReadiness.writeProbePassed)||process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1');
@@ -139,6 +141,8 @@ const pilotTenantByOrg=new Map([...pilotProfiles.values()].map(p=>[p.organisatio
 const pilotTenantBySlug=new Map([...pilotProfiles.values()].map(p=>[p.publicSlug||p.id,p]));
 function profileExpired(profile){if(!profile||!profile.accessExpiresAt)return false;const expires=Date.parse(profile.accessExpiresAt);return Number.isFinite(expires)&&Date.now()>expires}
 function pilotProfileByToken(token){return token?[...pilotProfiles.values()].find(profile=>profile.token===token)||null:null}
+async function currentCredentialVersion(profile){return credentialVersion(profile,await tenantCredentialStore.row(profile.organisationId));}
+async function browserSessionToken(profile){return browserSessions?browserSessions.create(profile,await currentCredentialVersion(profile)):profile.token;}
 const auth=new LocalAuthPort(authSessions);
 const application=new TimeApplication(new TimeProductionService({
   auth,entitlements,repository:businessRepositories?.time||new FileTimeRepository(path.join(dataDir,'time.json')),
@@ -360,6 +364,13 @@ function profileAccessGranted(cookie){
   return Boolean(sessionToken&&testProfiles.size&&[...testProfiles.values()].some(profile=>profile.token===sessionToken));
 }
 const PILOT_SESSION_MAX_AGE=60*60*24*180;
+const loginAttempts=new Map();
+function loginAllowed(tenant){
+  const now=Date.now(),key=String(tenant).slice(0,120),entry=loginAttempts.get(key)||{since:now,count:0};
+  if(now-entry.since>900000){entry.since=now;entry.count=0;}entry.count++;loginAttempts.set(key,entry);
+  if(loginAttempts.size>2000)loginAttempts.delete(loginAttempts.keys().next().value);
+  return entry.count<=30;
+}
 const PILOT_FACE_URL='https://cdn.websitepublisher.ai/custom/wid23947/images/werkz/founder-point.jpg';
 const PILOT_LOGO_URL='https://cdn.websitepublisher.ai/custom/wid23947/images/werkz/logo-wide.jpg';
 function sessionCookie(name,value,maxAge=28800){
@@ -472,10 +483,11 @@ async function handleRequest(request,response){
     return pilotLoginForm(response,{returnTo,tenant});
   }
   if(url.pathname==='/pilot/login'&&request.method==='POST'){
-    const chunks=[];for await(const chunk of request)chunks.push(chunk);
+    const chunks=[];let loginBytes=0;for await(const chunk of request){loginBytes+=chunk.length;if(loginBytes>4096){response.writeHead(413,{'cache-control':'no-store'});return response.end('Anfrage zu groß.');}chunks.push(chunk);}
     const params=new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
     const returnTo=safeLocalReturn(params.get('return'),'/pilot/');
     const tenant=String(params.get('tenant')||'').trim().toLowerCase();
+    if(browserSessions&&!loginAllowed(tenant)){response.writeHead(429,{'retry-after':'900','cache-control':'no-store'});return response.end('Zu viele Anmeldeversuche. Bitte später erneut versuchen.');}
     const submitted=String(params.get('code')||'');
     const code=normalisePilotAccessCode(submitted);
     const profile=pilotTenantBySlug.get(tenant);
@@ -490,13 +502,14 @@ async function handleRequest(request,response){
     const valid=Boolean(profile&&!expired&&(selfPasswordConfigured?selfPasswordValid:bootstrapValid));
     process.stdout.write(JSON.stringify({kind:'pilot-login',tenant,profileFound:Boolean(profile),expired,success:valid})+'\\n');
     if(!valid){
-      const message=!profile?'Betrieb nicht gefunden.':expired?'Testzugang ist abgelaufen.':selfPasswordConfigured?'Passwort falsch.':'Zugangscode falsch.';
+      const message=browserSessions?'Anmeldung nicht möglich. Bitte Betrieb und Zugang prüfen.':!profile?'Betrieb nicht gefunden.':expired?'Testzugang ist abgelaufen.':selfPasswordConfigured?'Passwort falsch.':'Zugangscode falsch.';
       return pilotLoginForm(response,{message,returnTo,tenant});
     }
-    response.writeHead(303,{location:pilotReturnWithTenant(returnTo,tenant),'set-cookie':sessionCookie('werkz_session',profile.token,PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
+    response.writeHead(303,{location:pilotReturnWithTenant(returnTo,tenant),'set-cookie':sessionCookie('werkz_session',await browserSessionToken(profile),browserSessions?28800:PILOT_SESSION_MAX_AGE),'cache-control':'no-store'});
     return response.end();
   }
   if(url.pathname==='/pilot/logout'&&request.method==='GET'){
+    if(browserSessions&&request.browserSessionToken)await browserSessions.revoke(request.browserSessionToken);
     const activeProfile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));
     const activeSlug=String(activeProfile?.publicSlug||'').trim().toLowerCase();
     const location=activeSlug?'/pilot/login?tenant='+encodeURIComponent(activeSlug):'/pilot/login';
@@ -596,6 +609,7 @@ async function handleRequest(request,response){
         safePost();if(!durableCustomerSecretStore)return json(503,{error:'Dauerhafter Zugangsspeicher ist noch nicht verbunden',code:'PERSISTENT_CREDENTIAL_STORE_REQUIRED'});const body=await readPost(),configured=await tenantCredentialStore.hasPassword(org);
         if(configured&&!await tenantCredentialStore.verifyPassword(org,String(body.currentPassword||'')))return json(403,{error:'Aktuelles Passwort ist falsch',code:'PASSWORD_CURRENT_INVALID'});
         await tenantCredentialStore.setPassword(org,String(body.newPassword||''));
+        if(browserSessions)response.setHeader('set-cookie',sessionCookie('werkz_session',await browserSessionToken(profile)));
         return json(200,{passwordConfigured:true,mode:'customer-password'});
       }
       if(url.pathname==='/pilot/api/mail/status'&&request.method==='GET')return json(200,{gmail:{email:storedGmail?.email||null,configured:googleClientReady,connected:Boolean(storedGmail?.refreshToken)},icloud:{email:storedIcloud?.email||null,configured:Boolean(mailTokenStore&&durableCustomerSecretStore),connected:Boolean(storedIcloud?.appPassword)},readOnly:true,durable:durableCustomerSecretStore});
@@ -650,6 +664,15 @@ async function handleRequest(request,response){
 const server=http.createServer(async(request,response)=>{
   try{
     const requestUrl=new URL(request.url,'http://werkz.invalid'),pathname=requestUrl.pathname;
+    if(browserSessions&&['POST','PUT','PATCH','DELETE'].includes(request.method)&&(pathname==='/pilot/login'||pathname.startsWith('/pilot/api/')||pathname.startsWith('/time/')||pathname.startsWith('/api/'))&&request.headers.origin!=='https://'+request.headers.host){
+      response.writeHead(403,{'content-type':'application/json','cache-control':'no-store'});return response.end(JSON.stringify({error:'FORBIDDEN'}));
+    }
+    if(browserSessions){
+      request.browserSessionToken=cookieTokenFromHeader(request.headers.cookie);
+      const profile=await browserSessions.profile(request.browserSessionToken,pilotProfiles.values(),currentCredentialVersion);
+      const otherCookies=String(request.headers.cookie||'').split(';').filter(part=>!part.trim().startsWith('werkz_session=')).join(';');
+      request.headers.cookie=otherCookies+(profile&&!profileExpired(profile)?'; werkz_session='+encodeURIComponent(profile.token):'');
+    }
     if(request.method==='GET'&&serveAdvisor(requestUrl,response))return;
     if(await advisorHandler(request,response))return;
     if(businessStore&&pathname==='/pilot/api/backup/drill-status'&&request.method==='GET'){const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));if(!profile||profileExpired(profile)){response.writeHead(401);return response.end();}response.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return response.end(fs.readFileSync(path.join(dataDir,'storage-drill-latest.json')));}
@@ -677,6 +700,6 @@ function start(){server.listen(port,'0.0.0.0',()=>{const actualPort=server.addre
   persistentStorageRequired:storageReadiness.requirePersistent,persistentStorageDeclared:storageReadiness.declaredPersistent,
   storageWriteProbePassed:storageReadiness.writeProbePassed,externalRestartProofRequired:storageReadiness.externalRestartProofRequired,durableCustomerSecretStore
 })+'\n')});}
-if(businessStore)businessStore.initialize().then(async()=>{if(process.env.WERKZ_RUN_STORAGE_DRILL==='1'){const report=await require('./postgres-business-drill').runDrill({connectionString:applicationDatabaseUrl,root:dataDir,key:process.env.WERKZ_BACKUP_KEY});process.stdout.write(JSON.stringify({kind:'storage-drill',...report})+'\n');}start();}).catch(async()=>{process.stderr.write('Business database initialization failed\n');await applicationPool.end();process.exitCode=1;});else start();
+if(businessStore)businessStore.initialize().then(async()=>{await browserSessions.initialize();if(process.env.WERKZ_RUN_STORAGE_DRILL==='1'){const report=await require('./postgres-business-drill').runDrill({connectionString:applicationDatabaseUrl,root:dataDir,key:process.env.WERKZ_BACKUP_KEY});process.stdout.write(JSON.stringify({kind:'storage-drill',...report})+'\n');}start();}).catch(async()=>{process.stderr.write('Business database initialization failed\n');await applicationPool.end();process.exitCode=1;});else start();
 
 module.exports={server,safeLocalReturn,serveDemoHub,servePilot,servePilotSite,testProfiles,profileAccessGranted,sessionCookie};

@@ -30,7 +30,7 @@ class PostgresBusinessStore{
       await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['werkz-business:'+org]);
       const {rows}=await client.query('SELECT state FROM werkz_business_state WHERE organisation_id=$1 FOR UPDATE',[org]);
       const state=validateState(org,rows[0]?.state||emptyState());
-      const scope={owner:this,org,state,afterCommit:[],repositories:{}};
+      const scope={owner:this,org,state,client,afterCommit:[],repositories:{}};
       const value=await context.run(scope,()=>work(state));
       validateState(org,state);
       if(write)await client.query('INSERT INTO werkz_business_state(organisation_id,state) VALUES($1,$2::jsonb) ON CONFLICT(organisation_id) DO UPDATE SET state=EXCLUDED.state,revision=werkz_business_state.revision+1,updated_at=clock_timestamp()',[org,JSON.stringify(state)]);

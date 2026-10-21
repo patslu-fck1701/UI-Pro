@@ -30,7 +30,7 @@ function repositories(store,root){
     put(input){
       let previous;try{previous=super.read(input);}catch(error){if(error.code!=='NOT_FOUND')throw error;}
       if(previous&&!previous.equals(Buffer.from(input.bytes)))throw Object.assign(new Error('Document bytes are immutable'),{code:'STATE_INVALID'});
-      const result=super.put(input),file=path.join(this.root,result.objectKey),descriptor=fs.openSync(file,'r');
+      const result=super.put(input),file=path.join(this.root,result.objectKey),descriptor=fs.openSync(file,'r+');
       try{fs.fsyncSync(descriptor);}finally{fs.closeSync(descriptor);}return result;
     }
     remove(input){if(input.organisationId!==store.current().org)throw new Error('Cross-tenant document operation');store.current().afterCommit.push(()=>super.remove(input));return true;}

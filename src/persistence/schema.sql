@@ -1,5 +1,18 @@
 BEGIN;
 SELECT pg_advisory_xact_lock(72651020);
+CREATE TABLE IF NOT EXISTS werkz_tenant_credentials (
+  organisation_id text PRIMARY KEY,
+  password jsonb NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS werkz_browser_sessions (
+  token_hash text PRIMARY KEY,
+  organisation_id text NOT NULL,
+  profile_id text NOT NULL,
+  credential_version text NOT NULL,
+  expires_at timestamptz NOT NULL,
+  revoked_at timestamptz
+);
 CREATE TABLE IF NOT EXISTS werkz_business_state (
   organisation_id text PRIMARY KEY,
   state jsonb NOT NULL CHECK (jsonb_typeof(state)='object' AND state->>'schemaVersion'='1'),
