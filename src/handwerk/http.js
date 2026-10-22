@@ -18,6 +18,7 @@ function createHandwerkHandler({accounts,service,organisationId,slug='demo'}){
       if(path==='/handwerk/logout'&&req.method==='POST'){await accounts.sessions.revoke(sessionToken);res.writeHead(303,{location:'/handwerk/login','set-cookie':cookie('',0),'cache-control':'no-store'});res.end();return true;}
       if(path==='/handwerk/api/session'&&req.method==='GET'){json(res,200,{user});return true;}
       if(path==='/handwerk/api/overview'&&req.method==='GET'){json(res,200,await service.overview(user));return true;}
+      const accountingMatch=path.match(/^\/handwerk\/api\/accounting\/([^/]+)$/);if(accountingMatch&&req.method==='GET'){json(res,200,await service.accounting(user,accountingMatch[1]));return true;}
       if(path==='/handwerk/api/commands'&&req.method==='POST'){const input=await body(req);json(res,200,await service.command(user,input.operation,input.input));return true;}
       if(path==='/handwerk/api/users'&&req.method==='GET'){json(res,200,await accounts.list(user));return true;}
       if(path==='/handwerk/api/roles'&&req.method==='GET'){await accounts.list(user);json(res,200,ROLES);return true;}
