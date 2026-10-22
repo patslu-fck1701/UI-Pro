@@ -1,0 +1,5 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const {SevdeskReadOnlyProbe}=require('../src/handwerk/sevdesk');
+test('sevdesk probe never performs a write and exposes no token',async()=>{let request;const probe=new SevdeskReadOnlyProbe({apiToken:'b'.repeat(32),fetchImpl:async(url,options)=>{request={url:String(url),options};return {ok:true,status:200};}});const result=await probe.status();assert.equal(result.connected,true);assert.equal(result.readOnly,true);assert.equal(result.writeEnabled,false);assert.equal(request.options.method,'GET');assert.match(request.url,/Contact\?limit=1$/);assert.doesNotMatch(JSON.stringify(result),/b{8}/);});
+test('sevdesk probe is truthful for absent or rejected tokens',async()=>{assert.equal((await new SevdeskReadOnlyProbe().status()).configured,false);const probe=new SevdeskReadOnlyProbe({apiToken:'c'.repeat(32),fetchImpl:async()=>({ok:false,status:401})});const result=await probe.status();assert.equal(result.connected,false);assert.equal(result.writeEnabled,false);});

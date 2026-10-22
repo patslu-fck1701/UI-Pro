@@ -64,6 +64,7 @@ const pilotSiteDir=path.resolve(__dirname,'../apps/simple-site');
 const {HandwerkAccounts}=require('../src/security/handwerk-accounts');
 const {HandwerkService}=require('../src/handwerk/service');
 const {createHandwerkHandler}=require('../src/handwerk/http');
+const {SevdeskReadOnlyProbe}=require('../src/handwerk/sevdesk');
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ_TEST_ORGANISATION_LABEL||'Pilotbetrieb';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
@@ -427,7 +428,7 @@ function profilePage(request,response,returnTo){
 }
 
 const handwerkAccounts=businessStore?new HandwerkAccounts({store:businessStore,sessions:browserSessions}):null;
-const handwerkHandler=createHandwerkHandler({accounts:handwerkAccounts,service:businessStore?new HandwerkService({store:businessStore}):null,organisationId});
+const handwerkHandler=createHandwerkHandler({accounts:handwerkAccounts,service:businessStore?new HandwerkService({store:businessStore,sevdesk:new SevdeskReadOnlyProbe({apiToken:process.env.SEVDESK_API_TOKEN})}):null,organisationId});
 const whatsAppWebhook=createWhatsAppWebhook({onEvent:createWhatsAppTestBridge({store:businessStore})});
 const advisorHandler=createAdvisorHandler({store:businessStore,isAdmin:request=>{const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));return Boolean(profile&&!profileExpired(profile)&&profile.role==='owner'&&profile.organisationId===organisationId);}});
 function serveAdvisor(url,response){
