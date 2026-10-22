@@ -1,13 +1,14 @@
 'use strict';
 
 const fs=require('node:fs'),child=require('node:child_process');
+const fence='-----';
 const PRIVATE_KEY_MARKERS=[
-  '-----BEGIN PRIVATE KEY-----',
-  '-----BEGIN ENCRYPTED PRIVATE KEY-----',
-  '-----BEGIN RSA PRIVATE KEY-----',
-  '-----BEGIN EC PRIVATE KEY-----',
-  '-----BEGIN OPENSSH PRIVATE KEY-----',
-  '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+  fence+'BEGIN PRIVATE KEY'+fence,
+  fence+'BEGIN ENCRYPTED PRIVATE KEY'+fence,
+  fence+'BEGIN RSA PRIVATE KEY'+fence,
+  fence+'BEGIN EC PRIVATE KEY'+fence,
+  fence+'BEGIN OPENSSH PRIVATE KEY'+fence,
+  fence+'BEGIN PGP PRIVATE KEY BLOCK'+fence
 ];
 const tracked=child.execFileSync('git',['ls-files','-z'],{encoding:'utf8'}).split('\0').filter(Boolean);
 const violations=[];

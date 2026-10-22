@@ -19,7 +19,768 @@
       "licenseDeclared": "NOASSERTION",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false
+    },
+    {
+      "SPDXID": "SPDXRef--pinojs-redact-0.4.0",
+      "name": "@pinojs/redact",
+      "versionInfo": "0.4.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/@pinojs/redact/-/redact-0.4.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "14686d9a3087537738b421174fb4c410c3d55f814a1bcff3c7c054a9fdd6ea34"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef--zone-eu-mailsplit-5.4.16",
+      "name": "@zone-eu/mailsplit",
+      "versionInfo": "5.4.16",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "(MIT OR EUPL-1.1+)",
+      "downloadLocation": "https://registry.npmjs.org/@zone-eu/mailsplit/-/mailsplit-5.4.16.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "eea2dbb5d053015e2856f848c3203241cb815a201d14271c9a0fdd189a8ad3b7"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-atomic-sleep-1.0.0",
+      "name": "atomic-sleep",
+      "versionInfo": "1.0.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/atomic-sleep/-/atomic-sleep-1.0.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "005e56c25446656e7c7115f4d26353b23adf63b7da2398edd5090b1c0b17440f"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-encoding-japanese-2.3.0",
+      "name": "encoding-japanese",
+      "versionInfo": "2.3.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/encoding-japanese/-/encoding-japanese-2.3.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "56751c0fc82518a04c5571353a0a37a12eb977a101caf615e496730f51e25ae0"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-iconv-lite-0.7.3",
+      "name": "iconv-lite",
+      "versionInfo": "0.7.3",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.7.3.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "99eed7052e857ef55feefcd51dcb022af155f8b69bc71dd1bf6ff2d9a497ddaa"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-imapflow-1.7.8",
+      "name": "imapflow",
+      "versionInfo": "1.7.8",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/imapflow/-/imapflow-1.7.8.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7c9d451b4162b6808af9374ea4aefef97ee8fcc100fe6bf6aee214f55c89623d"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-ip-address-10.7.3",
+      "name": "ip-address",
+      "versionInfo": "10.7.3",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/ip-address/-/ip-address-10.7.3.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "865e90d43ec273268da0e8776634f09133aa6d7d812e90f7d88caf1df9b3d1e9"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-libbase64-1.3.0",
+      "name": "libbase64",
+      "versionInfo": "1.3.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/libbase64/-/libbase64-1.3.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "46645e81f42406cfc39921a8f486de594374b4f4ce374b48ba2899df0d9f730f"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-libmime-5.4.3",
+      "name": "libmime",
+      "versionInfo": "5.4.3",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/libmime/-/libmime-5.4.3.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b4e253f58ceb41dbc3cd302556d705dde5e80ae77c8b539a6420492fe7a540bf"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-libqp-2.1.1",
+      "name": "libqp",
+      "versionInfo": "2.1.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/libqp/-/libqp-2.1.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bba030d4daab982442101f62ae087b4f8ec0855877940d5582bd080f79b569ba"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-on-exit-leak-free-2.1.2",
+      "name": "on-exit-leak-free",
+      "versionInfo": "2.1.2",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/on-exit-leak-free/-/on-exit-leak-free-2.1.2.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5830ab8cb5341c18183ff5b495cdb6c307c40cb5b34c80198fb3a8600aceaf30"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pg-8.23.1",
+      "name": "pg",
+      "versionInfo": "8.23.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pg/-/pg-8.23.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e3565effef6bbba2344dc1b58cf2cf6ef6582d4a66b6ca08bf6caccde9c63d2a"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pg-cloudflare-1.4.1",
+      "name": "pg-cloudflare",
+      "versionInfo": "1.4.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pg-cloudflare/-/pg-cloudflare-1.4.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2eae5c15b5d001be7e2c7520736cf46e551c92fab7a2bcea752f84465e0d923c"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pg-connection-string-2.14.1",
+      "name": "pg-connection-string",
+      "versionInfo": "2.14.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-2.14.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d99019c3fd681f0f8a48278bbf679498f6963cf75f8e861e7e96f4c278e1f400"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pg-int8-1.0.1",
+      "name": "pg-int8",
+      "versionInfo": "1.0.1",
+      "licenseConcluded": "ISC",
+      "licenseDeclared": "ISC",
+      "downloadLocation": "https://registry.npmjs.org/pg-int8/-/pg-int8-1.0.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "674385be90d738b0eb028679450ffb7dd46d2b1532f23016ef124ed36e7b5815"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pg-pool-3.14.0",
+      "name": "pg-pool",
+      "versionInfo": "3.14.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pg-pool/-/pg-pool-3.14.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f8acd8382e510701ad136512aaf82e9157b9eebd8597e64dd425019fb255ce99"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pg-protocol-1.16.1",
+      "name": "pg-protocol",
+      "versionInfo": "1.16.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pg-protocol/-/pg-protocol-1.16.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "82baaff0cca1e9fd2b70db8906e0363fd48284ad05451259a9ed10577b8e065a"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pg-types-2.2.0",
+      "name": "pg-types",
+      "versionInfo": "2.2.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pg-types/-/pg-types-2.2.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0b625f0a3b5846129ede69aaf5c729ba793c80b7e746e1ea18209466dd60e32d"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pgpass-1.0.5",
+      "name": "pgpass",
+      "versionInfo": "1.0.5",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pgpass/-/pgpass-1.0.5.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "333dedd44c45c109f19efb31c9e08c49e39f68389b16d8c11c1cc247fcf7a819"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pino-10.3.1",
+      "name": "pino",
+      "versionInfo": "10.3.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pino/-/pino-10.3.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c54585095a61fbc119522fc8a109877f6a668dd3765306b8c7ba3ee2f1f1b7f5"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pino-abstract-transport-3.0.0",
+      "name": "pino-abstract-transport",
+      "versionInfo": "3.0.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pino-abstract-transport/-/pino-abstract-transport-3.0.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "45c36758df020bebde3836992d6afe8221128702c194b19c2c4a3e91d0560288"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-pino-std-serializers-7.1.0",
+      "name": "pino-std-serializers",
+      "versionInfo": "7.1.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/pino-std-serializers/-/pino-std-serializers-7.1.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1e34383cd58c14e900fb08a898c42edf7040b565d15bdc34c9de13da99bc248b"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-postgres-array-2.0.0",
+      "name": "postgres-array",
+      "versionInfo": "2.0.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/postgres-array/-/postgres-array-2.0.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "38cd70ebbbf4455da00951daed71a40d205f2f9b04588965de7927ccd66da3e9"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-postgres-bytea-1.0.1",
+      "name": "postgres-bytea",
+      "versionInfo": "1.0.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "62f0b8c845446bf2c10c7b0b0a63be1559e7b4b04c70939b82bcc7db4610e2f2"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-postgres-date-1.0.7",
+      "name": "postgres-date",
+      "versionInfo": "1.0.7",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.7.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "65302f5865f197156064716acb96b3ad3e6e9e544f0dc5861fa9a0d197c18847"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-postgres-interval-1.2.0",
+      "name": "postgres-interval",
+      "versionInfo": "1.2.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.2.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a5f9e8c7198a68d6684ed13ec0c984b32c6ad5ca92f742d4d781c5329b62a237"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-process-warning-5.1.0",
+      "name": "process-warning",
+      "versionInfo": "5.1.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/process-warning/-/process-warning-5.1.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "486ae70f19b4470c71fdb1668bb8159e3e6f499f215857314c312e9ccd60dcac"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-quick-format-unescaped-4.0.4",
+      "name": "quick-format-unescaped",
+      "versionInfo": "4.0.4",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/quick-format-unescaped/-/quick-format-unescaped-4.0.4.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3e95c585c1f096d6b6c8c7a22828831958085f5d63a5dba8eea09c4c98185608"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-real-require-0.2.0",
+      "name": "real-require",
+      "versionInfo": "0.2.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/real-require/-/real-require-0.2.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "500f79a53c71bec9691b31f94d8e666b3843184d1ad41d9c81c3769d06b7365a"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-real-require-1.0.0",
+      "name": "real-require",
+      "versionInfo": "1.0.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/real-require/-/real-require-1.0.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "772f67f8c97c4ef7396bddaaa37e0b69f2bd9f45c95f851e6b9470b5be12b674"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-safe-stable-stringify-2.5.0",
+      "name": "safe-stable-stringify",
+      "versionInfo": "2.5.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/safe-stable-stringify/-/safe-stable-stringify-2.5.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "14dd01217b72534bcf8a730e621ce950e6e657b898455aeff448dd91bd6004d4"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-safer-buffer-2.1.2",
+      "name": "safer-buffer",
+      "versionInfo": "2.1.2",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e3eb190d045090a46fe673cab88dab7132a1cc1694c764388ececd1015df01de"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-smart-buffer-4.2.0",
+      "name": "smart-buffer",
+      "versionInfo": "4.2.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/smart-buffer/-/smart-buffer-4.2.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ee3439a6d8ba081f51f6761bf5194ee0dc4f6177a08533f038c146be7039a47e"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-socks-2.8.9",
+      "name": "socks",
+      "versionInfo": "2.8.9",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/socks/-/socks-2.8.9.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "46b1e9a40b4f7392b4cabc70b7e03267d456a52982190991cdda4699c5eb9cfd"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-sonic-boom-4.2.1",
+      "name": "sonic-boom",
+      "versionInfo": "4.2.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/sonic-boom/-/sonic-boom-4.2.1.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "eeacd6458e626f1db68c517c49228aaefcd08503689ff082e5bd5b7c4cfe27d1"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-split2-4.2.0",
+      "name": "split2",
+      "versionInfo": "4.2.0",
+      "licenseConcluded": "ISC",
+      "licenseDeclared": "ISC",
+      "downloadLocation": "https://registry.npmjs.org/split2/-/split2-4.2.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e95b384d2eab5cad0a4a3b1a390e357995e26cbc307d0ab2db8737fb456670a8"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-thread-stream-4.2.0",
+      "name": "thread-stream",
+      "versionInfo": "4.2.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/thread-stream/-/thread-stream-4.2.0.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "310c4ce3cf6131f9dd5fbb2116aa002c50ea700b5ec95f7bbd0f819d663d0b3c"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-xtend-4.0.2",
+      "name": "xtend",
+      "versionInfo": "4.0.2",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "downloadLocation": "https://registry.npmjs.org/xtend/-/xtend-4.0.2.tgz",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0e0f662a81b35a12a0691407f80d528218c6df0b5bc32a1dfca21a649c57fbf3"
+        }
+      ]
     }
   ],
-  "relationships": []
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef--pinojs-redact-0.4.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef--zone-eu-mailsplit-5.4.16",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-atomic-sleep-1.0.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-encoding-japanese-2.3.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-iconv-lite-0.7.3",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-imapflow-1.7.8",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-ip-address-10.7.3",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-libbase64-1.3.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-libmime-5.4.3",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-libqp-2.1.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-on-exit-leak-free-2.1.2",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pg-8.23.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pg-cloudflare-1.4.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pg-connection-string-2.14.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pg-int8-1.0.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pg-pool-3.14.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pg-protocol-1.16.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pg-types-2.2.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pgpass-1.0.5",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pino-10.3.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pino-abstract-transport-3.0.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-pino-std-serializers-7.1.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-postgres-array-2.0.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-postgres-bytea-1.0.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-postgres-date-1.0.7",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-postgres-interval-1.2.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-process-warning-5.1.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-quick-format-unescaped-4.0.4",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-real-require-0.2.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-real-require-1.0.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-safe-stable-stringify-2.5.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-safer-buffer-2.1.2",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-smart-buffer-4.2.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-socks-2.8.9",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-sonic-boom-4.2.1",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-split2-4.2.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-thread-stream-4.2.0",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Root",
+      "relatedSpdxElement": "SPDXRef-xtend-4.0.2",
+      "relationshipType": "DEPENDS_ON"
+    }
+  ]
 }

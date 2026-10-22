@@ -1,10 +1,15 @@
 'use strict';
 
-const fs=require('node:fs'),path=require('node:path');
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const lockPath=path.join(root,'package-lock.json');
 const review=/^(GPL|LGPL|AGPL|MPL|SSPL)|source.available|proprietary|commercial/i;
 const allowed=new Set(['MIT','ISC','BSD-2-Clause','BSD-3-Clause','Apache-2.0','0BSD','Unlicense','CC0-1.0','OFL-1.1']);
+function concludeLicence(licence){
+  if(allowed.has(licence))return licence;
+  const choices=String(licence||'').replace(/^\(|\)$/g,'').split(/\s+OR\s+/i).map(x=>x.trim());
+  return choices.find(x=>allowed.has(x))||null;
+}
 const dependencies={...pkg.dependencies,...pkg.optionalDependencies,...pkg.devDependencies};
 if(Object.keys(dependencies).length&&!fs.existsSync(lockPath))throw new Error('Dependency lockfile required for SBOM');
 const lock=fs.existsSync(lockPath)?JSON.parse(fs.readFileSync(lockPath,'utf8')):null;
@@ -14,9 +19,10 @@ for(const [location,item] of Object.entries(lock?.packages||{})){
   const name=item.name||location.replace(/^node_modules\//,'').split('/node_modules/').at(-1);
   const licence=item.license||null;
   if(!licence)throw new Error('Missing licence metadata: '+name);
-  if(review.test(licence)||!allowed.has(licence))throw new Error('Dependency requires licence review: '+name+' '+licence);
+  const concluded=concludeLicence(licence);
+  if(!concluded||review.test(concluded))throw new Error('Dependency requires licence review: '+name+' '+licence);
   packages.push({SPDXID:'SPDXRef-'+name.replace(/[^A-Za-z0-9.-]/g,'-')+'-'+item.version,
-    name,versionInfo:item.version,licenseConcluded:licence,licenseDeclared:licence,downloadLocation:item.resolved||'NOASSERTION',
+    name,versionInfo:item.version,licenseConcluded:concluded,licenseDeclared:licence,downloadLocation:item.resolved||'NOASSERTION',
     filesAnalyzed:false,checksums:item.integrity?[{algorithm:'SHA256',checksumValue:crypto.createHash('sha256').update(item.integrity).digest('hex')}]:[]});
 }
 packages.sort((a,b)=>a.SPDXID.localeCompare(b.SPDXID));
