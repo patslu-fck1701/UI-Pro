@@ -432,9 +432,11 @@ const handwerkHandler=createHandwerkHandler({accounts:handwerkAccounts,service:b
 const whatsAppWebhook=createWhatsAppWebhook({onEvent:createWhatsAppTestBridge({store:businessStore})});
 const advisorHandler=createAdvisorHandler({store:businessStore,isAdmin:request=>{const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));return Boolean(profile&&!profileExpired(profile)&&profile.role==='owner'&&profile.organisationId===organisationId);}});
 function serveAdvisor(url,response){
-  if(url.pathname==='/berater'){response.writeHead(308,{location:'/berater/'});response.end();return true;}
-  const file={'/berater/':'index.html','/berater/index.html':'index.html','/berater/app.js':'app.js','/berater/styles.css':'styles.css'}[url.pathname];if(!file)return false;
-  hubSecurityHeaders(response);response.writeHead(200,{'content-type':contentTypes[path.extname(file)],'cache-control':'no-store'});response.end(fs.readFileSync(path.join(__dirname,'../apps/customer-advisor',file)));return true;
+  if(!url.pathname.startsWith('/berater'))return false;
+  hubSecurityHeaders(response);
+  response.writeHead(410,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});
+  response.end('Der öffentliche WerkZ-Kundenberater wurde eingestellt.');
+  return true;
 }
 async function handleRequest(request,response){
   const url=new URL(request.url,'http://werkz.invalid');
