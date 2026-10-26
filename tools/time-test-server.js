@@ -65,6 +65,7 @@ const {HandwerkAccounts}=require('../src/security/handwerk-accounts');
 const {HandwerkService}=require('../src/handwerk/service');
 const {createHandwerkHandler}=require('../src/handwerk/http');
 const {SevdeskReadOnlyProbe}=require('../src/handwerk/sevdesk');
+const publicDemo=require('../src/handwerk/public-demo').createPublicDemo();
 const organisationId=process.env.WERKZ_TEST_ORGANISATION_ID||'org-device-test';
 const organisationLabel=process.env.WERKZ_PILOT_BUSINESS_NAME||process.env.WERKZ_TEST_ORGANISATION_LABEL||'Pilotbetrieb';
 const actorId=process.env.WERKZ_TEST_ACTOR_ID||'manager-device-test';
@@ -318,10 +319,12 @@ function servePilotSite(url,response){
 }
 
 function servePilot(url,response){
+  if(url.pathname==='/demo/'){hubSecurityHeaders(response);response.setHeader('referrer-policy','same-origin');response.writeHead(200,{'content-type':'text/html; charset=utf-8'});response.end(fs.readFileSync(path.join(__dirname,'../apps/trades-pilot/demo.html')));return true;}
   const tradesFiles={'/pilot/handwerk/rollen/':'roles.html','/pilot/handwerk/roles.js':'roles.js','/pilot/handwerk/':'index.html','/pilot/handwerk/app.js':'app.js','/pilot/handwerk/styles.css':'styles.css'};
   const tradesFile=tradesFiles[url.pathname];
   if(tradesFile){
     hubSecurityHeaders(response);
+    response.setHeader('referrer-policy','same-origin');
     response.writeHead(200,{'content-type':contentTypes[path.extname(tradesFile)]||'application/octet-stream'});
     response.end(fs.readFileSync(path.join(__dirname,'../apps/trades-pilot',tradesFile)));return true;
   }
@@ -469,8 +472,8 @@ async function handleRequest(request,response){
     if(!twilioVoiceHandler){response.writeHead(404,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});return response.end('Not found')}
     const handled=await twilioVoiceHandler(request,response);if(handled)return;
   }
-  if(handwerkOnly&&request.method==='GET'&&['/','/index.html','/pilot','/pilot/','/pilot/site','/pilot/site/'].includes(url.pathname)){
-    response.writeHead(303,{location:'/pilot/handwerk/','cache-control':'no-store'});return response.end();
+  if(handwerkOnly&&request.method==='GET'&&['/','/index.html','/pilot','/pilot/','/pilot/site','/pilot/site/','/pilot/handwerk/'].includes(url.pathname)){
+    response.writeHead(303,{location:'/demo/','cache-control':'no-store'});return response.end();
   }
   if(handwerkOnly&&(url.pathname==='/test-login'||url.pathname==='/test-profiles'||url.pathname==='/hub'||url.pathname.startsWith('/hub/')||['/styles.css','/app.js','/manifest.webmanifest','/icon.svg','/logo_ich_black.png'].includes(url.pathname))){
     response.writeHead(404,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});return response.end('Not found');
@@ -693,6 +696,7 @@ const server=http.createServer(async(request,response)=>{
       request.headers.cookie=otherCookies+(profile&&!profileExpired(profile)?'; werkz_session='+encodeURIComponent(profile.token):'');
     }
     if(request.method==='GET'&&serveAdvisor(requestUrl,response))return;
+    if(await publicDemo(request,response))return;
     if(await handwerkHandler(request,response))return;
     if(await advisorHandler(request,response))return;
     if(businessStore&&pathname==='/pilot/api/backup/drill-status'&&request.method==='GET'){const profile=pilotProfileByToken(cookieTokenFromHeader(request.headers.cookie));if(!profile||profileExpired(profile)){response.writeHead(401);return response.end();}response.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return response.end(fs.readFileSync(path.join(dataDir,'storage-drill-latest.json')));}

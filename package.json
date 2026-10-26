@@ -5,7 +5,7 @@
   "description": "WerkZ Handwerk deployment mirror",
   "type": "commonjs",
   "scripts": {
-    "test": "node --test test/handwerk-sevdesk.test.js",
+    "test": "node --test test/handwerk-sevdesk.test.js test/public-advisor-retirement.test.js test/public-handwerk-demo.test.js",
     "lint": "node tools/lint.js",
     "typecheck": "node tools/typecheck.js",
     "check": "node tools/deployment-preflight.js",

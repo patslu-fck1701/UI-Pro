@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WerkZ Handwerk · Öffentliche Vorführung</title><link rel="stylesheet" href="/pilot/handwerk/styles.css"></head>
+<body><main><header><div><p class="eyebrow">WERKZ · HANDWERKSDEMO</p><h1>Ein Betrieb. Fünf Perspektiven.</h1><p>Wähle ein fertiges Vorführprofil und probiere den Arbeitsalltag aus.</p></div></header>
+<p class="notice">Öffentliche Demo mit ausschließlich synthetischen Beispieldaten. Dein Beispielbetrieb ist von anderen Vorführungen getrennt. Keine echten Kundendaten eingeben. Nach zwei Stunden oder einem Serverneustart beginnt die Vorführung neu.</p>
+<section><h2>Direkt starten</h2><p>Alle Profile sind vorbereitet. Ein Beispielauftrag wartet auf den Monteur, ein zweiter ist abgeschlossen und zur internen Freigabe vorbereitet. Du kannst während der Vorführung zwischen den Rollen wechseln.</p>
+<div class="grid">
+<form action="/handwerk/demo/start" method="post"><h3>Chef / Inhaber</h3><p>Betrieb überblicken, Aufträge verteilen und Freigaben prüfen.</p><button name="role" value="owner">Als Chef starten</button></form>
+<form action="/handwerk/demo/start" method="post"><h3>Büro</h3><p>Kunden pflegen und neue Aufträge aufnehmen.</p><button name="role" value="office">Als Büro starten</button></form>
+<form action="/handwerk/demo/start" method="post"><h3>Disposition</h3><p>Einsätze überblicken und Mitarbeitende einteilen.</p><button name="role" value="dispatch">Als Disposition starten</button></form>
+<form action="/handwerk/demo/start" method="post"><h3>Monteur</h3><p>Zugewiesene Einsätze, Arbeitszeiten, Material und Berichte.</p><button name="role" value="technician">Als Monteur starten</button></form>
+<form action="/handwerk/demo/start" method="post"><h3>Buchhaltung</h3><p>Abgeschlossene Arbeiten und Abrechnungsunterlagen prüfen.</p><button name="role" value="accounting">Als Buchhaltung starten</button></form>
+</div></section>
+<section><h2>Ein vollständiger Vorführablauf</h2><ol><li>Als Chef den Wartungsauftrag ansehen.</li><li>Zum Monteur wechseln: Arbeitszeit starten und beenden, Material oder Bericht ergänzen und Auftrag fertigmelden.</li><li>Zum Chef wechseln: Abrechnung vorbereiten und intern freigeben.</li><li>Zur Buchhaltung wechseln: Prüfcheckliste und Arbeitsunterlage herunterladen.</li></ol><p>Die Demo zeigt Kundenverwaltung, Aufträge, Zeiterfassung, Materialberichte, Entscheidungen und Abrechnungsvorbereitung. Fotos und Belegdateien werden in dieser Rollenführung noch nicht hochgeladen. E-Mail, Telefon, WhatsApp und Rechnungsversand werden hier nicht extern ausgeführt.</p></section>
+<footer><a href="/handwerk/login">Persönliche Testanmeldung</a> · WerkZ Handwerk</footer>
+</main></body></html>
