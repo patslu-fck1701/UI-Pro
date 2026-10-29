@@ -1,0 +1,1 @@
+{"id":"scrap_ai","required":false,"implementation":"backend/work_app.py","dependencies":["core"],"routes":"/api/work","status":"local-demo","data":"synthetic"}

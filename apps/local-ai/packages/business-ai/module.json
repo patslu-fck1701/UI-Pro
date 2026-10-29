@@ -1,0 +1,1 @@
+{"id":"business_ai","required":false,"version":"0.1.0","implementation":"backend/modules/business","routes":"/api/business","permissions":["read","write"],"dependencies":["core"],"pythonExtra":"business"}

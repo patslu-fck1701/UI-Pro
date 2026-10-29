@@ -1,0 +1,1 @@
+{"id":"hotel_ai","required":false,"version":"0.1.0","implementation":"backend/modules/hotel","routes":"/api/hotel","dependencies":["core"],"externalCalls":false,"status":"local-demo"}

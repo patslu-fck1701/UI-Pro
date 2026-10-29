@@ -1,0 +1,1 @@
+{"id":"core","required":true,"version":"0.1.0","services":["authentication","roles","tenants","database","files","inference","audit","module-registry"],"implementation":"backend"}

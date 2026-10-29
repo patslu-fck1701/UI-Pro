@@ -1,0 +1,1 @@
+{"package":"werkz-hotel-demo","core":true,"modules":{"hotel_ai":true,"business_ai":false,"voice_ai":"simulation","automation":"preview","deutschz_ai":false,"creative_ai":false},"hotel_features":{"reception":true,"housekeeping":true,"kitchen":true,"restaurant":true,"inventory":true,"maintenance":true,"staff":true,"wellness":true,"management":true}}

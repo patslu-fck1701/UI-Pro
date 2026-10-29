@@ -1,0 +1,1 @@
+{"package":"werkz-handwerk-demo","core":true,"modules":{"business_ai":true,"voice_ai":"simulation","automation":"preview","deutschz_ai":false,"creative_ai":false},"mode":"demo","configuration":"config/packages/handwerk-demo.json"}

@@ -1,0 +1,42 @@
+import {chromium} from '@playwright/test';
+import {spawn} from 'node:child_process';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),base='http://127.0.0.1:8136';
+const server=spawn(process.env.WERKZ_TEST_PYTHON,['tests/master_control_ui_host.py'],{cwd:root,env:{...process.env,WERKZ_AI_DATA:fs.mkdtempSync(path.join(os.tmpdir(),'werkz-master-ui-')),WERKZ_AI_PACKAGE:'hotel',WERKZ_AI_MODE:'production',WERKZ_SYNTHETIC_AIZ_BINDING:process.argv[2]},stdio:'ignore'});
+let browser;
+try{
+ let ready=false;for(let i=0;i<60;i++){try{if((await fetch(base+'/api/setup')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,200));}assert.ok(ready);
+ browser=await chromium.launch({headless:true,channel:'msedge'});const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ const identity={username:'synthetic_owner',password:'synthetic-only-test'};
+ assert.equal((await context.request.post(base+'/api/setup',{headers:{origin:base},data:identity})).status(),201);
+ assert.equal((await context.request.post(base+'/api/login',{headers:{origin:base},data:identity})).status(),200);
+ await page.goto(base);await page.getByRole('button',{name:'Chat',exact:true}).click();
+ const option=page.getByRole('checkbox',{name:'Freigegebenes AiZ-Wissen verwenden'});await option.check();
+ let request;
+ page.on('request',r=>{if(r.url().endsWith('/stream'))request=r.postDataJSON();});
+ await page.getByRole('textbox',{name:'Deine Nachricht',exact:true}).fill('Neustart');
+ await page.getByRole('button',{name:'Senden ↗',exact:true}).click();
+ await page.getByRole('heading',{name:'Abgerufener AiZ-Kontext',exact:true}).waitFor();
+ await page.getByText('Synthetische Antwort aus dem autorisierten AiZ-Kontext.',{exact:true}).waitFor();
+ assert.equal(request.include_knowledge,true);
+ assert.ok((await page.getByRole('region',{name:'AiZ-Quellen'}).innerText()).includes('synthetic-source-revision'));
+ await page.screenshot({path:'D:/dev-infrastructure/master-control-aiz-chat-20261029.png',fullPage:true});
+ await page.getByRole('textbox',{name:'Deine Nachricht',exact:true}).fill('UnbekannterSuchbegriff');
+ await page.getByRole('button',{name:'Senden ↗',exact:true}).click();
+ await page.getByText('Keine freigegebenen AiZ-Treffer. Die Antwort enthält keinen abgerufenen Wissenskontext.',{exact:true}).waitFor();
+ for(const width of [390,768,1440]){await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
+ await page.getByRole('button',{name:'Module & Benutzer',exact:true}).click();
+ await page.getByRole('heading',{name:'Master Control · Betreibersteuerung',exact:true}).waitFor();
+ await page.getByText(/Konfiguriert: ja.*Authentifiziert: ja/).first().waitFor();
+ await page.clock.install();await page.clock.fastForward(61000);
+ await page.getByText('Prüfstand veraltet. Bitte Anbindungen erneut prüfen.',{exact:true}).waitFor();
+ fs.renameSync(process.argv[2],process.argv[2]+'.offline');
+ await page.getByRole('button',{name:'Anbindungen prüfen',exact:true}).click();
+ await page.getByText(/AiZ ist nicht nutzbar/).waitFor();
+ await page.reload();await page.getByRole('button',{name:'Chat',exact:true}).click();
+ await page.getByRole('checkbox',{name:/Freigegebenes AiZ-Wissen verwenden/}).waitFor();
+ assert.equal(await page.getByRole('checkbox',{name:/Freigegebenes AiZ-Wissen verwenden/}).isDisabled(),true);
+ assert.deepEqual(errors,[]);console.log('Master Control AiZ UI: real checkbox -> API -> adapter -> synthetic model, sources/empty/390-768-1440 PASS');
+}finally{await browser?.close();server.kill();}

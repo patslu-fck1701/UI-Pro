@@ -1,0 +1,1 @@
+{"id":"voice_ai","required":false,"version":"0.1.0","implementation":"backend/modules/voice.py","localSpeech":"backend/speech.py","routes":"/api/voice","status":"simulation","localSpeechStatus":"prototype","dependencies":["core"],"callbackDependency":"business_ai","externalCalls":false}

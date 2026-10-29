@@ -1,0 +1,13 @@
+{
+  "source": "D:\\WerkZ\\mirror\\schrotties-live",
+  "archive": ".runtime\\schrotties-original-source-20261026.zip",
+  "files": 17,
+  "sha256": "65bacfcd26fcc44d3fb75f445c3ab64d505fe973ba9cc8455b50035ed0b4e687",
+  "scope": "Local source copy only; not a restore or feature-parity claim.",
+  "integrity_readback_2026_10_27": {
+    "files_compared": 17,
+    "files_equal": 17,
+    "source_unchanged": true
+  },
+  "parity_report": "SCHROTTIES_PARITY_2026-10-27.md"
+}
