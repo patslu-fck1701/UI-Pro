@@ -12,6 +12,7 @@ COPY apps/local-ai/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY apps/local-ai/backend/ ./backend/
 COPY apps/local-ai/config/ ./config/
+COPY apps/local-ai/migrations/ ./migrations/
 COPY --from=frontend /build/dist/ ./frontend/dist/
 RUN useradd --create-home --uid 10001 werkz && mkdir -p /app/data /app/.runtime && chown -R werkz:werkz /app
 USER werkz
