@@ -56,16 +56,7 @@ async def ask(question: str) -> tuple[str, str]:
     device_id = os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID", "").strip()
     body = json.dumps({"device_id": device_id, "question": question}, ensure_ascii=False, separators=(",", ":"))
     body_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
-    canonical = "\n".join(("WERKZ-BRIDGE-1", "POST", route, timestamp, nonce, body_hash)).encode("utf-8")
-    signature = ""
-    if private_key and device_id:
-        try:
-            from cryptography.hazmat.primitives import serialization
-            key_data = base64.b64decode(private_key, validate=True)
-            key = serialization.load_pem_private_key(key_data, password=None)
-            signature = base64.b64encode(key.sign(canonical)).decode("ascii")
-        except Exception:
-            raise ValueError("bridge device identity unavailable") from None
+    signature = _sign(private_key, device_id, route, body, timestamp, nonce) if private_key and device_id else ""
     if not signature or not device_id:
         raise ValueError("bridge device is not paired")
     async with httpx.AsyncClient(timeout=httpx.Timeout(25.0, connect=5.0),
@@ -75,10 +66,7 @@ async def ask(question: str) -> tuple[str, str]:
             content=body.encode("utf-8"),
             headers={
                 "content-type": "application/json",
-                "x-werkz-device": device_id,
-                "x-werkz-timestamp": timestamp,
-                "x-werkz-nonce": nonce,
-                "x-werkz-signature": signature,
+                **_headers(device_id, signature, timestamp, nonce),
             },
         )
         response.raise_for_status()
@@ -93,3 +81,18 @@ async def ask(question: str) -> tuple[str, str]:
         raise ValueError("invalid bridge model")
     # Never expose a local Windows/POSIX path returned by a bridge implementation.
     return answer, model.replace("\\", "/").rsplit("/", 1)[-1][:200]
+
+
+def _sign(private_key: str, device_id: str, route: str, body: str, timestamp: str, nonce: str) -> str:
+    body_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    canonical = "\n".join(("WERKZ-BRIDGE-1", "POST", route, timestamp, nonce, body_hash)).encode()
+    from cryptography.hazmat.primitives import serialization
+    key = serialization.load_pem_private_key(base64.b64decode(private_key, validate=True), password=None)
+    return base64.b64encode(key.sign(canonical)).decode("ascii")
+
+
+def _headers(device_id: str, signature: str, timestamp: str, nonce: str) -> dict:
+    return {"content-type": "application/json", "x-werkz-device": device_id,
+            "x-werkz-timestamp": timestamp, "x-werkz-nonce": nonce,
+            "x-werkz-signature": signature}
+

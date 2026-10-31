@@ -1,6 +1,9 @@
 """Synthetic regression tests. Never contact OpenAI or a local model."""
 import asyncio
 import base64
+import hashlib
+import json
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +11,9 @@ from fastapi import HTTPException
 from backend.modules.hotel import assistant as ai
 from backend.modules.hotel import qwen_bridge
 from backend.modules.hotel import bridge_protocol
+from backend.modules.hotel import bridge_gateway
+from backend.app import app
+from fastapi.testclient import TestClient
 
 
 def test_openai_cost_gate_needs_admin_key_and_explicit_operator_opt_in(monkeypatch):
@@ -150,6 +156,55 @@ def test_bridge_protocol_rejects_tamper_replay_metadata_and_expiry():
         bridge_protocol.verify_request(public, "POST", "/api/public/local-ai/ask", timestamp, nonce, signature, body+b" ")
     with pytest.raises(ValueError):
         bridge_protocol.verify_request(public, "POST", "/api/public/local-ai/ask", str(int(time.time())-200), nonce, signature, body)
+
+
+def test_signed_hotel_gateway_worker_round_trip(monkeypatch):
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    key = Ed25519PrivateKey.generate()
+    private = base64.b64encode(key.private_bytes(serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8, serialization.NoEncryption())).decode()
+    public = base64.b64encode(key.public_key().public_bytes(serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo)).decode()
+    monkeypatch.setenv("WERKZ_SYNTHETIC_BRIDGE", "1")
+    monkeypatch.setenv("WERKZ_SYNTHETIC_DEVICE_ID", "synthetic-device")
+    monkeypatch.setenv("WERKZ_SYNTHETIC_DEVICE_PUBLIC_KEY", public)
+    monkeypatch.setenv("WERKZ_SYNTHETIC_DEVICE_TENANT", "hotel-alpha")
+    bridge_gateway._jobs.clear(); bridge_gateway._nonces.clear()
+    client = TestClient(app)
+
+    def signed(path, payload):
+        body = json.dumps(payload, separators=(",", ":")).encode()
+        timestamp, nonce = str(int(time.time())), __import__("secrets").token_hex(16)
+        signature = ai.qwen_bridge._sign(private, "synthetic-device", path, body.decode(), timestamp, nonce)
+        return client.post(path, content=body, headers={"content-type":"application/json",
+            "x-werkz-device":"synthetic-device", "x-werkz-timestamp":timestamp,
+            "x-werkz-nonce":nonce, "x-werkz-signature":signature})
+
+    result = {}
+    import threading
+    def hotel_request():
+        result["response"] = signed("/api/public/local-ai/ask", {
+            "device_id":"synthetic-device", "question":"synthetischer Durchlauf"})
+    thread = threading.Thread(target=hotel_request)
+    thread.start()
+    deadline = time.monotonic()+3
+    while time.monotonic()<deadline:
+        with bridge_gateway._lock:
+            queued = next((row["job"] for row in bridge_gateway._jobs.values() if row["state"]=="queued"),None)
+        if queued: break
+        time.sleep(.02)
+    assert queued and queued["tenant"] == "hotel-alpha"
+    claimed = signed("/api/public/local-ai/claim", {"device_id":"synthetic-device"})
+    assert claimed.status_code == 200 and claimed.json()["job"]["request_id"] == queued["request_id"]
+    completion = signed("/api/public/local-ai/complete", {"device_id":"synthetic-device",
+        "request_id":queued["request_id"],"lease_id":queued["lease_id"],"state":"succeeded",
+        "answer":"Qwen synthetic answer", "model":r"C:\models\Qwen.gguf"})
+    assert completion.status_code == 200
+    thread.join(timeout=3)
+    response = result["response"]
+    assert response.status_code == 200
+    assert response.json() == {"answer":"Qwen synthetic answer","model":"Qwen.gguf"}
 
 
 def test_online_qwen_bridge_rejects_non_https_and_redirects(monkeypatch):

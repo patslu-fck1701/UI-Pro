@@ -39,6 +39,8 @@ migrate_hotel()
 app.include_router(hotel_router)
 from .modules.hotel.assistant import router as hotel_assistant_router
 app.include_router(hotel_assistant_router)
+from .modules.hotel.bridge_gateway import router as synthetic_bridge_router
+app.include_router(synthetic_bridge_router)
 from .time_service import router as time_router
 from .guest_portal import router as guest_router
 from .work_app import router as work_router
