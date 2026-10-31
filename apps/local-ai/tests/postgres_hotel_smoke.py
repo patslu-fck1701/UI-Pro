@@ -61,6 +61,10 @@ if len(sys.argv) > 1:
 with TestClient(app, headers={"origin": "http://testserver"}) as client:
     registered = client.post("/api/setup", json={"username": "ciowner", "password": "synthetic-password"})
     assert registered.status_code == 201, registered.text
+    # Account creation deliberately does not mint a session; authenticate separately.
+    logged_in = client.post("/api/login", json={"username": "ciowner", "password": "synthetic-password"})
+    assert logged_in.status_code == 200, logged_in.text
+    assert client.cookies, "Authenticated session cookie must be set"
 
     room_type = client.post("/api/hotel/room-types", json={
         "name": "Synthetic Room", "capacity": 2, "nightly_cents": 9900,
