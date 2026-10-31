@@ -6,6 +6,8 @@ rejected before a response can reach the Hotel API.
 """
 from urllib.parse import urlparse
 import os
+import secrets
+import time
 
 import httpx
 
@@ -39,9 +41,18 @@ def _bridge_url() -> str:
 
 async def ask(question: str) -> tuple[str, str]:
     url = _bridge_url()
+    timestamp = str(int(time.time()))
+    nonce = secrets.token_hex(16)
     async with httpx.AsyncClient(timeout=httpx.Timeout(25.0, connect=5.0),
                                  trust_env=False, follow_redirects=False) as client:
-        response = await client.post(url, json={"question": question})
+        response = await client.post(
+            url,
+            json={"question": question},
+            headers={
+                "x-werkz-bridge-timestamp": timestamp,
+                "x-werkz-bridge-nonce": nonce,
+            },
+        )
         response.raise_for_status()
         body = response.json()
     if not isinstance(body, dict):
