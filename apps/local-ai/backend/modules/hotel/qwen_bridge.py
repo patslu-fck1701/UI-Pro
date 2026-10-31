@@ -47,13 +47,14 @@ def _record(success: bool, category: str | None = None) -> None:
 def status() -> dict:
     """Return non-secret bridge readiness metadata for operator readbacks."""
     configured = bool(os.environ.get("WERKZ_QWEN_BRIDGE_URL", "").strip())
-    authenticated = bool(os.environ.get("WERKZ_QWEN_BRIDGE_PRIVATE_KEY") and os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID"))
+    credentials_present = bool(configured and os.environ.get("WERKZ_QWEN_BRIDGE_PRIVATE_KEY") and os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID"))
     with _status_lock:
         matches = _last_status_identity == _status_identity()
         last_successful_check = _last_successful_check if matches else None
         error_category = _last_error_category if matches else None
+    authenticated = bool(credentials_present and last_successful_check and not error_category)
     return {
-        "state": "READY" if configured and authenticated and last_successful_check and not error_category else "NOT_VERIFIED" if configured and authenticated else "NOT_CONNECTED",
+        "state": "READY" if authenticated else "NOT_VERIFIED" if credentials_present else "NOT_CONNECTED",
         "configured": configured,
         "authenticated": authenticated,
         "last_successful_check": last_successful_check,
@@ -66,7 +67,9 @@ def _bridge_url() -> str:
 
     value = os.environ.get("WERKZ_QWEN_BRIDGE_URL", "").strip()
     if not value:
-        value = BRIDGE_ORIGIN + BRIDGE_ROUTE
+        raise ValueError("bridge disabled")
+    if value != BRIDGE_ORIGIN + BRIDGE_ROUTE:
+        raise ValueError("bridge disabled")
     parsed = urlparse(value)
     if (parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password
             or parsed.hostname != urlparse(BRIDGE_ORIGIN).hostname):
