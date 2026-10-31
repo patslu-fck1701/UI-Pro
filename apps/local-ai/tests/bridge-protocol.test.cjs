@@ -16,8 +16,8 @@ test('synthetic worker handles ready leased job and signed completion',async()=>
   const expires=new Date(Date.now()+60000).toISOString();
   const transport=async(url,request)=>{
     calls.push({url,request});
-    if(url.endsWith('/ask'))return {ok:true,status:200,headers:{get:()=> 'application/json'},json:async()=>({state:'ready',job:{request_id:'0e35f114-7325-48ea-88d8-79bb5dbb5928',lease_id:'0e35f114-7325-48ea-88d8-79bb5dbb5929',tenant:'synthetic-hotel',prompt:'synthetic question',expires_at:expires}})};
-    return {ok:true,status:200,headers:{get:()=> 'application/json'},json:async()=>({state:'succeeded'})};
+    if(url.endsWith('/ask'))return {ok:true,status:200,headers:{get:()=> 'application/json'},text:async()=>JSON.stringify({state:'ready',job:{request_id:'0e35f114-7325-48ea-88d8-79bb5dbb5928',lease_id:'0e35f114-7325-48ea-88d8-79bb5dbb5929',tenant:'synthetic-hotel',prompt:'synthetic question',expires_at:expires}})};
+    return {ok:true,status:200,headers:{get:()=> 'application/json'},text:async()=>JSON.stringify({state:'succeeded'})};
   };
   const worker=new OutboundAI({identity,transport,analyze:async()=>({answer:'synthetic answer',model:'Qwen-test.gguf'}),origin:ORIGIN,tenant:'synthetic-hotel'});
   const result=await worker.serveOnce();
