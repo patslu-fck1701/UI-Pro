@@ -15,6 +15,7 @@ from ... import engine
 from ...db import MODE, PACKAGE
 from ..registry import guard
 from .service import require
+from .openai_credentials import openai_api_key
 
 router = APIRouter(prefix="/api/hotel/ai", tags=["hotel_ai"])
 permission = guard("hotel_ai")
@@ -41,7 +42,7 @@ def _cloud_allowed(user) -> bool:
         and MODE == "production"
         and user.role == "admin"
         and os.environ.get("WERKZ_HOTEL_OPENAI_ENABLED") == "1"
-        and bool(os.environ.get("OPENAI_API_KEY", "").strip())
+        and bool(openai_api_key())
     )
 
 
@@ -66,7 +67,9 @@ def providers(user=Depends(permission)):
 
 async def _openai(question: str) -> tuple[str, str]:
     # Fixed vendor endpoint: no user-configurable URL, redirect or model.
-    key = os.environ["OPENAI_API_KEY"].strip()
+    key = openai_api_key()
+    if not key:
+        raise HTTPException(503, "OpenAI-Schluessel ist lokal nicht verfuegbar.")
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(35.0, connect=5.0),
                                      trust_env=False, follow_redirects=False) as client:
