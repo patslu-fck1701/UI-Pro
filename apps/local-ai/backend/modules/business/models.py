@@ -50,4 +50,9 @@ class Callback(Base):
 class Seed(Base):
     __tablename__='business_seed'
     tenant:Mapped[str]=mapped_column(String,primary_key=True)
-Base.metadata.create_all(engine)
+
+# Never create every table currently registered on the shared metadata here.
+# Test/import order may already have registered versioned Hotel tables, which
+# must remain exclusively owned by Alembic migrations.
+BUSINESS_TABLES=[Customer.__table__,Order.__table__,Invoice.__table__,Quote.__table__,Callback.__table__,Seed.__table__]
+Base.metadata.create_all(engine,tables=BUSINESS_TABLES)
