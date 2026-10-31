@@ -6,6 +6,7 @@ from fastapi import APIRouter,Depends,HTTPException,Response
 from pydantic import BaseModel,Field
 from sqlalchemy import select,text
 from .db import Session,User,PACKAGE,now
+from .write_lock import begin_write
 from .security import current_user
 from .modules.registry import check_module,audit
 from .platform_models import TimeEntry,TimeCorrection,WorkRecord
@@ -58,7 +59,7 @@ def clock(input:Clock,user=Depends(permission)):
         timestamp=timestamp.astimezone(timezone.utc)
     instant=timestamp.isoformat()
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));existing=replay(db,user,input.idempotency_key,'time.clock',input.model_dump())
+        begin_write(db);existing=replay(db,user,input.idempotency_key,'time.clock',input.model_dump())
         if existing is not None:return existing
         active=db.scalar(select(TimeEntry).where(TimeEntry.tenant==user.tenant,TimeEntry.user_id==user.id,TimeEntry.ended==''))
         if input.action in {'stop','break','resume'}:
@@ -94,14 +95,14 @@ def correction(input:Correction,user=Depends(permission)):
     a,b=interval(input.start,input.end)
     if b>datetime.now(timezone.utc):raise HTTPException(400,'Korrektur darf nicht in die Zukunft reichen.')
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));row=owned_entry(db,user,input.entry_id)
+        begin_write(db);row=owned_entry(db,user,input.entry_id)
         if not row.ended:raise HTTPException(409,'Laufende Zeit zuerst beenden.')
         change=TimeCorrection(id=str(uuid.uuid4()),tenant=user.tenant,entry_id=row.id,proposed_start=a.isoformat(),proposed_end=b.isoformat(),reason=input.reason);db.add(change);audit(db,user,'time.correction.proposed',row.id);db.commit();return {'id':change.id,'state':'pending'}
 @router.post('/corrections/{id}/approve')
 def approve(id:str,user=Depends(permission)):
     if not manager(user):raise HTTPException(403,'Freigaberecht erforderlich.')
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));change=db.get(TimeCorrection,id)
+        begin_write(db);change=db.get(TimeCorrection,id)
         if not change or change.tenant!=user.tenant:raise HTTPException(404,'Korrektur nicht gefunden.')
         row=owned_entry(db,user,change.entry_id,True)
         if change.state!='pending':raise HTTPException(409,'Korrektur ist bereits entschieden.')
