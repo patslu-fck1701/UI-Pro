@@ -5,6 +5,7 @@ import hashlib
 import json
 import time
 from types import SimpleNamespace
+from urllib.parse import urlparse
 
 import pytest
 from fastapi import HTTPException
@@ -181,30 +182,43 @@ def test_signed_hotel_gateway_worker_round_trip(monkeypatch):
             "x-werkz-device":"synthetic-device", "x-werkz-timestamp":timestamp,
             "x-werkz-nonce":nonce, "x-werkz-signature":signature})
 
-    result = {}
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", qwen_bridge.BRIDGE_ORIGIN + qwen_bridge.BRIDGE_ROUTE)
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_PRIVATE_KEY", private)
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_DEVICE_ID", "synthetic-device")
+    monkeypatch.setattr(qwen_bridge.httpx, "AsyncClient", lambda **kwargs: LocalAsyncClient(client))
+
+    class LocalAsyncClient:
+        def __init__(self, local_client, **kwargs): self.local_client=local_client
+        async def __aenter__(self): return self
+        async def __aexit__(self,*args): return False
+        async def post(self, url, *, content, headers):
+            response=self.local_client.post(urlparse(url).path,content=content,headers=headers)
+            class Wrapped:
+                def raise_for_status(self): response.raise_for_status()
+                def json(self): return response.json()
+            return Wrapped()
+
+    result={}
     import threading
-    def hotel_request():
-        result["response"] = signed("/api/public/local-ai/ask", {
-            "device_id":"synthetic-device", "question":"synthetischer Durchlauf"})
-    thread = threading.Thread(target=hotel_request)
-    thread.start()
-    deadline = time.monotonic()+3
+    def hotel_request(): result["answer"]=asyncio.run(qwen_bridge.ask("synthetischer Durchlauf"))
+    thread=threading.Thread(target=hotel_request);thread.start()
+    deadline=time.monotonic()+3
+    queued=None
     while time.monotonic()<deadline:
         with bridge_gateway._lock:
-            queued = next((row["job"] for row in bridge_gateway._jobs.values() if row["state"]=="queued"),None)
+            queued=next((row["job"] for row in bridge_gateway._jobs.values() if row["state"]=="queued"),None)
         if queued: break
         time.sleep(.02)
-    assert queued and queued["tenant"] == "hotel-alpha"
-    claimed = signed("/api/public/local-ai/claim", {"device_id":"synthetic-device"})
-    assert claimed.status_code == 200 and claimed.json()["job"]["request_id"] == queued["request_id"]
-    completion = signed("/api/public/local-ai/complete", {"device_id":"synthetic-device",
+    assert queued and queued["tenant"]=="hotel-alpha"
+    claimed=signed("/api/public/local-ai/claim",{"device_id":"synthetic-device"})
+    assert claimed.status_code==200 and claimed.json()["job"]["request_id"]==queued["request_id"]
+    completion=signed("/api/public/local-ai/complete",{"device_id":"synthetic-device",
         "request_id":queued["request_id"],"lease_id":queued["lease_id"],"state":"succeeded",
-        "answer":"Qwen synthetic answer", "model":r"C:\models\Qwen.gguf"})
-    assert completion.status_code == 200
+        "answer":"Qwen synthetic answer","model":r"C:\models\Qwen.gguf"})
+    assert completion.status_code==200
     thread.join(timeout=3)
-    response = result["response"]
-    assert response.status_code == 200
-    assert response.json() == {"answer":"Qwen synthetic answer","model":"Qwen.gguf"}
+    assert not thread.is_alive()
+    assert result["answer"]==("Qwen synthetic answer","Qwen.gguf")
 
 
 def test_online_qwen_bridge_rejects_non_https_and_redirects(monkeypatch):
