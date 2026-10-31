@@ -37,7 +37,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import inspect, select, func
 
 from backend.app import app
-from backend.db import Session, engine
+from backend.db import Session, engine, User
+from backend.security import hash_password
 from backend.modules.hotel.models import Hotel, HotelAiUsage, Guest, Reservation, Room
 
 with engine.connect() as connection:
@@ -50,7 +51,7 @@ with engine.connect() as connection:
 # It must be idempotent and must see the first process's committed records.
 if len(sys.argv) > 1:
     with Session() as db:
-        assert db.scalar(select(func.count()).select_from(Hotel)) == 1
+        assert db.scalar(select(func.count()).select_from(Hotel)) == 2
         assert db.scalar(select(func.count()).select_from(Room)) == 2
         assert db.scalar(select(func.count()).select_from(Reservation)) == 2
         assert db.scalar(select(func.count()).select_from(Guest)) == 2
@@ -109,6 +110,43 @@ with TestClient(app, headers={"origin": "http://testserver"}) as client:
     with ThreadPoolExecutor(max_workers=2) as pool:
         statuses = sorted(pool.map(race_booking, range(2)))
     assert statuses == [201, 409], f"Concurrent booking outcomes: {statuses}"
+
+    # A completely independent hotel operator must never see or modify records
+    # belonging to the first operator, even if the foreign UUIDs are known.
+    with Session() as db:
+        db.add(User(
+            id="ci-other-user",
+            username="ci-other",
+            password_hash=hash_password("synthetic-other-password"),
+            role="admin",
+            tenant="ci-other-hotel",
+        ))
+        db.commit()
+    with TestClient(app, headers={"origin": "http://testserver"}) as stranger:
+        assert stranger.get("/api/hotel/snapshot").status_code == 401
+        signed_in = stranger.post("/api/login", json={
+            "username": "ci-other", "password": "synthetic-other-password",
+        })
+        assert signed_in.status_code == 200, signed_in.text
+        foreign_snapshot = stranger.get("/api/hotel/snapshot")
+        assert foreign_snapshot.status_code == 200, foreign_snapshot.text
+        assert foreign_snapshot.json()["rooms"] == []
+        assert foreign_snapshot.json()["reservations"] == []
+        assert foreign_snapshot.json()["guests"] == []
+        forbidden_booking = stranger.post("/api/hotel/reservations", json={
+            **booking,
+            "guest_name": "",
+            "guest_id": first.json()["guest_id"],
+        })
+        assert forbidden_booking.status_code == 404, forbidden_booking.text
+        forbidden_room = stranger.post("/api/hotel/reservations", json=booking)
+        assert forbidden_room.status_code == 404, forbidden_room.text
+        assert stranger.get("/api/hotel/snapshot").json()["guests"] == []
+    with Session() as db:
+        assert db.scalar(select(func.count()).select_from(Guest)) == 2
+        assert db.scalar(select(func.count()).select_from(Guest).where(
+            Guest.tenant == "ci-other-hotel",
+        )) == 0
 
 # Prove data survives BOTH connection disposal and a new Python process.
 engine.dispose()
