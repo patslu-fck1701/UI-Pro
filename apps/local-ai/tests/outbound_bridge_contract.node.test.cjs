@@ -6,7 +6,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
-const {identityFromKey, signedRequest, validJob} = require('../scripts/outbound-ai.js');
+const {OutboundAI, identityFromKey, signedRequest, validJob} = require('../scripts/outbound-ai.js');
 
 function device() {
   const pair = crypto.generateKeyPairSync('ed25519');
@@ -92,4 +92,96 @@ test('worker rejects expired, future, malformed and oversized synthetic leased j
   assert.equal(validJob({...job, lease_id:'not-a-uuid'},now), false);
   assert.equal(validJob({...job, prompt:'x'.repeat(4001)},now), false);
   assert.equal(validJob({...job, prompt:' '},now), false);
+});
+
+test('signed claim → local answer → leased complete runs exactly once', async () => {
+  const identity = device();
+  const publicKey = crypto.createPublicKey(identity.privateKey);
+  const now = Date.parse('2026-10-31T15:00:00.000Z');
+  const job = {
+    request_id: crypto.randomUUID(),
+    lease_id: crypto.randomUUID(),
+    prompt: 'Synthetic request only',
+    expires_at: new Date(now + 30000).toISOString(),
+  };
+  let inferCount = 0;
+  let claims = 0;
+  let completions = 0;
+  const nonces = new Set();
+  const transport = async (url, request) => {
+    const parsed = new URL(url);
+    assert.equal(parsed.origin, 'https://project--9081192e-6239-40a6-8f20-02296cff5c91-dev.lovable.app');
+    assert.equal(verifyRequest(request, parsed.pathname, publicKey), true);
+    assert.equal(request.redirect, 'manual');
+    const nonce = request.headers['x-werkz-nonce'];
+    assert(!nonces.has(nonce), 'Fresh nonce is required on every request');
+    nonces.add(nonce);
+    const body = JSON.parse(request.body);
+    assert.equal(body.device_id, identity.device_id);
+    let payload;
+    if (parsed.pathname === CLAIM) {
+      claims++;
+      payload = {state:'ready', job};
+    } else if (parsed.pathname === COMPLETE) {
+      completions++;
+      assert.equal(body.request_id, job.request_id);
+      assert.equal(body.lease_id, job.lease_id);
+      assert.equal(body.state, 'succeeded');
+      assert.equal(body.answer, 'SYNTHETIC ANSWER');
+      assert.equal(body.model, 'Synthetic-Qwen.gguf');
+      payload = {ok:true};
+    } else {
+      throw new Error('UNEXPECTED_ROUTE');
+    }
+    return new Response(JSON.stringify(payload), {
+      status:200,
+      headers:{'content-type':'application/json'},
+    });
+  };
+  const worker = new OutboundAI({
+    identity, transport, clock:()=>now,
+    analyze:async (input) => {
+      inferCount++;
+      assert.equal(input.prompt, 'Synthetic request only');
+      return {answer:'SYNTHETIC ANSWER', model:'Synthetic-Qwen.gguf'};
+    },
+  });
+  assert.deepEqual(await worker.once(), {state:'succeeded', request_id:job.request_id});
+  assert.equal(inferCount, 1);
+  assert.equal(completions, 1);
+  assert.equal(claims, 1);
+  await assert.rejects(worker.once(), /DUPLICATE_JOB/);
+  assert.equal(inferCount, 1, 'The same leased job must not run twice');
+  assert.equal(completions, 1, 'The same leased job must not complete twice');
+});
+
+test('failed local inference still completes with redacted fixed error code', async () => {
+  const identity = device();
+  const now = Date.parse('2026-10-31T15:00:00.000Z');
+  const job = {
+    request_id: crypto.randomUUID(),
+    lease_id: crypto.randomUUID(),
+    prompt:'SYNTHETIC',
+    expires_at:new Date(now+30000).toISOString(),
+  };
+  let completion = null;
+  const transport = async (url, req) => {
+    const path = new URL(url).pathname;
+    let body;
+    if (path === CLAIM) body = {state:'ready',job};
+    else if (path === COMPLETE) {
+      completion = JSON.parse(req.body);
+      body = {ok:true};
+    } else throw new Error('UNEXPECTED_ROUTE');
+    return new Response(JSON.stringify(body),{status:200,headers:{'content-type':'application/json'}});
+  };
+  const worker = new OutboundAI({
+    identity,clock:()=>now,transport,
+    analyze:async () => {throw new Error('PRIVATE_OPERATOR_PATH_CANNOT_LEAK');},
+  });
+  const result = await worker.once();
+  assert.equal(result.state,'failed');
+  assert.equal(completion.error_code,'MODEL_UNAVAILABLE');
+  assert.equal(completion.answer,undefined);
+  assert(!JSON.stringify(completion).includes('PRIVATE_OPERATOR_PATH_CANNOT_LEAK'));
 });
