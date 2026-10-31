@@ -2,7 +2,8 @@ import {useEffect, useState} from 'react';
 
 type Provider = 'local' | 'openai';
 type Usage = {calls:number;reservedMicroUsd:number;actualMicroUsd:number;callLimit:number;budgetMicroUsd:number};
-type Status = {local:{state:string};openai:{state:string};cloudDataScope:string;hotelRecordsShared:boolean;outboundBridge:string;openaiUsage:Usage|null};
+type BridgeStatus = {state:string;configured:boolean;authenticated:boolean;last_successful_check:string|null;error_category:string|null};
+type Status = {local:{state:string};openai:{state:string};cloudDataScope:string;hotelRecordsShared:boolean;outboundBridge:BridgeStatus;openaiUsage:Usage|null};
 type Answer = {answer:string;model:string;provider:Provider;verifiedHotelData:boolean;createdReservation:boolean;dataScope:string;openaiUsage:Usage|null};
 
 export function HotelAssistant(){
@@ -62,7 +63,8 @@ export function HotelAssistant(){
       {answer.openaiUsage&&<p className="muted small">OpenAI-Testbudget: {answer.openaiUsage.calls}/{answer.openaiUsage.callLimit} Aufrufe · maximal reserviert {(answer.openaiUsage.reservedMicroUsd/1_000_000).toFixed(6)} USD von {(answer.openaiUsage.budgetMicroUsd/1_000_000).toFixed(6)} USD.</p>}
     </article>}
     {!available('local')&&!available('openai')&&<p className="muted" role="status">Noch kein autorisierter KI-Anbieter verbunden. Lokales Qwen benötigt den vorhandenen llama.cpp-Server; Online-Qwen benötigt erst die private, authentifizierte Bridge. OpenAI erfordert eine separate serverseitige Betreiberfreigabe.</p>}
-    <p className="muted small">Status der ausgehenden Geräte-Bridge: {status?.outboundBridge??'nicht geprüft'} · Cloud-Freigabe: {status?.openai.state??'unbekannt'}.</p>
+    <p className="muted small">Status der ausgehenden Geräte-Bridge: {status?.outboundBridge.state??'nicht geprüft'} · Cloud-Freigabe: {status?.openai.state??'unbekannt'}.</p>
+    {status?.outboundBridge.error_category&&<p className="muted small">Bridge-Hinweis: {status.outboundBridge.error_category}. Es wurden keine Hotel- oder Gastdaten übertragen.</p>}
     {status?.openaiUsage&&<p className="muted small">Persistenter OpenAI-Zähler: {status.openaiUsage.calls}/{status.openaiUsage.callLimit} Aufrufe · maximal reserviert {(status.openaiUsage.reservedMicroUsd/1_000_000).toFixed(6)} USD von {(status.openaiUsage.budgetMicroUsd/1_000_000).toFixed(6)} USD.</p>}
   </section>;
 }
