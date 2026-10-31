@@ -98,7 +98,25 @@ async def local_boundary(request,call_next):
     return response
 
 class Credentials(BaseModel):
-    username: str=Field(min_length=3,max_length=64,pattern=r'^[a-zA-Z0-9_.-]+
+    username: str=Field(min_length=3,max_length=64,pattern=r'^[a-zA-Z0-9_.-]+$')
+    password: str=Field(min_length=4,max_length=128)
+class LocalPinCredentials(BaseModel):
+    pin: str=Field(min_length=4,max_length=128)
+
+def local_pin_guard(request:Request):
+    if PACKAGE!='personal' or ONLINE_TEST or POSTGRES_ENABLED:
+        raise HTTPException(403,'PIN-only ist nur für die persönliche lokale Installation verfügbar.')
+    if not request.client or request.client.host not in {'127.0.0.1','::1','testclient'}:
+        raise HTTPException(403,'PIN-only erfordert einen lokalen Rechner.')
+    if request.url.hostname not in {'127.0.0.1','localhost','testserver'}:
+        raise HTTPException(403,'PIN-only erfordert eine lokale Herkunft.')
+
+def local_pin_operator(db):
+    operators=list(db.scalars(select(User).limit(2)))
+    if len(operators)!=1 or operators[0].role!='admin':
+        raise HTTPException(409,'PIN-only benötigt genau ein lokales Betreiberkonto.')
+    return operators[0]
+
 def safe_user(user):
     return {'id':user.id,'username':user.username,'role':user.role,'tenant':user.tenant,'modules':configuration(user.tenant)}
 
@@ -152,16 +170,13 @@ def setup(input:Credentials):
 @app.post('/api/local-pin/setup',status_code=201)
 def local_pin_setup(input:LocalPinCredentials,request:Request):
     local_pin_guard(request)
-    # Internal account identifier is created once; its PIN stays salted and hashed.
     return setup(Credentials(username='werkz-local-owner',password=input.pin))
 
 @app.post('/api/local-pin/login')
 def local_pin_login(input:LocalPinCredentials,request:Request,response:Response):
     local_pin_guard(request)
     with Session() as db:
-        operator=local_pin_operator(db)
-        username=operator.username
-    # Reuse the existing rate-limiter, password hash and session-cookie controls.
+        username=local_pin_operator(db).username
     return login(Credentials(username=username,password=input.pin),request,response)
 
 @app.post('/api/login')
