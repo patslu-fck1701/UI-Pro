@@ -148,13 +148,14 @@ def _usage_status(user) -> dict:
 @router.get("/providers")
 def providers(user=Depends(permission)):
     _role_allowed(user)
+    bridge = qwen_bridge.status()
     return {
-        "local": {"state": "NOT_CONNECTED" if os.environ.get("WERKZ_ONLINE_TEST") == "1"
+        "local": {"state": bridge["state"] if os.environ.get("WERKZ_ONLINE_TEST") == "1"
                   else "CHECK_ON_REQUEST"},
         "openai": {"state": "CONFIGURED" if _cloud_allowed(user) else "NOT_CONNECTED"},
         "cloudDataScope": "USER_QUESTION_ONLY",
         "hotelRecordsShared": False,
-        "outboundBridge": "NOT_CONNECTED",
+        "outboundBridge": bridge,
         "openaiUsage": _usage_status(user) if user.role == "admin" else None,
     }
 

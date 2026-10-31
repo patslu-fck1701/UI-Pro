@@ -104,13 +104,20 @@ def test_online_qwen_bridge_sends_question_only_and_redacts_model_path(monkeypat
             assert kwargs["trust_env"] is False and kwargs["follow_redirects"] is False
         async def __aenter__(self): return self
         async def __aexit__(self, *args): return False
-        async def post(self, url, *, json): captured.append((url, json)); return Response()
+        async def post(self, url, *, json, headers):
+            captured.append((url, json, headers))
+            return Response()
     monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "https://bridge.example.test/v1/ask")
     monkeypatch.setattr(qwen_bridge.httpx, "AsyncClient", Client)
     answer, model = asyncio.run(qwen_bridge.ask("synthetische Frage"))
     assert answer == "Synthetische Bridge-Antwort"
     assert model == "Qwen.gguf"
-    assert captured == [("https://bridge.example.test/v1/ask", {"question": "synthetische Frage"})]
+    assert len(captured) == 1
+    url, payload, headers = captured[0]
+    assert url == "https://bridge.example.test/v1/ask"
+    assert payload == {"question": "synthetische Frage"}
+    assert headers["x-werkz-bridge-nonce"]
+    assert headers["x-werkz-bridge-timestamp"].isdigit()
 
 
 def test_online_qwen_bridge_rejects_non_https_and_redirects(monkeypatch):
