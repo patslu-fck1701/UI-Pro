@@ -67,7 +67,7 @@ jobs:
     env:
       WERKZ_AI_PACKAGE: hotel
       WERKZ_AI_MODE: production
-      WERKZ_AI_DATA: ${{ runner.temp }}/werkz-hotel-ci
+      WERKZ_AI_DATA: /tmp/werkz-hotel-ci
       WERKZ_HOTEL_OPENAI_ENABLED: "0"
       WERKZ_ONLINE_TEST: "0"
     steps:
