@@ -185,3 +185,70 @@ test('failed local inference still completes with redacted fixed error code', as
   assert.equal(completion.answer,undefined);
   assert(!JSON.stringify(completion).includes('PRIVATE_OPERATOR_PATH_CANNOT_LEAK'));
 });
+
+test('pending/revoked worker state never invokes local inference or complete', async () => {
+  for (const state of ['pending', 'revoked']) {
+    const identity = device();
+    let inferCount = 0;
+    let requestCount = 0;
+    const transport = async (url, req) => {
+      requestCount++;
+      assert.equal(new URL(url).pathname, CLAIM);
+      assert.equal(req.method,'POST');
+      return new Response(JSON.stringify({state, job:null}), {
+        status:200, headers:{'content-type':'application/json'},
+      });
+    };
+    const worker = new OutboundAI({
+      identity,transport,analyze:async () => {
+        inferCount++;
+        throw new Error('UNEXPECTED_INFERENCE');
+      },
+    });
+    assert.deepEqual(await worker.once(),{state});
+    assert.equal(inferCount,0);
+    assert.equal(requestCount,1);
+  }
+});
+
+test('expired or malformed leased job never reaches local inference', async () => {
+  const invalid = [
+    {request_id:crypto.randomUUID(), lease_id:crypto.randomUUID(),
+     prompt:'Synthetic',expires_at:new Date(Date.now()-5000).toISOString()},
+    {request_id:crypto.randomUUID(),lease_id:crypto.randomUUID(),
+     prompt:'Synthetic',expires_at:new Date(Date.now()+200000).toISOString()},
+    {request_id:crypto.randomUUID(),lease_id:'wrong',
+     prompt:'Synthetic',expires_at:new Date(Date.now()+30000).toISOString()},
+  ];
+  for (const job of invalid) {
+    const worker = new OutboundAI({
+      identity:device(), transport:async () =>
+        new Response(JSON.stringify({state:'ready',job}), {
+          status:200,headers:{'content-type':'application/json'},
+        }),
+      analyze:async () => {throw new Error('INFERENCE_MUST_NOT_RUN');},
+    });
+    await assert.rejects(worker.once(), /INVALID_JOB/);
+  }
+});
+
+test('non-JSON and oversized transport replies fail closed before inference', async () => {
+  const identity=device();
+  let analyzed=0;
+  for (const response of [
+    new Response('<html>blocked</html>',{status:200,headers:{'content-type':'text/html'}}),
+    new Response(JSON.stringify({state:'ready',job:null}), {
+      status:200,headers:{'content-type':'application/json'},
+    }),
+  ]) {
+    const worker=new OutboundAI({
+      identity,
+      transport:async () => response.clone(),
+      analyze:async () => {analyzed++;return {answer:'should not execute',model:'test'};},
+    });
+    if(response.headers.get('content-type')==='text/html')
+      await assert.rejects(worker.once(), /INVALID_BRIDGE_RESPONSE/);
+    else assert.deepEqual(await worker.once(),{state:'idle'});
+  }
+  assert.equal(analyzed,0);
+});
