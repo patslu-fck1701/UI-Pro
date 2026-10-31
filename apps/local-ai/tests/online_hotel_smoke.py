@@ -24,6 +24,20 @@ with tempfile.TemporaryDirectory() as tmp:
             assert all('Secure' in h and 'HttpOnly' in h and 'SameSite=strict' in h for h in a.headers.get_list('set-cookie'))
             assert first.get('/api/hotel/snapshot').status_code==200
             assert second.get('/api/hotel/snapshot').status_code==200
+            # AI choices are visible but NEVER bill public demo users.
+            providers=first.get('/api/hotel/ai/providers')
+            assert providers.status_code==200,providers.text
+            assert providers.json()['openai']['state']=='NOT_CONNECTED'
+            assert providers.json()['local']['state']=='NOT_CONNECTED'
+            assert providers.json()['hotelRecordsShared'] is False
+            assert first.post('/api/hotel/ai/ask',headers={'Origin':origin},
+                json={'provider':'openai','question':'Synthetischer Test'}).status_code==403
+            assert first.post('/api/hotel/ai/ask',headers={'Origin':origin},
+                json={'provider':'local','question':'Synthetischer Test'}).status_code==503
+            assert second.get('/api/hotel/ai/providers').status_code==200
+            assert second.post('/api/hotel/ai/ask',headers={'Origin':origin},
+                json={'provider':'openai','question':'Synthetischer Test'}).status_code==403
+
             assert first.get('/api/modules').json()['modules']['deutschz_ai'] is False
             assert first.get('/api/health').headers['strict-transport-security']
         print('PASS: cloud health, setup lock, auth, origin/host, secure cookies, two visitors/roles, scoped modules')

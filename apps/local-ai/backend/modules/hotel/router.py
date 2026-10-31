@@ -5,13 +5,14 @@ from fastapi import APIRouter,Depends,HTTPException,Request,Response
 from pydantic import BaseModel,Field
 from sqlalchemy import text,select,delete,func
 from ...db import Session,User,LoginSession,ModuleConfig,MODE,PACKAGE,now
+from ...write_lock import begin_write
 from ...security import hash_password,session_hash,current_user,COOKIE_NAME
 from ..registry import guard,configuration,audit
 from .service import *
 
 router=APIRouter(prefix='/api/hotel',tags=['hotel_ai'])
 permission=guard('hotel_ai')
-def transaction(db):db.execute(text('BEGIN IMMEDIATE'))
+def transaction(db):begin_write(db)
 @router.get('/snapshot')
 def overview(user=Depends(permission)):
     with Session() as db:
@@ -412,3 +413,24 @@ def start_demo(input:DemoProfile,response:Response,request:Request):
             grant_token=secrets.token_urlsafe(32);grant=DemoGrant(token_hash=session_hash(grant_token),tenant=tenant,expires=int(time.time()+7200));db.add(grant)
             db.add(ModuleConfig(tenant=tenant,modules=json.dumps({'hotel_ai':True,'business_ai':False,'voice_ai':'simulation','automation':'preview','creative_ai':False,'deutschz_ai':False})))
         user=db.scalar(select(User).where(User.tenant==grant.tenant,User.role=='hotel_'+input.role));db.flush();value=attach_session(db,user,response);db.commit();response.set_cookie('werkz_hotel_demo',grant_token,httponly=True,samesite='strict',max_age=7200);return value
+
+class GoetheScenarioInput(BaseModel):
+    role: Literal['management','reception','kitchen','housekeeping']='management'
+
+@router.post('/scenario/goethe/start')
+def start_goethe(input:GoetheScenarioInput,response:Response):
+    if PACKAGE!='hotel-demo' or MODE!='demo':
+        raise HTTPException(403,'Goethe-Szenario ist nur im isolierten Hotel-Demopaket verfügbar.')
+    with Session() as db:
+        transaction(db)
+        token=secrets.token_urlsafe(32);tenant='goethe-'+uuid.uuid4().hex[:12]
+        hotel=Hotel(tenant=tenant,name='Goethe Hotel Bad Pyrmont · synthetisches Szenario',settings=json.dumps({'scenario':'goethe-bad-pyrmont'}));db.add(hotel);db.flush()
+        roles=['administrator','reception','reception','kitchen','kitchen','housekeeping','housekeeping','housekeeping']
+        for index,assigned in enumerate(roles):
+            db.add(User(id=uid(),username=f'goethe-{tenant[-6:]}-{index+1}',password_hash=hash_password(secrets.token_urlsafe(32)),role='hotel_'+assigned,tenant=tenant))
+        db.flush();owner=db.scalar(select(User).where(User.tenant==tenant,User.role=='hotel_administrator'));seed_goethe(db,owner)
+        employees=rows(db,Employee,tenant);users=list(db.scalars(select(User).where(User.tenant==tenant).order_by(User.username)))
+        for employee,index in zip(employees,range(8)): employee.user_id=users[index].id
+        grant=DemoGrant(token_hash=session_hash(token),tenant=tenant,expires=int(time.time()+7200));db.add(grant);db.add(ModuleConfig(tenant=tenant,modules=json.dumps({'hotel_ai':True,'business_ai':False,'voice_ai':'simulation','automation':'preview','creative_ai':False,'deutschz_ai':False})));db.flush()
+        selected={'management':'hotel_administrator','reception':'hotel_reception','kitchen':'hotel_kitchen','housekeeping':'hotel_housekeeping_lead'}[input.role]
+        user=db.scalar(select(User).where(User.tenant==tenant,User.role==selected));value=attach_session(db,user,response);db.commit();response.set_cookie('werkz_goethe_scenario',token,httponly=True,samesite='strict',max_age=7200);return value

@@ -58,6 +58,56 @@ def seed(db,user):
     guest=rows(db,Guest,user.tenant)[0];add(db,HotelInvoice,user.tenant,guest_id=guest.id,amount_cents=17800,due=str(today-timedelta(days=3)))
     notify(db,user.tenant,'reception','SYNTHETISCHE DEMO · Anreise und Abreise prüfen.')
     db.flush()
+
+def seed_goethe(db, user):
+    """Seed the isolated synthetic Goethe Hotel scenario exactly once."""
+    hotel = db.get(Hotel, user.tenant)
+    if not hotel:
+        hotel = Hotel(tenant=user.tenant, name='Goethe Hotel Bad Pyrmont · synthetisches Szenario',
+                      settings=json.dumps({'scenario':'goethe-bad-pyrmont','rooms':19,'employees':8,
+                                           'elevator':False,'garden':True,'library':True,'wellness_optional':True,
+                                           'rest_hours':11,'max_shift_hours':10}))
+        db.add(hotel); db.flush()
+    settings = json.loads(hotel.settings or '{}')
+    if settings.get('scenario') == 'goethe-bad-pyrmont' and hotel.seeded:
+        return
+    hotel.seeded = 1
+    today = date.today()
+    for name in ['Rezeption','Küche','Housekeeping','Management','Frühstück','Externe Dienstleister']:
+        add(db, Department, user.tenant, name=name)
+    kinds = [add(db, RoomType, user.tenant, name=n, capacity=c, nightly_cents=p)
+             for n,c,p in [('Einzelzimmer Goethe',1,10900),('Doppelzimmer Park',2,14900),('Doppelzimmer Garten',2,16900),('Suite Bibliothek',3,22900)]]
+    rooms=[]
+    for index in range(19):
+        kind = kinds[0] if index < 5 else kinds[1] if index < 13 else kinds[2] if index < 18 else kinds[3]
+        rooms.append(add(db, Room, user.tenant, number=f'G{index+1:02}', type_id=kind.id))
+    employees=[]
+    people=[('Goethe-Inhaber','Management','owner'),('Rezeption A','Rezeption','reception'),('Rezeption B','Rezeption','reception'),
+            ('Küche A','Küche','food'),('Küche B','Küche','food'),('Housekeeping A','Housekeeping','cleaning'),
+            ('Housekeeping B','Housekeeping','cleaning'),('Housekeeping C','Housekeeping','cleaning')]
+    for name,department,qualification in people:
+        employees.append(add(db, Employee, user.tenant, name='SYNTHETISCH · '+name, department=department, qualification=qualification))
+    for index in range(10):
+        guest=add(db, Guest, user.tenant, name=f'SYNTHETISCH · Goethegast {index+1:02}', contact=f'goethe{index+1}@hotel.example.invalid', notes='Synthetische Testdaten')
+        room=rooms[index % 15]
+        arrival=today-timedelta(days=1) if index<4 else today if index<7 else today+timedelta(days=1)
+        departure=today+timedelta(days=1 if index<7 else 3)
+        reservation=add(db, Reservation, user.tenant, guest_id=guest.id, room_id=room.id, arrival=str(arrival), departure=str(departure), persons=1+(index%2), breakfast=1, state='checked_in' if index<4 else 'confirmed', nightly_cents=10900+(index%3)*2000)
+        if index<4: add(db, Stay, user.tenant, reservation_id=reservation.id)
+    rooms[7].cleaning='dirty'; add(db, HousekeepingTask, user.tenant, room_id=rooms[7].id, employee_id=employees[5].id, priority='urgent', comment='Hohe Belastung: Anreise heute')
+    rooms[8].cleaning='dirty'; add(db, HousekeepingTask, user.tenant, room_id=rooms[8].id, employee_id=employees[6].id, priority='high', comment='Fehlende Reinigungskraft simuliert')
+    rooms[12].blocked='SYNTHETISCH · Dusche defekt'; add(db, MaintenanceTicket, user.tenant, room_id=rooms[12].id, title='SYNTHETISCH · Dusche reparieren', blocking=1, priority='urgent', report='Zimmer vor Reparatur nicht verkaufen')
+    supplier=add(db, Supplier, user.tenant, name='SYNTHETISCH · Externer Gebäudeservice', contact='dienstleister@example.invalid')
+    add(db, PurchaseRequest, user.tenant, item_id=None, supplier_id=supplier.id, quantity=1, state='pending') if False else None
+    for name,quantity,minimum in [('Brot',2400,5000),('Eier',18,30),('Handtücher',42,60)]:
+        add(db, InventoryItem, user.tenant, name=name, location='Goethe Hotel Lager', unit='Stück', quantity=quantity, minimum=minimum, unit_cents=10, batch='SYN-GOETHE')
+    add(db, KitchenTask, user.tenant, title='SYNTHETISCH · Frühstück für hohe Belegung vorbereiten', day=str(today))
+    for employee in employees:
+        add(db, Shift, user.tenant, employee_id=employee.id, start=str(today)+'T06:00:00+00:00', end=str(today)+'T14:00:00+00:00')
+    add(db, GuestRequest, user.tenant, room_id=rooms[0].id, kind='accessibility', text='SYNTHETISCH · Unterstützung wegen fehlendem Aufzug')
+    add(db, MaintenanceTicket, user.tenant, room_id=None, title='SYNTHETISCH · Technischen Notfall an externen Fachbetrieb eskalieren', blocking=0, priority='urgent', report='Angebot und Termin vor Beauftragung dokumentieren')
+    notify(db, user.tenant, 'reception', 'SYNTHETISCH · Goethe-Szenario: Anreisen, Defekt und fehlender Aufzug prüfen.')
+    db.flush()
 def own_employee(db,user):return db.scalar(select(Employee).where(Employee.tenant==user.tenant,Employee.user_id==user.id))
 def allowed_task(db,user,id):
     require(user,'housekeeping','housekeeping_own');task=get(db,HousekeepingTask,id,user.tenant)

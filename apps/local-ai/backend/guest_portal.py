@@ -5,6 +5,7 @@ from fastapi import APIRouter,Depends,HTTPException,Request,Response
 from pydantic import BaseModel,Field
 from sqlalchemy import select,text,delete
 from .db import Session,User,MODE,now
+from .write_lock import begin_write
 from .security import current_user,session_hash
 from .modules.registry import guard,audit
 from .modules.hotel.service import get,rows,require,serialize,notify,uid,seed
@@ -31,7 +32,7 @@ def preference(id:str,input:PreferenceInput,user=Depends(hotel_permission)):
     if input.category not in PREFERENCES or input.value not in PREFERENCES[input.category]:raise HTTPException(400,'Nur ausdrücklich angebotene, servicebezogene Auswahlwerte sind zulässig.')
     if input.scope=='permanent' and len(input.consent.strip())<10:raise HTTPException(400,'Dauerhafte Präferenz benötigt dokumentierte freiwillige Freigabe und Information.')
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));get(db,Guest,id,user.tenant);stay=get(db,Reservation,input.stay_id,user.tenant)
+        begin_write(db);get(db,Guest,id,user.tenant);stay=get(db,Reservation,input.stay_id,user.tenant)
         if stay.guest_id!=id:raise HTTPException(400,'Aufenthalt gehört nicht zu diesem Gast.')
         expiry=str(date.today()+timedelta(days=input.days)) if input.scope=='permanent' else stay.departure if input.scope=='stay' else str(date.today()+timedelta(days=1))
         row=GuestPreference(id=uid(),tenant=user.tenant,guest_id=id,stay_id=stay.id,category=input.category,value=input.value,scope=input.scope,consent=input.consent if input.scope=='permanent' else '',expires=expiry);db.add(row);audit(db,user,'hotel.preference.created',row.id);db.commit();return serialize(row)
@@ -82,7 +83,7 @@ def issue_code(id:str,input:Confirmation,user=Depends(hotel_permission)):
     require(user,'reception')
     if not input.confirmed:raise HTTPException(400,'Zugangsausgabe bestätigen.')
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));reservation=get(db,Reservation,id,user.tenant)
+        begin_write(db);reservation=get(db,Reservation,id,user.tenant)
         if reservation.state!='checked_in':raise HTTPException(409,'Portalzugang nur für aktuell eingecheckten Aufenthalt.')
         for old in rows(db,PortalAccess,user.tenant):
             if old.reservation_id==id:old.revoked=1
@@ -135,7 +136,7 @@ class GuestOrderInput(BaseModel):
 def order(input:GuestOrderInput,access=Depends(guest_session)):
     if not input.confirmed:raise HTTPException(400,'Leistung, Gesamtpreis und Sonderwunsch vor Bestellung bestätigen.')
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));item=get(db,HotelMenu,input.item_id,access['tenant'])
+        begin_write(db);item=get(db,HotelMenu,input.item_id,access['tenant'])
         if not item.available:raise HTTPException(409,'Leistung ist nicht mehr verfügbar.')
         if item.price_cents!=input.unit_price_cents:raise HTTPException(409,'Preis hat sich geändert. Angebot neu laden und ausdrücklich bestätigen.')
         # Reservation-scoped key: guest access is not a staff principal.
@@ -172,7 +173,7 @@ def department_orders(user=Depends(hotel_permission)):
 def advance(id:str,input:Advance,user=Depends(hotel_permission)):
     from .modules.hotel.service import check_revision
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));row=get(db,PortalOrder,id,user.tenant)
+        begin_write(db);row=get(db,PortalOrder,id,user.tenant)
         if not any(o['id']==id for o in department_orders(user)):raise HTTPException(403,'Bestellung nicht für diese Abteilung.')
         check_revision(row,input.revision);allowed={'received':{'accepted','cancelled','unavailable'},'accepted':{'preparing','cancelled','unavailable'},'preparing':{'en_route','cancelled'},'en_route':{'delivered'},'delivered':set(),'cancelled':set(),'unavailable':set()}
         if input.state not in allowed[row.state]:raise HTTPException(409,'Ungültiger Bestellstatuswechsel.')

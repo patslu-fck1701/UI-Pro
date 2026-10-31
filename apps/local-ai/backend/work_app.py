@@ -8,6 +8,7 @@ from fastapi import APIRouter,Depends,HTTPException,Response,Request
 from pydantic import BaseModel,Field
 from sqlalchemy import select,text,delete
 from .db import Session,User,LoginSession,ModuleConfig,MODE,PACKAGE
+from .write_lock import begin_write
 from .security import current_user,session_hash,hash_password,COOKIE_NAME
 from .modules.registry import check_module,configuration,audit
 from .platform_models import WorkRecord,TimeEntry,TimeCorrection
@@ -68,7 +69,7 @@ def context(db,user):
     s=snapshot(db,user);return {key:s[key] for key in ['industry','role','metrics','orders','tasks']}
 @router.get('/snapshot')
 def overview(user=Depends(permission)):
-    with Session() as db:db.execute(text('BEGIN IMMEDIATE'));result=snapshot(db,user);db.commit();return result
+    with Session() as db:begin_write(db);result=snapshot(db,user);db.commit();return result
 class WorkCommand(BaseModel):
     operation:Literal['customer.create','order.create','order.assign','order.start','order.complete','order.material','order.evidence','order.sign','order.invoice','quote.approve','stock.receive','stock.consume','vehicle.create','task.create','task.done','record.edit']
     target:str=Field(default='',max_length=80)
@@ -89,7 +90,7 @@ class WorkCommand(BaseModel):
 @router.post('/commands')
 def command(c:WorkCommand,user=Depends(permission)):
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));seed(db,user);existing=replay(db,user,c.idempotency_key,'work.'+c.operation,c.model_dump(mode='json'))
+        begin_write(db);seed(db,user);existing=replay(db,user,c.idempotency_key,'work.'+c.operation,c.model_dump(mode='json'))
         if existing is not None:return existing
         op=c.operation;row=None
         if op in {'customer.create','order.create','vehicle.create','task.create'}:
@@ -213,7 +214,7 @@ def reset(user=Depends(permission)):
     require_manage(user)
     if MODE!='demo':raise HTTPException(403,'Produktivdaten dürfen nicht zurückgesetzt werden.')
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));db.execute(delete(TimeCorrection).where(TimeCorrection.tenant==user.tenant,TimeCorrection.entry_id.in_(select(TimeEntry.id).where(TimeEntry.tenant==user.tenant,TimeEntry.industry==industry(user)))));db.execute(delete(TimeEntry).where(TimeEntry.tenant==user.tenant,TimeEntry.industry==industry(user)));db.execute(delete(WorkRecord).where(WorkRecord.tenant==user.tenant,WorkRecord.industry==industry(user),WorkRecord.kind!='demo_grant'));seed(db,user);bind_employees(db,user);audit(db,user,'work.demo.reset',user.tenant);db.commit();return {'reset':True}
+        begin_write(db);db.execute(delete(TimeCorrection).where(TimeCorrection.tenant==user.tenant,TimeCorrection.entry_id.in_(select(TimeEntry.id).where(TimeEntry.tenant==user.tenant,TimeEntry.industry==industry(user)))));db.execute(delete(TimeEntry).where(TimeEntry.tenant==user.tenant,TimeEntry.industry==industry(user)));db.execute(delete(WorkRecord).where(WorkRecord.tenant==user.tenant,WorkRecord.industry==industry(user),WorkRecord.kind!='demo_grant'));seed(db,user);bind_employees(db,user);audit(db,user,'work.demo.reset',user.tenant);db.commit();return {'reset':True}
 def bind_employees(db,user):
     for record in records(db,user,'employees'):
         data=json.loads(record.data);account=db.scalar(select(User).where(User.tenant==user.tenant,User.role==industry(user)+'_'+data['role']))
@@ -237,7 +238,7 @@ def demo_start(input:Profile,response:Response,request:Request):
     if MODE!='demo' or area not in ROLES:raise HTTPException(403,'Branchendemo ist hier nicht verfügbar.')
     if input.role not in ROLES[area]:raise HTTPException(400,'Vorführprofil prüfen.')
     with Session() as db:
-        db.execute(text('BEGIN IMMEDIATE'));grant_hash=session_hash(request.cookies.get('werkz_demo_'+area,''));grant=db.scalar(select(WorkRecord).where(WorkRecord.industry==area,WorkRecord.kind=='demo_grant',WorkRecord.data.like('%'+grant_hash+'%')))
+        begin_write(db);grant_hash=session_hash(request.cookies.get('werkz_demo_'+area,''));grant=db.scalar(select(WorkRecord).where(WorkRecord.industry==area,WorkRecord.kind=='demo_grant',WorkRecord.data.like('%'+grant_hash+'%')))
         if not grant or json.loads(grant.data)['expires']<time.time():
             tenant=str(uuid.uuid4())
             for role_name in ROLES[area]:db.add(User(id=str(uuid.uuid4()),tenant=tenant,username='demo-'+tenant[:8]+'-'+role_name,password_hash=hash_password(secrets.token_urlsafe(32)),role=area+'_'+role_name))

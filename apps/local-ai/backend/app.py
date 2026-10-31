@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field,ConfigDict
 from sqlalchemy import select, func, delete, or_
-from .db import Session, User, LoginSession, Chat, ChatKnowledge, Message, Document, Prompt, Action, ROOT, DATA, PACKAGE, MODE, now
+from .db import Session, User, LoginSession, Chat, ChatKnowledge, Message, Document, Prompt, Action, ROOT, DATA, PACKAGE, MODE, POSTGRES_ENABLED, now
 from .security import hash_password, verify_password, session_hash, current_user,COOKIE_NAME
 from .analysis import inspect_file, build_prompt
 from . import engine
@@ -35,8 +35,16 @@ from .speech import router as speech_router
 app.include_router(speech_router)
 from .modules.hotel.router import router as hotel_router
 from .modules.hotel.migrate import migrate as migrate_hotel
-migrate_hotel()
+# Local SQLite installations retain their self-contained upgrade behavior.
+# PostgreSQL releases are migrated only by the explicit operator command; merely
+# importing or starting the web application must never mutate a release database.
+if not POSTGRES_ENABLED:
+    migrate_hotel()
 app.include_router(hotel_router)
+from .modules.hotel.assistant import router as hotel_assistant_router
+app.include_router(hotel_assistant_router)
+from .modules.hotel.bridge_gateway import router as synthetic_bridge_router
+app.include_router(synthetic_bridge_router)
 from .time_service import router as time_router
 from .guest_portal import router as guest_router
 from .work_app import router as work_router
@@ -70,7 +78,9 @@ async def local_boundary(request,call_next):
         return JSONResponse({'detail':'Betreibereinrichtung ist in dieser Testinstanz gesperrt.'},status_code=403)
     if request.method in {'POST','PUT','PATCH','DELETE'}:
         allowed_origins={PUBLIC_ORIGIN} if ONLINE_TEST else {str(request.base_url).rstrip('/'),'http://127.0.0.1:5173','http://localhost:5173'}
-        if request.headers.get('origin') not in allowed_origins:
+        signed_synthetic_bridge=(os.environ.get('WERKZ_SYNTHETIC_BRIDGE')=='1'
+                                 and request.url.path.startswith('/api/public/local-ai/'))
+        if not signed_synthetic_bridge and request.headers.get('origin') not in allowed_origins:
             return JSONResponse({'detail':'Ungültige Anfrageherkunft.'},status_code=403)
         try:body_size=int(request.headers.get('content-length','0') or 0)
         except ValueError:return JSONResponse({'detail':'Ungültige Anfragelänge.'},status_code=400)
@@ -90,6 +100,23 @@ async def local_boundary(request,call_next):
 class Credentials(BaseModel):
     username: str=Field(min_length=3,max_length=64,pattern=r'^[a-zA-Z0-9_.-]+$')
     password: str=Field(min_length=4,max_length=128)
+class LocalPinCredentials(BaseModel):
+    pin: str=Field(min_length=4,max_length=128)
+
+def local_pin_guard(request:Request):
+    if PACKAGE!='personal' or ONLINE_TEST or POSTGRES_ENABLED:
+        raise HTTPException(403,'PIN-only ist nur für die persönliche lokale Installation verfügbar.')
+    if not request.client or request.client.host not in {'127.0.0.1','::1','testclient'}:
+        raise HTTPException(403,'PIN-only erfordert einen lokalen Rechner.')
+    if request.url.hostname not in {'127.0.0.1','localhost','testserver'}:
+        raise HTTPException(403,'PIN-only erfordert eine lokale Herkunft.')
+
+def local_pin_operator(db):
+    operators=list(db.scalars(select(User).limit(2)))
+    if len(operators)!=1 or operators[0].role!='admin':
+        raise HTTPException(409,'PIN-only benötigt genau ein lokales Betreiberkonto.')
+    return operators[0]
+
 def safe_user(user):
     return {'id':user.id,'username':user.username,'role':user.role,'tenant':user.tenant,'modules':configuration(user.tenant)}
 
@@ -126,8 +153,13 @@ def require_admin(user):
 
 @app.get('/api/setup')
 def setup_status():
-    if ONLINE_TEST:return {'required':False}
-    with Session() as db: return {'required':db.scalar(select(func.count()).select_from(User))==0}
+    if ONLINE_TEST:return {'required':False,'local_pin_mode':False}
+    with Session() as db:
+        users=list(db.scalars(select(User).limit(2)))
+        return {'required':len(users)==0,
+                'local_pin_mode':(PACKAGE=='personal' and not POSTGRES_ENABLED
+                                  and (not users or (len(users)==1 and users[0].role=='admin')))}
+
 @app.post('/api/setup',status_code=201)
 def setup(input:Credentials):
     with setup_lock,Session() as db:
@@ -135,6 +167,18 @@ def setup(input:Credentials):
         user=User(id=str(uuid.uuid4()),username=input.username,password_hash=hash_password(input.password),tenant=str(uuid.uuid4()),role='admin')
         db.add(user);db.commit()
         return safe_user(user)
+@app.post('/api/local-pin/setup',status_code=201)
+def local_pin_setup(input:LocalPinCredentials,request:Request):
+    local_pin_guard(request)
+    return setup(Credentials(username='werkz-local-owner',password=input.pin))
+
+@app.post('/api/local-pin/login')
+def local_pin_login(input:LocalPinCredentials,request:Request,response:Response):
+    local_pin_guard(request)
+    with Session() as db:
+        username=local_pin_operator(db).username
+    return login(Credentials(username=username,password=input.pin),request,response)
+
 @app.post('/api/login')
 def login(input:Credentials,request:Request,response:Response):
     key=request.client.host if request.client else 'local'
@@ -169,6 +213,29 @@ async def health():
         return {'app':'ok','name':'WERKZ AI','package':PACKAGE,'mode':MODE,'engine':'ready','models':[row['id'] for row in rows],'localOnly':True}
     except (httpx_error_types()):
         return {'app':'ok','name':'WERKZ AI','package':PACKAGE,'mode':MODE,'engine':'offline','models':[],'localOnly':True}
+
+@app.get('/api/ready')
+def ready():
+    """Deployment readiness without exposing credentials or business data."""
+    from sqlalchemy import text
+    try:
+        with Session() as db:
+            db.execute(text('SELECT 1'))
+            try:
+                revision=db.execute(text('SELECT version_num FROM hotel_alembic_version')).scalar_one_or_none()
+            except Exception:
+                db.rollback()
+                revision=None
+        database='ready'
+    except Exception:
+        database='unavailable'
+        revision=None
+    migration='current' if revision=='hotel_004' else 'required'
+    ready=database=='ready' and migration=='current'
+    payload={'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
+             'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,
+             'online_test':ONLINE_TEST,'migration':migration}
+    return payload if ready else JSONResponse(payload,status_code=503)
 def httpx_error_types():
     import httpx
     return (httpx.HTTPError,OSError,ValueError)

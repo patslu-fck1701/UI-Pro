@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from sqlalchemy import create_engine, String, Text, Integer, Float, ForeignKey, event
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,12 +12,35 @@ if PACKAGE not in {'personal','handwerk-demo','hotel-demo','schrotties-demo','ho
     raise RuntimeError('Ungültiges Paket oder Betriebsmodus.')
 DATA = Path(os.environ.get('WERKZ_AI_DATA', ROOT / 'data')) / (PACKAGE+'-'+MODE)
 DATA.mkdir(parents=True, exist_ok=True)
-engine = create_engine('sqlite:///' + str(DATA / 'werkz-ai.sqlite3'), connect_args={'check_same_thread': False})
-@event.listens_for(engine, 'connect')
-def configure(connection, _):
-    connection.execute('PRAGMA foreign_keys=ON')
-    connection.execute('PRAGMA journal_mode=WAL')
-    connection.execute('PRAGMA busy_timeout=5000')
+
+# PostgreSQL is opt-in for the EXISTING Hotel test program only. No database,
+# public deployment, or customer data is changed merely by importing this module.
+POSTGRES_ENABLED=os.environ.get('WERKZ_HOTEL_POSTGRES_ENABLED')=='1'
+if POSTGRES_ENABLED:
+    if PACKAGE!='hotel' or MODE!='production':
+        raise RuntimeError('PostgreSQL erfordert expliziten Hotel-Produktionsmodus.')
+    if os.environ.get('WERKZ_HOTEL_DB_SCHEMA')!='werkz_hotel_test':
+        raise RuntimeError('Isoliertes Hotel-Testschema nicht freigegeben.')
+    raw_url=os.environ.get('WERKZ_HOTEL_DATABASE_URL','')
+    if not raw_url:
+        raise RuntimeError('Hotel-PostgreSQL-Verbindung nicht konfiguriert.')
+    db_url=make_url(raw_url)
+    if db_url.drivername not in {'postgresql','postgresql+psycopg'}:
+        raise RuntimeError('Nur PostgreSQL ist fuer das Hotel-Testschema zulaessig.')
+    # The designated schema must ALREADY EXIST and be privately provisioned.
+    # Never create a schema or migrate the shared/public schema implicitly.
+    engine=create_engine(db_url.set(drivername='postgresql+psycopg'),
+                         connect_args={'options':'-csearch_path=werkz_hotel_test'},
+                         pool_pre_ping=True,hide_parameters=True)
+else:
+    engine = create_engine('sqlite:///' + str(DATA / 'werkz-ai.sqlite3'), connect_args={'check_same_thread': False})
+
+if not POSTGRES_ENABLED:
+    @event.listens_for(engine, 'connect')
+    def configure(connection, _):
+        connection.execute('PRAGMA foreign_keys=ON')
+        connection.execute('PRAGMA journal_mode=WAL')
+        connection.execute('PRAGMA busy_timeout=5000')
 Session = sessionmaker(engine, expire_on_commit=False)
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -95,4 +119,5 @@ class Audit(Base):
     event: Mapped[str]=mapped_column(String)
     target: Mapped[str]=mapped_column(String)
     created: Mapped[str]=mapped_column(String,default=now)
-Base.metadata.create_all(engine)
+if not POSTGRES_ENABLED or os.environ.get('WERKZ_HOTEL_MIGRATION_CONTEXT')=='operator-cli':
+    Base.metadata.create_all(engine)
