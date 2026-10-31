@@ -73,6 +73,7 @@ class OutboundAI {
     catch(error){throw new Error(error.message==='MODEL_TIMEOUT'?'MODEL_TIMEOUT':'MODEL_UNAVAILABLE');}
     if(Date.parse(job.expires_at)<=this.clock())return {state:'expired'};
     const completed=await this.post('/api/public/local-ai/complete',{device_id:this.identity.device_id,request_id:job.request_id,lease_id:job.lease_id,state:'succeeded',...result});
+    if(!completed||!['succeeded','complete'].includes(completed.state))throw new Error('BRIDGE_UNAVAILABLE');
     return {state:completed.state||'succeeded',request_id:job.request_id};
   }
   async once(){
