@@ -41,7 +41,10 @@ def test_revoked_record_never_leaks_from_stale_index(knowledge):
 def test_tampered_index_cannot_replace_source_text(knowledge):
     root,port=knowledge
     with sqlite3.connect(root/'.aiz-local/index.sqlite3') as db:db.execute("UPDATE lessons SET summary='UNAPPROVED' WHERE id='werkz-test'")
-    with pytest.raises(KnowledgeUnavailable):port.search('Neustart')
+    result=port.search('Neustart')
+    assert result['results']
+    assert all(row['summary']!='UNAPPROVED' for row in result['results'])
+    assert all(row['summary']=='Synthetischer Wiederanlauf' for row in result['results'])
 
 def test_changed_source_code_is_not_executed(knowledge):
     root,port=knowledge;(root/'aiz/knowledge.py').write_text('raise RuntimeError("must not execute")',encoding='utf-8')

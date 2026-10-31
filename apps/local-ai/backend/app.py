@@ -74,7 +74,9 @@ async def local_boundary(request,call_next):
         return JSONResponse({'detail':'Betreibereinrichtung ist in dieser Testinstanz gesperrt.'},status_code=403)
     if request.method in {'POST','PUT','PATCH','DELETE'}:
         allowed_origins={PUBLIC_ORIGIN} if ONLINE_TEST else {str(request.base_url).rstrip('/'),'http://127.0.0.1:5173','http://localhost:5173'}
-        if request.headers.get('origin') not in allowed_origins:
+        signed_synthetic_bridge=(os.environ.get('WERKZ_SYNTHETIC_BRIDGE')=='1'
+                                 and request.url.path.startswith('/api/public/local-ai/'))
+        if not signed_synthetic_bridge and request.headers.get('origin') not in allowed_origins:
             return JSONResponse({'detail':'Ungültige Anfrageherkunft.'},status_code=403)
         try:body_size=int(request.headers.get('content-length','0') or 0)
         except ValueError:return JSONResponse({'detail':'Ungültige Anfragelänge.'},status_code=400)

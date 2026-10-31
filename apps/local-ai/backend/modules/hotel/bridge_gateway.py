@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import calendar
 import json
 import os
 import threading
@@ -132,7 +133,7 @@ async def complete(request: Request):
             or job["device_id"] != device or job["tenant"] != tenant):
         raise HTTPException(403, "BRIDGE_LEASE_DENIED")
     expiry = time.strptime(job["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
-    if time.time() >= time.mktime(expiry):
+    if time.time() >= calendar.timegm(expiry):
         with _lock:
             row["state"] = "expired"
         raise HTTPException(410, "BRIDGE_LEASE_EXPIRED")
