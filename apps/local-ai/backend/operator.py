@@ -7,6 +7,7 @@ from .modules.registry import configuration
 from .db import ROOT,PACKAGE,MODE
 from .knowledge_port import KnowledgeSearchPort,KnowledgeUnavailable
 from . import engine
+from .modules.hotel import qwen_bridge
 
 router=APIRouter(prefix='/api/operator',tags=['operator'])
 port=KnowledgeSearchPort(ROOT/'config'/'aiz-binding.json')
@@ -22,6 +23,7 @@ async def domains(user=Depends(admin)):
     except Exception:model_ready=False
     values=[
         {'id':'werkz','state':'AVAILABLE','source':'/api/modules','package':PACKAGE,'mode':MODE,'modules':modules,'local_model_ready':model_ready},
+        {'id':'qwen-bridge','state':qwen_bridge.status()['state'],'source':'configured outbound bridge','bridge':qwen_bridge.status()},
         {'id':'kundenz','state':'PARTIAL','source':'existing WerkZ authentication and module guards','session_verified':True,'external_identity_federation':False},
         {'id':'aiz',**knowledge},
         {'id':'master-control','state':'NOT_VERIFIED','source':'/api/operator/domains','independent_monitor':False},

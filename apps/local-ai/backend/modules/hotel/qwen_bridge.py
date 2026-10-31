@@ -5,11 +5,24 @@ Only the user's question is sent; redirects, arbitrary URLs and path leakage are
 rejected before a response can reach the Hotel API.
 """
 from urllib.parse import urlparse
+import os
 
 import httpx
 
 
 MAX_ANSWER_CHARS = 4500
+
+
+def status() -> dict:
+    """Return non-secret bridge readiness metadata for operator readbacks."""
+    configured = bool(os.environ.get("WERKZ_QWEN_BRIDGE_URL", "").strip())
+    return {
+        "state": "NOT_VERIFIED" if configured else "NOT_CONNECTED",
+        "configured": configured,
+        "authenticated": False,
+        "last_successful_check": None,
+        "error_category": None if configured else "BRIDGE_URL_MISSING",
+    }
 
 
 def _bridge_url() -> str:
