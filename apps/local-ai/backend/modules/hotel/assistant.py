@@ -6,6 +6,7 @@ The public synthetic demo is never allowed to spend OpenAI credits.
 from contextlib import aclosing
 from math import ceil
 import os
+from pathlib import Path
 from typing import Literal
 import uuid
 
@@ -196,7 +197,7 @@ async def _local(question: str) -> tuple[str, str]:
         answer = "".join(chunks)
         if not answer.strip():
             raise ValueError("Empty answer")
-        return answer, model
+        return answer, Path(model).name
     except (httpx.HTTPError, OSError, ValueError, LookupError, KeyError, TypeError):
         raise HTTPException(503, "Das lokale Qwen-Modell ist nicht bereit.") from None
 

@@ -91,3 +91,17 @@ def test_public_online_mode_rejects_direct_local_engine(monkeypatch):
     with pytest.raises(HTTPException) as error:
         asyncio.run(ai._local("Test"))
     assert error.value.status_code == 503
+
+
+def test_local_provider_redacts_model_path(monkeypatch):
+    async def models():
+        return [{"id": r"D:\\AI-Runtime\\Models\\Qwen3.5-9B-Q4_K_M.gguf"}]
+    async def tokens(*args, **kwargs):
+        yield "Bereit."
+    monkeypatch.delenv("WERKZ_ONLINE_TEST", raising=False)
+    monkeypatch.setattr(ai.engine, "models", models)
+    monkeypatch.setattr(ai.engine, "tokens", tokens)
+    answer, model = asyncio.run(ai._local("Synthetischer Test"))
+    assert answer == "Bereit."
+    assert model == "Qwen3.5-9B-Q4_K_M.gguf"
+    assert "\\" not in model and "/" not in model
