@@ -151,4 +151,32 @@ with TestClient(app, headers={"origin": "http://testserver"}) as client:
 # Prove data survives BOTH connection disposal and a new Python process.
 engine.dispose()
 subprocess.run([sys.executable, __file__, "verify"], check=True, timeout=90)
-print("PASS: PostgreSQL concurrent booking collision, orphan rollback and new-process readback")
+
+# Exercise the reversible, additive Hotel AI usage migration only against
+# this disposable CI database, then verify existing reservations survive.
+from alembic import command
+from alembic.config import Config
+from backend.db import ROOT
+
+with engine.begin() as connection:
+    cfg = Config()
+    cfg.set_main_option("script_location", str(ROOT / "migrations"))
+    cfg.attributes["connection"] = connection
+    assert connection.exec_driver_sql(
+        "SELECT version_num FROM hotel_alembic_version"
+    ).scalar() == "hotel_004"
+    command.downgrade(cfg, "platform_003")
+    assert not inspect(connection).has_table("hotel_ai_usage")
+    assert connection.exec_driver_sql(
+        "SELECT version_num FROM hotel_alembic_version"
+    ).scalar() == "platform_003"
+    command.upgrade(cfg, "head")
+    assert inspect(connection).has_table("hotel_ai_usage")
+    assert connection.exec_driver_sql(
+        "SELECT version_num FROM hotel_alembic_version"
+    ).scalar() == "hotel_004"
+    assert connection.scalar(select(func.count()).select_from(Reservation)) == 2
+    assert connection.scalar(select(func.count()).select_from(Guest)) == 2
+
+engine.dispose()
+print("PASS: PostgreSQL concurrent booking, tenant isolation, migration rollback/upgrade and persistence")
