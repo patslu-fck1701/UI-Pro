@@ -21,6 +21,7 @@ from ..registry import guard
 from .service import require
 from .openai_credentials import openai_api_key
 from .models import HotelAiUsage
+from . import qwen_bridge
 from sqlalchemy import func, select
 
 router = APIRouter(prefix="/api/hotel/ai", tags=["hotel_ai"])
@@ -97,14 +98,26 @@ def _reserve_openai(user, question: str) -> str:
         return row.id
 
 
-def _finish_openai(reservation_id: str, state: str, usage: dict | None = None) -> None:
+def _usage_count(value) -> int:
+    """Parse provider usage defensively; malformed telemetry must not break the request."""
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
+def _finish_openai(tenant: str, reservation_id: str, state: str, usage: dict | None = None) -> None:
     usage = usage or {}
-    input_tokens = max(0, int(usage.get("prompt_tokens", 0) or 0))
-    output_tokens = max(0, int(usage.get("completion_tokens", 0) or 0))
+    input_tokens = _usage_count(usage.get("prompt_tokens", 0))
+    output_tokens = _usage_count(usage.get("completion_tokens", 0))
     actual = ceil(input_tokens * 0.1 + output_tokens * 0.5)
     with Session() as db:
         begin_write(db)
-        row = db.get(HotelAiUsage, reservation_id)
+        row = db.scalar(select(HotelAiUsage).where(
+            HotelAiUsage.id == reservation_id,
+            HotelAiUsage.tenant == tenant,
+            HotelAiUsage.provider == "openai",
+        ))
         if row:
             row.state = state
             row.input_tokens = input_tokens
@@ -179,7 +192,10 @@ async def _openai(question: str) -> tuple[str, str, dict]:
 
 async def _local(question: str) -> tuple[str, str]:
     if os.environ.get("WERKZ_ONLINE_TEST") == "1":
-        raise HTTPException(503, "Die private Qwen-Bridge ist online noch nicht verbunden.")
+        try:
+            return await qwen_bridge.ask(question)
+        except (httpx.HTTPError, OSError, ValueError, LookupError, KeyError, TypeError):
+            raise HTTPException(503, "Die private Qwen-Bridge ist online nicht bereit.") from None
     try:
         models = await engine.models()
         if not models:
@@ -216,9 +232,9 @@ async def ask(input: HotelQuestion, user=Depends(permission)):
         try:
             answer, model, usage = await _openai(input.question)
         except HTTPException:
-            _finish_openai(reservation_id, "failed")
+            _finish_openai(user.tenant, reservation_id, "failed")
             raise
-        _finish_openai(reservation_id, "complete", usage)
+        _finish_openai(user.tenant, reservation_id, "complete", usage)
     else:
         answer, model = await _local(input.question)
     # No guest records, employee names, reservations or chat history read or sent.

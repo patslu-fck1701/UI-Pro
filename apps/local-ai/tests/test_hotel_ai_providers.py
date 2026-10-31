@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 from fastapi import HTTPException
 from backend.modules.hotel import assistant as ai
+from backend.modules.hotel import qwen_bridge
 
 
 def test_openai_cost_gate_needs_admin_key_and_explicit_operator_opt_in(monkeypatch):
@@ -93,6 +94,32 @@ def test_public_online_mode_rejects_direct_local_engine(monkeypatch):
     assert error.value.status_code == 503
 
 
+def test_online_qwen_bridge_sends_question_only_and_redacts_model_path(monkeypatch):
+    captured = []
+    class Response:
+        def raise_for_status(self): return None
+        def json(self): return {"answer": "Synthetische Bridge-Antwort", "model": r"C:\\Models\\Qwen.gguf"}
+    class Client:
+        def __init__(self, *args, **kwargs):
+            assert kwargs["trust_env"] is False and kwargs["follow_redirects"] is False
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return False
+        async def post(self, url, *, json): captured.append((url, json)); return Response()
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "https://bridge.example.test/v1/ask")
+    monkeypatch.setattr(qwen_bridge.httpx, "AsyncClient", Client)
+    answer, model = asyncio.run(qwen_bridge.ask("synthetische Frage"))
+    assert answer == "Synthetische Bridge-Antwort"
+    assert model == "Qwen.gguf"
+    assert captured == [("https://bridge.example.test/v1/ask", {"question": "synthetische Frage"})]
+
+
+def test_online_qwen_bridge_rejects_non_https_and_redirects(monkeypatch):
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "http://bridge.example.test/ask")
+    with pytest.raises(ValueError): asyncio.run(qwen_bridge.ask("test"))
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "https://bridge.example.test/ask?next=evil")
+    with pytest.raises(ValueError): asyncio.run(qwen_bridge.ask("test"))
+
+
 def test_local_provider_redacts_model_path(monkeypatch):
     async def models():
         return [{"id": r"D:\\AI-Runtime\\Models\\Qwen3.5-9B-Q4_K_M.gguf"}]
@@ -105,3 +132,15 @@ def test_local_provider_redacts_model_path(monkeypatch):
     assert answer == "Bereit."
     assert model == "Qwen3.5-9B-Q4_K_M.gguf"
     assert "\\" not in model and "/" not in model
+
+
+@pytest.mark.parametrize("value", [None, "", "not-a-number", object(), -4])
+def test_malformed_provider_usage_is_safe(value):
+    # Provider telemetry is untrusted. It must never turn a completed request
+    # into a 500 or make cost accounting negative.
+    assert ai._usage_count(value) == 0
+
+
+def test_provider_usage_coerces_numeric_strings():
+    assert ai._usage_count("17") == 17
+    assert ai._usage_count(3.9) == 3
