@@ -25,6 +25,9 @@ jobs:
       - name: Verify full core
         if: github.ref != 'refs/heads/test/mobile-assistant-render'
         run: npm run verify
+      - name: Verify outbound worker Ed25519 contract (synthetic)
+        if: github.ref != 'refs/heads/test/mobile-assistant-render'
+        run: node --test apps/local-ai/tests/outbound_bridge_contract.node.test.cjs
       - name: Schrotties · Backend syntax
         if: github.ref == 'refs/heads/test/mobile-assistant-render'
         run: |
