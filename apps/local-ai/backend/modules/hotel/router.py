@@ -5,13 +5,14 @@ from fastapi import APIRouter,Depends,HTTPException,Request,Response
 from pydantic import BaseModel,Field
 from sqlalchemy import text,select,delete,func
 from ...db import Session,User,LoginSession,ModuleConfig,MODE,PACKAGE,now
+from ...write_lock import begin_write
 from ...security import hash_password,session_hash,current_user,COOKIE_NAME
 from ..registry import guard,configuration,audit
 from .service import *
 
 router=APIRouter(prefix='/api/hotel',tags=['hotel_ai'])
 permission=guard('hotel_ai')
-def transaction(db):db.execute(text('BEGIN IMMEDIATE'))
+def transaction(db):begin_write(db)
 @router.get('/snapshot')
 def overview(user=Depends(permission)):
     with Session() as db:
