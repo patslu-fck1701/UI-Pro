@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 from datetime import date, timedelta
+from concurrent.futures import ThreadPoolExecutor
 
 from sqlalchemy.engine import make_url
 
@@ -50,9 +51,9 @@ with engine.connect() as connection:
 if len(sys.argv) > 1:
     with Session() as db:
         assert db.scalar(select(func.count()).select_from(Hotel)) == 1
-        assert db.scalar(select(func.count()).select_from(Room)) == 1
-        assert db.scalar(select(func.count()).select_from(Reservation)) == 1
-        assert db.scalar(select(func.count()).select_from(Guest)) == 1
+        assert db.scalar(select(func.count()).select_from(Room)) == 2
+        assert db.scalar(select(func.count()).select_from(Reservation)) == 2
+        assert db.scalar(select(func.count()).select_from(Guest)) == 2
         assert db.scalar(select(func.count()).select_from(HotelAiUsage)) == 0
     engine.dispose()
     print("PASS: isolated PostgreSQL schema, idempotent migrations and cross-process persistence")
@@ -94,7 +95,22 @@ with TestClient(app, headers={"origin": "http://testserver"}) as client:
     with Session() as db:
         assert db.scalar(select(func.count()).select_from(Guest)) == 1, "Rollback must remove duplicate guest"
 
+    # Real PostgreSQL concurrent booking race on a fresh room.
+    second_room = client.post("/api/hotel/rooms", json={
+        "number": "CI-102", "type_id": room_type.json()["id"],
+    })
+    assert second_room.status_code == 201, second_room.text
+    simultaneous = {**booking, "room_id": second_room.json()["id"]}
+
+    def race_booking(_):
+        with TestClient(app, headers={"origin": "http://testserver"}, cookies=client.cookies) as other:
+            return other.post("/api/hotel/reservations", json=simultaneous).status_code
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        statuses = sorted(pool.map(race_booking, range(2)))
+    assert statuses == [201, 409], f"Concurrent booking outcomes: {statuses}"
+
 # Prove data survives BOTH connection disposal and a new Python process.
 engine.dispose()
 subprocess.run([sys.executable, __file__, "verify"], check=True, timeout=90)
-print("PASS: PostgreSQL booking collision, orphan rollback and new-process readback")
+print("PASS: PostgreSQL concurrent booking collision, orphan rollback and new-process readback")
