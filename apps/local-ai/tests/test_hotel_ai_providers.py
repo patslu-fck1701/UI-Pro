@@ -47,9 +47,10 @@ def test_openai_provider_uses_fixed_endpoint_and_never_forwards_hotel_records(mo
             return Response()
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-test-key-only")
     monkeypatch.setattr(ai.httpx, "AsyncClient", Client)
-    answer, model = asyncio.run(ai._openai("Welche Uebergaben gibt es?"))
+    answer, model, usage = asyncio.run(ai._openai("Welche Uebergaben gibt es?"))
     assert answer == "Nur synthetischer Test."
     assert model == ai.CLOUD_MODEL
+    assert usage == {}
     assert len(calls) == 1
     endpoint, payload, headers = calls[0]
     assert endpoint == "https://api.openai.com/v1/chat/completions"

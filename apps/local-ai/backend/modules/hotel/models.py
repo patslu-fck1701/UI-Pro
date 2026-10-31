@@ -185,4 +185,15 @@ class DemoGrant(Base):
     tenant:Mapped[str]=mapped_column(ForeignKey('hotel_hotels.tenant'))
     expires:Mapped[int]=mapped_column(Integer)
 
+class HotelAiUsage(Row,Base):
+    __tablename__='hotel_ai_usage'
+    actor:Mapped[str]=mapped_column(ForeignKey('users.id'))
+    provider:Mapped[str]=mapped_column(String)
+    model:Mapped[str]=mapped_column(String)
+    state:Mapped[str]=mapped_column(String,default='reserved')
+    input_tokens:Mapped[int]=mapped_column(Integer,default=0)
+    output_tokens:Mapped[int]=mapped_column(Integer,default=0)
+    reserved_microusd:Mapped[int]=mapped_column(Integer)
+    actual_microusd:Mapped[int]=mapped_column(Integer,default=0)
+
 TABLES=[table for table in Base.metadata.sorted_tables if table.name.startswith('hotel_')]
