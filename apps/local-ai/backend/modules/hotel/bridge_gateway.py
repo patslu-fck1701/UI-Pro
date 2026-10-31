@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api/public/local-ai", tags=["synthetic_bridge"])
 _jobs: dict[str, dict] = {}
 _nonces: dict[str, float] = {}
 _lock = threading.Lock()
+FAILED_CODES = frozenset({"MODEL_TIMEOUT", "MODEL_UNAVAILABLE"})
 
 
 def _enabled() -> bool:
@@ -139,6 +140,13 @@ async def complete(request: Request):
         raise HTTPException(410, "BRIDGE_LEASE_EXPIRED")
     if state != "leased":
         raise HTTPException(409, "BRIDGE_JOB_ALREADY_COMPLETED")
+    if payload.get("state") == "failed":
+        error_code = payload.get("error_code")
+        if not isinstance(error_code, str) or error_code not in FAILED_CODES:
+            raise HTTPException(502, "BRIDGE_WORKER_FAILED")
+        with _lock:
+            row.update(state="failed", error_code=error_code)
+        return {"state": "failed"}
     answer, model = payload.get("answer"), payload.get("model", "Qwen")
     if payload.get("state") != "succeeded" or not isinstance(answer, str) or not answer.strip() or len(answer) > 4500 or not isinstance(model, str):
         raise HTTPException(502, "BRIDGE_WORKER_FAILED")

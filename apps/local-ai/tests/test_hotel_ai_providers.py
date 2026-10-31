@@ -139,6 +139,23 @@ def test_online_qwen_bridge_sends_question_only_and_redacts_model_path(monkeypat
     public = key.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
     bridge_protocol.verify_request(base64.b64encode(public).decode(), "POST", qwen_bridge.BRIDGE_ROUTE, timestamp,
                                    nonce, headers["x-werkz-signature"], body)
+    bridge_status=qwen_bridge.status()
+    assert bridge_status["state"]=="READY"
+    assert bridge_status["last_successful_check"]
+    assert bridge_status["error_category"] is None
+    class FailedClient:
+        def __init__(self,*args,**kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self,*args): return False
+        async def post(self,*args,**kwargs):
+            raise qwen_bridge.httpx.ConnectError("synthetic failure")
+    monkeypatch.setattr(qwen_bridge.httpx,"AsyncClient",FailedClient)
+    with pytest.raises(qwen_bridge.httpx.ConnectError):
+        asyncio.run(qwen_bridge.ask("synthetic failure"))
+    failed_status=qwen_bridge.status()
+    assert failed_status["state"]=="NOT_VERIFIED"
+    assert failed_status["last_successful_check"] is None
+    assert failed_status["error_category"]=="BRIDGE_REQUEST_FAILED"
 
 
 def test_bridge_protocol_rejects_tamper_replay_metadata_and_expiry():
@@ -157,6 +174,8 @@ def test_bridge_protocol_rejects_tamper_replay_metadata_and_expiry():
         bridge_protocol.verify_request(public, "POST", "/api/public/local-ai/ask", timestamp, nonce, signature, body+b" ")
     with pytest.raises(ValueError):
         bridge_protocol.verify_request(public, "POST", "/api/public/local-ai/ask", str(int(time.time())-200), nonce, signature, body)
+    with pytest.raises(ValueError, match="ROUTE_DENIED"):
+        bridge_protocol.canonical_message("POST", "/api/public/local-ai/evil", timestamp, nonce, body)
 
 
 def test_signed_hotel_gateway_worker_round_trip(monkeypatch):
@@ -219,6 +238,71 @@ def test_signed_hotel_gateway_worker_round_trip(monkeypatch):
     thread.join(timeout=3)
     assert not thread.is_alive()
     assert result["answer"]==("Qwen synthetic answer","Qwen.gguf")
+
+
+def test_failed_worker_completion_unblocks_ask_with_redacted_error(monkeypatch):
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    key = Ed25519PrivateKey.generate()
+    private = base64.b64encode(key.private_bytes(serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8, serialization.NoEncryption())).decode()
+    public = base64.b64encode(key.public_key().public_bytes(serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo)).decode()
+    monkeypatch.setenv("WERKZ_SYNTHETIC_BRIDGE", "1")
+    monkeypatch.setenv("WERKZ_SYNTHETIC_DEVICE_ID", "synthetic-device")
+    monkeypatch.setenv("WERKZ_SYNTHETIC_DEVICE_PUBLIC_KEY", public)
+    monkeypatch.setenv("WERKZ_SYNTHETIC_DEVICE_TENANT", "hotel-alpha")
+    bridge_gateway._jobs.clear(); bridge_gateway._nonces.clear()
+    client = TestClient(app)
+
+    def signed(path, payload):
+        body = json.dumps(payload, separators=(",", ":")).encode()
+        timestamp, nonce = str(int(time.time())), __import__("secrets").token_hex(16)
+        signature = qwen_bridge._sign(private, "synthetic-device", path, body.decode(), timestamp, nonce)
+        return client.post(path, content=body, headers={"content-type":"application/json",
+            "x-werkz-device":"synthetic-device", "x-werkz-timestamp":timestamp,
+            "x-werkz-nonce":nonce, "x-werkz-signature":signature})
+
+    result = {}
+    import threading
+    def hotel_request():
+        body = json.dumps({"device_id":"synthetic-device","question":"synthetic failure"},separators=(",", ":"))
+        timestamp, nonce = str(int(time.time())), __import__("secrets").token_hex(16)
+        signature = qwen_bridge._sign(private, "synthetic-device", "/api/public/local-ai/ask", body, timestamp, nonce)
+        result["response"] = client.post("/api/public/local-ai/ask", content=body, headers={"content-type":"application/json",
+            "x-werkz-device":"synthetic-device", "x-werkz-timestamp":timestamp,
+            "x-werkz-nonce":nonce, "x-werkz-signature":signature})
+    thread=threading.Thread(target=hotel_request);thread.start()
+    deadline=time.monotonic()+3
+    queued=None
+    while time.monotonic()<deadline:
+        with bridge_gateway._lock:
+            queued=next((row["job"] for row in bridge_gateway._jobs.values() if row["state"]=="queued"),None)
+        if queued: break
+        time.sleep(.02)
+    assert queued
+    assert signed("/api/public/local-ai/claim",{"device_id":"synthetic-device"}).status_code==200
+    completion=signed("/api/public/local-ai/complete",{"device_id":"synthetic-device",
+        "request_id":queued["request_id"],"lease_id":queued["lease_id"],"state":"failed","error_code":"MODEL_UNAVAILABLE"})
+    assert completion.status_code==200 and completion.json()=={"state":"failed"}
+    thread.join(timeout=3)
+    assert not thread.is_alive()
+    assert result["response"].status_code==503
+    assert result["response"].json()=={"detail":"BRIDGE_WORKER_UNAVAILABLE"}
+
+
+def test_cancelled_openai_request_closes_budget_reservation(monkeypatch):
+    user=SimpleNamespace(role="admin",tenant="hotel-alpha",id="owner")
+    finished=[]
+    monkeypatch.setattr(ai,"_cloud_allowed",lambda value: True)
+    monkeypatch.setattr(ai,"_reserve_openai",lambda value,question: "reservation-id")
+    monkeypatch.setattr(ai,"_finish_openai",lambda tenant,reservation,state,usage=None: finished.append((tenant,reservation,state,usage)))
+    async def cancelled(question):
+        raise asyncio.CancelledError
+    monkeypatch.setattr(ai,"_openai",cancelled)
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(ai.ask(ai.HotelQuestion(provider="openai",question="synthetic cancel"),user))
+    assert finished==[("hotel-alpha","reservation-id","cancelled",None)]
 
 
 def test_online_qwen_bridge_rejects_non_https_and_redirects(monkeypatch):

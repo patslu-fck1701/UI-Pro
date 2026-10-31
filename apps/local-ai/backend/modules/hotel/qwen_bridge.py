@@ -10,7 +10,9 @@ import hashlib
 import json
 import os
 import secrets
+import threading
 import time
+from datetime import datetime, timezone
 
 import httpx
 
@@ -18,17 +20,44 @@ import httpx
 MAX_ANSWER_CHARS = 4500
 BRIDGE_ORIGIN = "https://project--9081192e-6239-40a6-8f20-02296cff5c91-dev.lovable.app"
 BRIDGE_ROUTE = "/api/public/local-ai/ask"
+_status_lock = threading.Lock()
+_last_successful_check: str | None = None
+_last_error_category: str | None = None
+_last_status_identity: str | None = None
+
+
+def _status_identity() -> str:
+    value = os.environ.get("WERKZ_QWEN_BRIDGE_URL", "").strip()
+    device = os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID", "").strip()
+    return hashlib.sha256((value + "\n" + device).encode()).hexdigest()
+
+
+def _record(success: bool, category: str | None = None) -> None:
+    global _last_successful_check, _last_error_category, _last_status_identity
+    with _status_lock:
+        _last_status_identity = _status_identity()
+        if success:
+            _last_successful_check = datetime.now(timezone.utc).isoformat()
+            _last_error_category = None
+        else:
+            _last_successful_check = None
+            _last_error_category = category or "BRIDGE_UNAVAILABLE"
 
 
 def status() -> dict:
     """Return non-secret bridge readiness metadata for operator readbacks."""
     configured = bool(os.environ.get("WERKZ_QWEN_BRIDGE_URL", "").strip())
+    authenticated = bool(os.environ.get("WERKZ_QWEN_BRIDGE_PRIVATE_KEY") and os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID"))
+    with _status_lock:
+        matches = _last_status_identity == _status_identity()
+        last_successful_check = _last_successful_check if matches else None
+        error_category = _last_error_category if matches else None
     return {
-        "state": "NOT_VERIFIED" if configured and os.environ.get("WERKZ_QWEN_BRIDGE_PRIVATE_KEY") and os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID") else "NOT_CONNECTED",
+        "state": "READY" if configured and authenticated and last_successful_check and not error_category else "NOT_VERIFIED" if configured and authenticated else "NOT_CONNECTED",
         "configured": configured,
-        "authenticated": bool(os.environ.get("WERKZ_QWEN_BRIDGE_PRIVATE_KEY") and os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID")),
-        "last_successful_check": None,
-        "error_category": None if configured else "BRIDGE_URL_MISSING",
+        "authenticated": authenticated,
+        "last_successful_check": last_successful_check,
+        "error_category": error_category if configured else "BRIDGE_URL_MISSING",
     }
 
 
@@ -59,28 +88,33 @@ async def ask(question: str) -> tuple[str, str]:
     signature = _sign(private_key, device_id, route, body, timestamp, nonce) if private_key and device_id else ""
     if not signature or not device_id:
         raise ValueError("bridge device is not paired")
-    async with httpx.AsyncClient(timeout=httpx.Timeout(25.0, connect=5.0),
-                                 trust_env=False, follow_redirects=False) as client:
-        response = await client.post(
-            url,
-            content=body.encode("utf-8"),
-            headers={
-                "content-type": "application/json",
-                **_headers(device_id, signature, timestamp, nonce),
-            },
-        )
-        response.raise_for_status()
-        response_body = response.json()
-    if not isinstance(response_body, dict):
-        raise ValueError("invalid bridge response")
-    answer = response_body.get("answer")
-    model = response_body.get("model", "Qwen")
-    if not isinstance(answer, str) or not answer.strip() or len(answer) > MAX_ANSWER_CHARS:
-        raise ValueError("invalid bridge answer")
-    if not isinstance(model, str) or not model.strip():
-        raise ValueError("invalid bridge model")
-    # Never expose a local Windows/POSIX path returned by a bridge implementation.
-    return answer, model.replace("\\", "/").rsplit("/", 1)[-1][:200]
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(25.0, connect=5.0),
+                                     trust_env=False, follow_redirects=False) as client:
+            response = await client.post(
+                url,
+                content=body.encode("utf-8"),
+                headers={
+                    "content-type": "application/json",
+                    **_headers(device_id, signature, timestamp, nonce),
+                },
+            )
+            response.raise_for_status()
+            response_body = response.json()
+        if not isinstance(response_body, dict):
+            raise ValueError("invalid bridge response")
+        answer = response_body.get("answer")
+        model = response_body.get("model", "Qwen")
+        if not isinstance(answer, str) or not answer.strip() or len(answer) > MAX_ANSWER_CHARS:
+            raise ValueError("invalid bridge answer")
+        if not isinstance(model, str) or not model.strip():
+            raise ValueError("invalid bridge model")
+        _record(True)
+        # Never expose a local Windows/POSIX path returned by a bridge implementation.
+        return answer, model.replace("\\", "/").rsplit("/", 1)[-1][:200]
+    except Exception:
+        _record(False, "BRIDGE_REQUEST_FAILED")
+        raise
 
 
 def _sign(private_key: str, device_id: str, route: str, body: str, timestamp: str, nonce: str) -> str:

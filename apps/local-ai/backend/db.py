@@ -119,4 +119,5 @@ class Audit(Base):
     event: Mapped[str]=mapped_column(String)
     target: Mapped[str]=mapped_column(String)
     created: Mapped[str]=mapped_column(String,default=now)
-Base.metadata.create_all(engine)
+if not POSTGRES_ENABLED or os.environ.get('WERKZ_HOTEL_MIGRATION_CONTEXT')=='operator-cli':
+    Base.metadata.create_all(engine)

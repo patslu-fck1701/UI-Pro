@@ -12,10 +12,15 @@ import time
 
 MAX_CLOCK_SKEW_SECONDS = 90
 NONCE_PATTERN = re.compile(r"^[0-9a-f]{32}$")
+ALLOWED_ROUTES = frozenset({
+    "/api/public/local-ai/ask",
+    "/api/public/local-ai/claim",
+    "/api/public/local-ai/complete",
+})
 
 
 def canonical_message(method: str, path: str, timestamp: str, nonce: str, body: bytes) -> bytes:
-    if method != "POST" or not path.startswith("/api/public/local-ai/"):
+    if method != "POST" or path not in ALLOWED_ROUTES:
         raise ValueError("ROUTE_DENIED")
     if not timestamp.isdigit() or not NONCE_PATTERN.fullmatch(nonce):
         raise ValueError("INVALID_AUTH_METADATA")

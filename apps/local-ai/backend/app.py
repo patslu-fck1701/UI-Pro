@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field,ConfigDict
 from sqlalchemy import select, func, delete, or_
-from .db import Session, User, LoginSession, Chat, ChatKnowledge, Message, Document, Prompt, Action, ROOT, DATA, PACKAGE, MODE, now
+from .db import Session, User, LoginSession, Chat, ChatKnowledge, Message, Document, Prompt, Action, ROOT, DATA, PACKAGE, MODE, POSTGRES_ENABLED, now
 from .security import hash_password, verify_password, session_hash, current_user,COOKIE_NAME
 from .analysis import inspect_file, build_prompt
 from . import engine
@@ -35,7 +35,11 @@ from .speech import router as speech_router
 app.include_router(speech_router)
 from .modules.hotel.router import router as hotel_router
 from .modules.hotel.migrate import migrate as migrate_hotel
-migrate_hotel()
+# Local SQLite installations retain their self-contained upgrade behavior.
+# PostgreSQL releases are migrated only by the explicit operator command; merely
+# importing or starting the web application must never mutate a release database.
+if not POSTGRES_ENABLED:
+    migrate_hotel()
 app.include_router(hotel_router)
 from .modules.hotel.assistant import router as hotel_assistant_router
 app.include_router(hotel_assistant_router)
@@ -180,17 +184,24 @@ async def health():
 def ready():
     """Deployment readiness without exposing credentials or business data."""
     from sqlalchemy import text
-    from .db import POSTGRES_ENABLED
     try:
         with Session() as db:
             db.execute(text('SELECT 1'))
+            try:
+                revision=db.execute(text('SELECT version_num FROM hotel_alembic_version')).scalar_one_or_none()
+            except Exception:
+                db.rollback()
+                revision=None
         database='ready'
     except Exception:
         database='unavailable'
-    ready=database=='ready'
-    return {'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
-            'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,
-            'online_test':ONLINE_TEST,'migration':'operator_managed'}
+        revision=None
+    migration='current' if revision=='hotel_004' else 'required'
+    ready=database=='ready' and migration=='current'
+    payload={'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
+             'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,
+             'online_test':ONLINE_TEST,'migration':migration}
+    return payload if ready else JSONResponse(payload,status_code=503)
 def httpx_error_types():
     import httpx
     return (httpx.HTTPError,OSError,ValueError)

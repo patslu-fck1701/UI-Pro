@@ -36,6 +36,35 @@ else:
 from fastapi.testclient import TestClient
 from sqlalchemy import inspect, select, func
 
+if len(sys.argv) == 1:
+    # A refused operator command must not create any table before its guard runs.
+    refused_env = {**os.environ}
+    refused_env.pop("WERKZ_HOTEL_RUN_MIGRATIONS", None)
+    refused_env.pop("WERKZ_HOTEL_MIGRATION_CONTEXT", None)
+    refused = subprocess.run(
+        [sys.executable, "-m", "backend.modules.hotel.migrate"],
+        env=refused_env, capture_output=True, text=True, timeout=30,
+    )
+    assert refused.returncode != 0
+    with psycopg.connect(DB_URL, options="-csearch_path=werkz_hotel_test") as connection:
+        assert connection.execute(
+            "SELECT count(*) FROM information_schema.tables WHERE table_schema='werkz_hotel_test'"
+        ).fetchone()[0] == 0
+
+    # Migration is an explicit release step. Importing the web application below
+    # must not run Alembic against PostgreSQL.
+    approved_env = {**os.environ,
+                    "WERKZ_HOTEL_RUN_MIGRATIONS": "1",
+                    "WERKZ_HOTEL_MIGRATION_CONTEXT": "operator-cli"}
+    subprocess.run(
+        [sys.executable, "-m", "backend.modules.hotel.migrate"],
+        env=approved_env, check=True, timeout=90,
+    )
+    subprocess.run(
+        [sys.executable, "-m", "backend.modules.hotel.migrate"],
+        env=approved_env, check=True, timeout=90,
+    )
+
 from backend.app import app
 from backend.db import Session, engine, User
 from backend.security import hash_password
@@ -47,8 +76,8 @@ with engine.connect() as connection:
     assert {"users", "hotel_hotels", "hotel_rooms", "hotel_ai_usage", "hotel_alembic_version"} <= tables
     assert not any(name.startswith("hotel_") for name in inspect(connection).get_table_names(schema="public"))
 
-# A second process imports the app and runs the same Alembic upgrade again.
-# It must be idempotent and must see the first process's committed records.
+# A second process imports the app without any migration opt-in. It must perform
+# no release migration and must see the first process's committed records.
 if len(sys.argv) > 1:
     with Session() as db:
         assert db.scalar(select(func.count()).select_from(Hotel)) == 2
@@ -61,6 +90,10 @@ if len(sys.argv) > 1:
     raise SystemExit(0)
 
 with TestClient(app, headers={"origin": "http://testserver"}) as client:
+    readiness = client.get("/api/ready")
+    assert readiness.status_code == 200, readiness.text
+    assert readiness.json()["state"] == "READY", readiness.text
+    assert readiness.json()["migration"] == "current", readiness.text
     registered = client.post("/api/setup", json={"username": "ciowner", "password": "synthetic-password"})
     assert registered.status_code == 201, registered.text
     # Account creation deliberately does not mint a session; authenticate separately.

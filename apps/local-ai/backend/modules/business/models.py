@@ -1,6 +1,7 @@
 from sqlalchemy import String,Text,Integer,ForeignKey
 from sqlalchemy.orm import Mapped,mapped_column
-from ...db import Base,engine,now
+from ...db import Base,engine,now,POSTGRES_ENABLED
+import os
 class Customer(Base):
     __tablename__='business_customers'
     id:Mapped[str]=mapped_column(String,primary_key=True)
@@ -55,4 +56,5 @@ class Seed(Base):
 # Test/import order may already have registered versioned Hotel tables, which
 # must remain exclusively owned by Alembic migrations.
 BUSINESS_TABLES=[Customer.__table__,Order.__table__,Invoice.__table__,Quote.__table__,Callback.__table__,Seed.__table__]
-Base.metadata.create_all(engine,tables=BUSINESS_TABLES)
+if not POSTGRES_ENABLED or os.environ.get('WERKZ_HOTEL_MIGRATION_CONTEXT')=='operator-cli':
+    Base.metadata.create_all(engine,tables=BUSINESS_TABLES)

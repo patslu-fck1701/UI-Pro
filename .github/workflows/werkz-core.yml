@@ -99,6 +99,13 @@ jobs:
       - name: Hotel TypeScript and production build
         working-directory: apps/local-ai/frontend
         run: npm run build
+      - name: Install synthetic Hotel browser runtime
+        working-directory: apps/local-ai/frontend
+        run: npx playwright install --with-deps chromium
+      - name: Hotel provider UI release-candidate smoke (synthetic only)
+        env:
+          WERKZ_TEST_PYTHON: python
+        run: node tests/browser_hotel_ai_providers.mjs
 
   hotel-postgres-verify:
     runs-on: ubuntu-latest

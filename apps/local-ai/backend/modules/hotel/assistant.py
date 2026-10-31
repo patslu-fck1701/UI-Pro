@@ -4,6 +4,7 @@ No hotel record or tenant-scoped data is ever forwarded to cloud providers.
 The public synthetic demo is never allowed to spend OpenAI credits.
 """
 from contextlib import aclosing
+import asyncio
 from math import ceil
 import os
 from typing import Literal
@@ -234,6 +235,9 @@ async def ask(input: HotelQuestion, user=Depends(permission)):
         reservation_id = _reserve_openai(user, input.question)
         try:
             answer, model, usage = await _openai(input.question)
+        except asyncio.CancelledError:
+            _finish_openai(user.tenant, reservation_id, "cancelled")
+            raise
         except HTTPException:
             _finish_openai(user.tenant, reservation_id, "failed")
             raise
