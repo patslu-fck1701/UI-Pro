@@ -78,7 +78,7 @@ jobs:
           cache: pip
           cache-dependency-path: apps/local-ai/requirements.txt
       - name: Install Hotel backend test dependencies
-        run: python -m pip install -e ".[test,hotel]"
+        run: python -m pip install -e ".[test,hotel,business]"
       - name: Hotel backend and security regression suite
         run: python -m pytest -q
       - uses: actions/setup-node@v4
