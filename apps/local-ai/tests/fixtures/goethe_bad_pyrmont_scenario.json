@@ -848,7 +848,8 @@
           "stock-eggs",
           "stock-linen"
         ],
-        "no_automatic_purchasing": true
+        "no_automatic_purchasing": true,
+        "external_contact_allowed": false
       }
     ],
     "capability_policy": {
