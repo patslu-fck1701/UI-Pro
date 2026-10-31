@@ -13,6 +13,7 @@ export function HotelAssistant(){
   const [answer,setAnswer]=useState<Answer|null>(null);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
+  const [requestController,setRequestController]=useState<AbortController|null>(null);
   useEffect(()=>{
     const controller=new AbortController();
     void fetch('/api/hotel/ai/providers',{signal:controller.signal})
@@ -25,17 +26,18 @@ export function HotelAssistant(){
     && status[which].state !== 'NOT_CONNECTED';
   async function ask(e:React.FormEvent<HTMLFormElement>){
     e.preventDefault();if(busy||!question.trim())return;
+    const controller=new AbortController();setRequestController(controller);
     setError('');setAnswer(null);setBusy(true);
     try{
       const response=await fetch('/api/hotel/ai/ask',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({provider,question:question.trim()})
+        body:JSON.stringify({provider,question:question.trim()}),signal:controller.signal
       });
       const result=await response.json();
       if(!response.ok)throw Error(typeof result.detail==='string'?result.detail:'KI-Antwort fehlgeschlagen.');
       setAnswer(result as Answer);
-    }catch(e){setError(e instanceof Error?e.message:'KI-Antwort fehlgeschlagen.');}
-    finally{setBusy(false);}
+    }catch(e){if(!controller.signal.aborted)setError(e instanceof Error?e.message:'KI-Antwort fehlgeschlagen.');}
+    finally{setBusy(false);setRequestController(null);}
   }
   return <section className="panel" aria-label="WerkZ Hotel KI">
     <h2>WerkZ Hotel-KI</h2>
@@ -51,9 +53,10 @@ export function HotelAssistant(){
         <textarea value={question} maxLength={1000} rows={4} onChange={e=>setQuestion(e.target.value)}
           placeholder="Zum Beispiel: Welche Schritte gehören zu einer sauberen Rezeption-Übergabe?" />
       </label>
-      <button type="submit" disabled={busy||!available(provider)||question.trim().length<2}>
-        {busy?'KI antwortet …':'Frage beantworten'}
-      </button>
+      <div className="actions">
+        <button type="submit" disabled={busy||!available(provider)||question.trim().length<2}>{busy?'KI antwortet …':'Frage beantworten'}</button>
+        {busy&&<button type="button" className="ghost" onClick={()=>requestController?.abort()}>Anfrage abbrechen</button>}
+      </div>
     </form>
     {error&&<p className="error" role="alert">{error}</p>}
     {answer&&<article className="business-row" aria-live="polite">

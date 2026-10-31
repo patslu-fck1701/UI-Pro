@@ -171,6 +171,22 @@ async def health():
         return {'app':'ok','name':'WERKZ AI','package':PACKAGE,'mode':MODE,'engine':'ready','models':[row['id'] for row in rows],'localOnly':True}
     except (httpx_error_types()):
         return {'app':'ok','name':'WERKZ AI','package':PACKAGE,'mode':MODE,'engine':'offline','models':[],'localOnly':True}
+
+@app.get('/api/ready')
+def ready():
+    """Deployment readiness without exposing credentials or business data."""
+    from sqlalchemy import text
+    from .db import POSTGRES_ENABLED
+    try:
+        with Session() as db:
+            db.execute(text('SELECT 1'))
+        database='ready'
+    except Exception:
+        database='unavailable'
+    ready=database=='ready'
+    return {'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
+            'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,
+            'online_test':ONLINE_TEST,'migration':'operator_managed'}
 def httpx_error_types():
     import httpx
     return (httpx.HTTPError,OSError,ValueError)

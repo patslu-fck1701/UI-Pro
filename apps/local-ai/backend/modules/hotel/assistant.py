@@ -80,6 +80,8 @@ def _reserve_openai(user, question: str) -> str:
         raise HTTPException(503, "OpenAI-Ausgabenlimit ist sicher gesperrt.")
     with Session() as db:
         begin_write(db)
+        # Serialize the read-check-reserve sequence across processes and tenants.
+        # The lock is transaction scoped; uniqueness also prevents duplicate holds.
         calls = db.scalar(select(func.count()).select_from(HotelAiUsage).where(
             HotelAiUsage.tenant == user.tenant,
             HotelAiUsage.provider == "openai",

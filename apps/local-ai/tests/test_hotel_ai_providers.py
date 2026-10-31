@@ -1,11 +1,13 @@
 """Synthetic regression tests. Never contact OpenAI or a local model."""
 import asyncio
+import base64
 from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
 from backend.modules.hotel import assistant as ai
 from backend.modules.hotel import qwen_bridge
+from backend.modules.hotel import bridge_protocol
 
 
 def test_openai_cost_gate_needs_admin_key_and_explicit_operator_opt_in(monkeypatch):
@@ -104,26 +106,56 @@ def test_online_qwen_bridge_sends_question_only_and_redacts_model_path(monkeypat
             assert kwargs["trust_env"] is False and kwargs["follow_redirects"] is False
         async def __aenter__(self): return self
         async def __aexit__(self, *args): return False
-        async def post(self, url, *, json, headers):
-            captured.append((url, json, headers))
+        async def post(self, url, *, content, headers):
+            captured.append((url, content, headers))
             return Response()
-    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "https://bridge.example.test/v1/ask")
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", qwen_bridge.BRIDGE_ORIGIN + qwen_bridge.BRIDGE_ROUTE)
+    # Request signing uses a throwaway Ed25519 key; no device credential or live endpoint.
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    key = Ed25519PrivateKey.generate()
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_PRIVATE_KEY", base64.b64encode(key.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption())).decode())
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_DEVICE_ID", "synthetic-device")
     monkeypatch.setattr(qwen_bridge.httpx, "AsyncClient", Client)
     answer, model = asyncio.run(qwen_bridge.ask("synthetische Frage"))
     assert answer == "Synthetische Bridge-Antwort"
     assert model == "Qwen.gguf"
     assert len(captured) == 1
-    url, payload, headers = captured[0]
-    assert url == "https://bridge.example.test/v1/ask"
-    assert payload == {"question": "synthetische Frage"}
-    assert headers["x-werkz-bridge-nonce"]
-    assert headers["x-werkz-bridge-timestamp"].isdigit()
+    url, body, headers = captured[0]
+    assert url == qwen_bridge.BRIDGE_ORIGIN + qwen_bridge.BRIDGE_ROUTE
+    assert b'"question":"synthetische Frage"' in body
+    assert b'"device_id":"synthetic-device"' in body
+    timestamp = headers["x-werkz-timestamp"]
+    nonce = headers["x-werkz-nonce"]
+    public = key.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+    bridge_protocol.verify_request(base64.b64encode(public).decode(), "POST", qwen_bridge.BRIDGE_ROUTE, timestamp,
+                                   nonce, headers["x-werkz-signature"], body)
+
+
+def test_bridge_protocol_rejects_tamper_replay_metadata_and_expiry():
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    import base64, hashlib, time
+    key = Ed25519PrivateKey.generate()
+    public = base64.b64encode(key.public_key().public_bytes(
+        serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)).decode()
+    body = b'{"question":"synthetic"}'
+    timestamp, nonce = str(int(time.time())), "a" * 32
+    message = bridge_protocol.canonical_message("POST", "/api/public/local-ai/ask", timestamp, nonce, body)
+    signature = base64.b64encode(key.sign(message)).decode()
+    bridge_protocol.verify_request(public, "POST", "/api/public/local-ai/ask", timestamp, nonce, signature, body)
+    with pytest.raises(ValueError):
+        bridge_protocol.verify_request(public, "POST", "/api/public/local-ai/ask", timestamp, nonce, signature, body+b" ")
+    with pytest.raises(ValueError):
+        bridge_protocol.verify_request(public, "POST", "/api/public/local-ai/ask", str(int(time.time())-200), nonce, signature, body)
 
 
 def test_online_qwen_bridge_rejects_non_https_and_redirects(monkeypatch):
-    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "http://bridge.example.test/ask")
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "http://example.test/ask")
     with pytest.raises(ValueError): asyncio.run(qwen_bridge.ask("test"))
-    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", "https://bridge.example.test/ask?next=evil")
+    monkeypatch.setenv("WERKZ_QWEN_BRIDGE_URL", qwen_bridge.BRIDGE_ORIGIN + "/ask?next=evil")
     with pytest.raises(ValueError): asyncio.run(qwen_bridge.ask("test"))
 
 

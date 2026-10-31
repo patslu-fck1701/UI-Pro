@@ -2,8 +2,9 @@
 // Outbound-only operator bridge. Never opens a listening socket or executes remote commands.
 const crypto=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
 const {spawnSync}=require('node:child_process');
-const ORIGIN='https://project--9081192e-6239-40a6-8f20-02296cff5c91-dev.lovable.app';
-const ROUTES=new Set(['/api/public/local-ai/pair','/api/public/local-ai/claim','/api/public/local-ai/complete']);
+const DEFAULT_ORIGIN='https://project--9081192e-6239-40a6-8f20-02296cff5c91-dev.lovable.app';
+const ORIGIN=process.env.WERKZ_BRIDGE_ORIGIN||DEFAULT_ORIGIN;
+const ROUTES=new Set(['/api/public/local-ai/pair','/api/public/local-ai/claim','/api/public/local-ai/complete','/api/public/local-ai/ask']);
 function identityFromKey(privateKey){
   const publicBytes=crypto.createPublicKey(privateKey).export({type:'spki',format:'der'});
   return {privateKey,public_key:publicBytes.toString('base64'),device_id:crypto.createHash('sha256').update(publicBytes).digest('hex')};
@@ -37,27 +38,43 @@ function signedRequest(identity,route,input,now=Date.now()){
   return {method:'POST',redirect:'manual',body,headers:{'content-type':'application/json','x-werkz-device':identity.device_id,'x-werkz-timestamp':timestamp,'x-werkz-nonce':nonce,'x-werkz-signature':crypto.sign(null,Buffer.from(signed),identity.privateKey).toString('base64')}};
 }
 function validJob(job,now=Date.now()){
-  if(!job||typeof job!=='object'||Array.isArray(job))return false;
+    if(!job||typeof job!=='object'||Array.isArray(job))return false;
   const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if(!uuid.test(job.request_id)||!uuid.test(job.lease_id)||typeof job.prompt!=='string'||!job.prompt.trim()||job.prompt.length>4000)return false;
   const expires=Date.parse(job.expires_at);
   return Number.isFinite(expires)&&expires>now&&expires<=now+120000;
 }
 class OutboundAI {
-  constructor({identity,transport=fetch,analyze,origin=ORIGIN,clock=Date.now}){
-    if(origin!==ORIGIN)throw new Error('ORIGIN_DENIED');
-    this.identity=identity;this.transport=transport;this.analyze=analyze;this.clock=clock;this.seen=new Set();
+  constructor({identity,transport=fetch,analyze,origin=ORIGIN,clock=Date.now,tenant}){
+    if(origin!==ORIGIN||new URL(origin).protocol!=='https:')throw new Error('ORIGIN_DENIED');
+    this.identity=identity;this.transport=transport;this.analyze=analyze;this.clock=clock;this.tenant=tenant;this.seen=new Set();
   }
   async post(route,input){
-    const response=await this.transport(ORIGIN+route,{...signedRequest(this.identity,route,input,this.clock()),signal:AbortSignal.timeout(10000)});
+    const request=typeof input==='string'?{...signedRequest(this.identity,route,JSON.parse(input),this.clock()),body:input}:signedRequest(this.identity,route,input,this.clock());
+    const response=await this.transport(ORIGIN+route,{...request,signal:AbortSignal.timeout(10000)});
     if(!response.ok)throw new Error(response.status===429?'RATE_LIMITED':'BRIDGE_UNAVAILABLE');
     if(!String(response.headers.get('content-type')).includes('application/json'))throw new Error('INVALID_BRIDGE_RESPONSE');
-    const reader=response.body.getReader();let chunks=[],bytes=0;
-    try{while(true){const {value,done}=await reader.read();if(done)break;bytes+=value.length;if(bytes>32768)throw new Error('INVALID_BRIDGE_RESPONSE');chunks.push(value);}}
-    finally{await reader.cancel();}
-    try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new Error('INVALID_BRIDGE_RESPONSE');}
+    let text='';try{text=await response.text();}catch{throw new Error('INVALID_BRIDGE_RESPONSE');}
+    if(Buffer.byteLength(text)>32768)throw new Error('INVALID_BRIDGE_RESPONSE');
+    try{return JSON.parse(text);}catch{throw new Error('INVALID_BRIDGE_RESPONSE');}
   }
   pair(){return this.post('/api/public/local-ai/pair',{device_id:this.identity.device_id,public_key:this.identity.public_key,label:'WERKZ local Qwen'});}
+  async serveOnce(){
+    const request=await this.post('/api/public/local-ai/ask',{device_id:this.identity.device_id});
+    if(!request||!['pending','revoked','ready','idle'].includes(request.state))throw new Error('INVALID_BRIDGE_RESPONSE');
+    if(request.state!=='ready')return {state:request.state};
+    const job=request.job;
+    if(!validJob(job,this.clock()))throw new Error('INVALID_JOB');
+    if(typeof job.tenant!=='string'||!job.tenant||this.tenant&&job.tenant!==this.tenant)throw new Error('TENANT_DENIED');
+    if(this.seen.has(job.request_id))throw new Error('DUPLICATE_JOB');
+    this.seen.add(job.request_id);
+    let result;
+    try{const answer=await this.analyze(job);result={answer:answer.answer,model:answer.model};}
+    catch(error){throw new Error(error.message==='MODEL_TIMEOUT'?'MODEL_TIMEOUT':'MODEL_UNAVAILABLE');}
+    if(Date.parse(job.expires_at)<=this.clock())return {state:'expired'};
+    const completed=await this.post('/api/public/local-ai/complete',{device_id:this.identity.device_id,request_id:job.request_id,lease_id:job.lease_id,state:'succeeded',...result});
+    return {state:completed.state||'succeeded',request_id:job.request_id};
+  }
   async once(){
     const claimed=await this.post('/api/public/local-ai/claim',{device_id:this.identity.device_id});
     if(!['pending','revoked','ready'].includes(claimed.state))throw new Error('INVALID_BRIDGE_RESPONSE');
@@ -89,7 +106,7 @@ function analyzer(root){return async job=>{
 async function main(){
   const action=process.argv[2],root=path.resolve(__dirname,'..');
   if(!['status','pair','once','run'].includes(action))throw new Error('USE_STATUS_PAIR_ONCE_OR_RUN');
-  const identity=loadIdentity(root),client=new OutboundAI({identity,analyze:analyzer(root)});
+  const identity=loadIdentity(root),client=new OutboundAI({identity,analyze:analyzer(root),tenant:process.env.WERKZ_HOTEL_TENANT});
   if(action==='status'){console.log(JSON.stringify({device_id:identity.device_id,origin:ORIGIN,state:'NOT_VERIFIED'}));return;}
   if(action==='pair'){const result=await client.pair();console.log(JSON.stringify({state:result.state,device_id:identity.device_id}));return;}
   if(action==='once'){console.log(JSON.stringify(await client.once()));return;}
@@ -109,7 +126,7 @@ async function main(){
     const statusFile=path.join(root,'.runtime','outbound-ai','worker-status.json');
     while(!stopping){
       let result;
-      try{result=await client.once();failures=0;}catch{failures++;result={state:'offline'};}
+      try{result=await client.serveOnce();failures=0;}catch{failures++;result={state:'offline'};}
       fs.writeFileSync(statusFile,JSON.stringify({...result,checked_at:new Date().toISOString()}));
       if(['pending','revoked'].includes(result.state))break;
       await new Promise(resolve=>setTimeout(resolve,failures?Math.min(60000,15000*failures):result.state==='idle'?15000:3000));
