@@ -24,7 +24,7 @@ SYSTEM = (
     "Aktion. Fuer Buchungen ist eine separate autorisierte Datenbankpruefung "
     "durch die Rezeption erforderlich. Erfinde keine Hotel- oder Gastdaten."
 )
-CLOUD_MODEL = "gpt-4.1-mini"
+CLOUD_MODEL = "gpt-6-luna"
 MAX_ANSWER_CHARS = 4500
 
 
@@ -77,7 +77,7 @@ async def _openai(question: str) -> tuple[str, str]:
                 json={"model": CLOUD_MODEL,
                       "messages": [{"role": "system", "content": SYSTEM},
                                    {"role": "user", "content": question}],
-                      "max_completion_tokens": 400},
+                      "max_completion_tokens": 400, "reasoning_effort": "none"},
             )
             response.raise_for_status()
             body = response.json()
