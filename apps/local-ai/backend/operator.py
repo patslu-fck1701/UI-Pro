@@ -24,7 +24,7 @@ async def domains(user=Depends(admin)):
         {'id':'werkz','state':'AVAILABLE','source':'/api/modules','package':PACKAGE,'mode':MODE,'modules':modules,'local_model_ready':model_ready},
         {'id':'kundenz','state':'PARTIAL','source':'existing WerkZ authentication and module guards','session_verified':True,'external_identity_federation':False},
         {'id':'aiz',**knowledge},
-        {'id':'master-control','state':'PARTIAL','source':'/api/operator/domains','independent_monitor':False},
+        {'id':'master-control','state':'NOT_VERIFIED','source':'/api/operator/domains','independent_monitor':False},
         {'id':'deutschz','state':'NOT_CONNECTED','reason':'separate project, no live adapter authorized here'}
     ]
     for item in values:
@@ -32,7 +32,7 @@ async def domains(user=Depends(admin)):
         item['checks']={'configured':available or item['state']=='PARTIAL','reachable':available,'authenticated':available,'usable':available}
         if item['id']=='werkz':item['checks']['model_usable']=model_ready
         if item['id']=='kundenz':item['checks']={'configured':True,'reachable':True,'authenticated':True,'usable':True,'external_federation':False}
-        if item['id']=='master-control':item['checks']={'configured':True,'reachable':True,'authenticated':True,'usable':True,'independent_monitor':False}
+        if item['id']=='master-control':item['checks']={'configured':False,'reachable':False,'authenticated':False,'usable':False,'independent_monitor':False}
     return {'checked_at':datetime.now(timezone.utc).isoformat(),'stale_after_seconds':60,'tenant':user.tenant,'scope':'current_operator_tenant','domains':values,'plugin_mcp_connections_verified':False}
 
 class Search(BaseModel):
