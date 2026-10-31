@@ -58,7 +58,7 @@ test('claim signature authenticates the exact UTF-8 request body and route', () 
     ...req,
     headers: {...req.headers, 'x-werkz-timestamp': '1'},
   }, CLAIM, pub), false);
-  assert.equal(verifyRequest(req, CLAIM, device().privateKey), false);
+  assert.equal(verifyRequest(req, CLAIM, crypto.createPublicKey(device().privateKey)), false);
 });
 
 test('every signed request has unique 128-bit nonce and bounded JSON body', () => {
