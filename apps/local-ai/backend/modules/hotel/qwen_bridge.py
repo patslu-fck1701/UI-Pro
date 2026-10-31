@@ -29,7 +29,8 @@ _last_status_identity: str | None = None
 def _status_identity() -> str:
     value = os.environ.get("WERKZ_QWEN_BRIDGE_URL", "").strip()
     device = os.environ.get("WERKZ_QWEN_BRIDGE_DEVICE_ID", "").strip()
-    return hashlib.sha256((value + "\n" + device).encode()).hexdigest()
+    private_key = os.environ.get("WERKZ_QWEN_BRIDGE_PRIVATE_KEY", "").strip()
+    return hashlib.sha256((value + "\n" + device + "\n" + private_key).encode()).hexdigest()
 
 
 def _record(success: bool, category: str | None = None) -> None:
