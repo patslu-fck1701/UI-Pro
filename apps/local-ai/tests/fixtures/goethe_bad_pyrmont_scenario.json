@@ -1,0 +1,876 @@
+{
+  "schema": "werkz.hotel.test-scenario.v1",
+  "id": "goethe-bad-pyrmont-19-8",
+  "classification": "SYNTHETIC_ONLY",
+  "import_policy": {
+    "mode": "EXPLICIT_OPERATOR_ONLY",
+    "live_database_import": false,
+    "allow_existing_tenant_reset": false,
+    "idempotency_key": "werkz-goethe-19-8-fixture-v1",
+    "create_new_render_resources": false
+  },
+  "reference": {
+    "name": "Goethe Hotel Bad Pyrmont",
+    "city": "Bad Pyrmont",
+    "country": "DE",
+    "room_count": 19,
+    "staff_count": 8,
+    "reported_historic_building_year": 1740,
+    "no_elevator": true,
+    "notes": "Hotelidentität, 19 Zimmer, alte Bausubstanz und kein Aufzug laut Betreiberangaben; keine amtliche Verifizierung. Alle Betriebsdatensätze darunter frei simuliert.",
+    "source_class": "USER_SUPPLIED_NOT_INDEPENDENTLY_VERIFIED"
+  },
+  "simulation": {
+    "label": "Goethe-Hotel · kleine Belegschaft, hoher Arbeitsdruck",
+    "day_base": "RELATIVE_TO_TEST_CLOCK",
+    "timezone": "Europe/Berlin",
+    "floor_plan": "SYNTHETIC_NOT_REAL_FLOOR_PLAN",
+    "no_realtime_room_claims": true,
+    "room_types": [
+      {
+        "id": "single",
+        "label": "Einzelzimmer",
+        "capacity": 1,
+        "nightly_cents": 7900
+      },
+      {
+        "id": "double",
+        "label": "Doppelzimmer",
+        "capacity": 2,
+        "nightly_cents": 10900
+      },
+      {
+        "id": "comfort",
+        "label": "Komfort-Doppelzimmer",
+        "capacity": 2,
+        "nightly_cents": 12900
+      },
+      {
+        "id": "suite",
+        "label": "Kleine Suite",
+        "capacity": 3,
+        "nightly_cents": 17900
+      }
+    ],
+    "rooms": [
+      {
+        "ref": "room-001",
+        "number": "001",
+        "floor": 0,
+        "type_id": "single",
+        "synthetic_name": "Kurpark",
+        "elevator_access": false,
+        "stairs_required": false,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-002",
+        "number": "002",
+        "floor": 0,
+        "type_id": "single",
+        "synthetic_name": "Garten",
+        "elevator_access": false,
+        "stairs_required": false,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-003",
+        "number": "003",
+        "floor": 0,
+        "type_id": "single",
+        "synthetic_name": "Bibliothek",
+        "elevator_access": false,
+        "stairs_required": false,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-004",
+        "number": "004",
+        "floor": 0,
+        "type_id": "single",
+        "synthetic_name": "Wandelhalle",
+        "elevator_access": false,
+        "stairs_required": false,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-005",
+        "number": "005",
+        "floor": 0,
+        "type_id": "single",
+        "synthetic_name": "Brunnenplatz",
+        "elevator_access": false,
+        "stairs_required": false,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-101",
+        "number": "101",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Goethe",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-102",
+        "number": "102",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Altstadt",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-103",
+        "number": "103",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Rosengarten",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-104",
+        "number": "104",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Kaminzimmer",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-105",
+        "number": "105",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Biedermeier",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-106",
+        "number": "106",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Turmzimmer",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-107",
+        "number": "107",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Fürstenblick",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-108",
+        "number": "108",
+        "floor": 1,
+        "type_id": "double",
+        "synthetic_name": "Sonnenhof",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-201",
+        "number": "201",
+        "floor": 2,
+        "type_id": "double",
+        "synthetic_name": "Lindenallee",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-202",
+        "number": "202",
+        "floor": 2,
+        "type_id": "double",
+        "synthetic_name": "Pavillon",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "occupied",
+        "block_reason": null
+      },
+      {
+        "ref": "room-203",
+        "number": "203",
+        "floor": 2,
+        "type_id": "comfort",
+        "synthetic_name": "Klassik",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "blocked",
+        "block_reason": "SYNTHETISCH: Wasserleitung prüfen; nicht verkäuflich"
+      },
+      {
+        "ref": "room-204",
+        "number": "204",
+        "floor": 2,
+        "type_id": "comfort",
+        "synthetic_name": "Theater",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "ready",
+        "block_reason": null
+      },
+      {
+        "ref": "room-205",
+        "number": "205",
+        "floor": 2,
+        "type_id": "comfort",
+        "synthetic_name": "Quellenblick",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "ready",
+        "block_reason": null
+      },
+      {
+        "ref": "room-206",
+        "number": "206",
+        "floor": 2,
+        "type_id": "suite",
+        "synthetic_name": "Morgensonne",
+        "elevator_access": false,
+        "stairs_required": true,
+        "status": "ready",
+        "block_reason": null
+      }
+    ],
+    "staff": [
+      {
+        "ref": "owner-01",
+        "display_name": "SYNTHETISCH · owner-01",
+        "role": "management",
+        "department": "Management",
+        "qualification": "management",
+        "skills": [
+          "operations",
+          "vendor_approvals",
+          "billing",
+          "escalations"
+        ]
+      },
+      {
+        "ref": "desk-01",
+        "display_name": "SYNTHETISCH · desk-01",
+        "role": "reception",
+        "department": "Rezeption",
+        "qualification": "reception",
+        "skills": [
+          "checkin_checkout",
+          "inquiries",
+          "guest_support"
+        ]
+      },
+      {
+        "ref": "desk-02",
+        "display_name": "SYNTHETISCH · desk-02",
+        "role": "reception",
+        "department": "Rezeption",
+        "qualification": "reception",
+        "skills": [
+          "checkin_checkout",
+          "inquiries",
+          "handover"
+        ]
+      },
+      {
+        "ref": "kitchen-01",
+        "display_name": "SYNTHETISCH · kitchen-01",
+        "role": "kitchen",
+        "department": "Küche",
+        "qualification": "food",
+        "skills": [
+          "breakfast_prep",
+          "food_safety",
+          "inventory"
+        ]
+      },
+      {
+        "ref": "kitchen-02",
+        "display_name": "SYNTHETISCH · kitchen-02",
+        "role": "kitchen",
+        "department": "Küche",
+        "qualification": "food",
+        "skills": [
+          "breakfast_service",
+          "stock_count",
+          "breakfast_prep"
+        ]
+      },
+      {
+        "ref": "hk-01",
+        "display_name": "SYNTHETISCH · hk-01",
+        "role": "housekeeping",
+        "department": "Housekeeping",
+        "qualification": "cleaning",
+        "skills": [
+          "room_cleaning",
+          "linen",
+          "damage_report"
+        ]
+      },
+      {
+        "ref": "hk-02",
+        "display_name": "SYNTHETISCH · hk-02",
+        "role": "housekeeping",
+        "department": "Housekeeping",
+        "qualification": "cleaning",
+        "skills": [
+          "room_cleaning",
+          "linen",
+          "damage_report"
+        ]
+      },
+      {
+        "ref": "hk-03",
+        "display_name": "SYNTHETISCH · hk-03",
+        "role": "housekeeping",
+        "department": "Housekeeping",
+        "qualification": "cleaning",
+        "skills": [
+          "room_cleaning",
+          "linen",
+          "damage_report"
+        ]
+      }
+    ],
+    "bookings": [
+      {
+        "ref": "booking-01",
+        "guest_ref": "fake-guest-01",
+        "room_ref": "room-001",
+        "arrival_day_offset": -2,
+        "departure_day_offset": 0,
+        "persons": 1,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-02",
+        "guest_ref": "fake-guest-02",
+        "room_ref": "room-002",
+        "arrival_day_offset": -2,
+        "departure_day_offset": 0,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-03",
+        "guest_ref": "fake-guest-03",
+        "room_ref": "room-003",
+        "arrival_day_offset": -2,
+        "departure_day_offset": 0,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-04",
+        "guest_ref": "fake-guest-04",
+        "room_ref": "room-004",
+        "arrival_day_offset": -2,
+        "departure_day_offset": 0,
+        "persons": 1,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-05",
+        "guest_ref": "fake-guest-05",
+        "room_ref": "room-005",
+        "arrival_day_offset": -2,
+        "departure_day_offset": 0,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-06",
+        "guest_ref": "fake-guest-06",
+        "room_ref": "room-101",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-07",
+        "guest_ref": "fake-guest-07",
+        "room_ref": "room-102",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 1,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-08",
+        "guest_ref": "fake-guest-08",
+        "room_ref": "room-103",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-09",
+        "guest_ref": "fake-guest-09",
+        "room_ref": "room-104",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-10",
+        "guest_ref": "fake-guest-10",
+        "room_ref": "room-105",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 1,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-11",
+        "guest_ref": "fake-guest-11",
+        "room_ref": "room-106",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-12",
+        "guest_ref": "fake-guest-12",
+        "room_ref": "room-107",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-13",
+        "guest_ref": "fake-guest-13",
+        "room_ref": "room-108",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 1,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-14",
+        "guest_ref": "fake-guest-14",
+        "room_ref": "room-201",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-15",
+        "guest_ref": "fake-guest-15",
+        "room_ref": "room-202",
+        "arrival_day_offset": -1,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "checked_in",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-16",
+        "guest_ref": "fake-guest-16",
+        "room_ref": "room-001",
+        "arrival_day_offset": 0,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "confirmed",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-17",
+        "guest_ref": "fake-guest-17",
+        "room_ref": "room-002",
+        "arrival_day_offset": 0,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "confirmed",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-18",
+        "guest_ref": "fake-guest-18",
+        "room_ref": "room-003",
+        "arrival_day_offset": 0,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "confirmed",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-19",
+        "guest_ref": "fake-guest-19",
+        "room_ref": "room-004",
+        "arrival_day_offset": 0,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "confirmed",
+        "synthetic": true
+      },
+      {
+        "ref": "booking-20",
+        "guest_ref": "fake-guest-20",
+        "room_ref": "room-005",
+        "arrival_day_offset": 0,
+        "departure_day_offset": 2,
+        "persons": 2,
+        "breakfast": true,
+        "state": "confirmed",
+        "synthetic": true
+      }
+    ],
+    "cleaning_tasks": [
+      {
+        "ref": "clean-turnover-1",
+        "room_ref": "room-001",
+        "kind": "departure",
+        "priority": "high",
+        "estimate_minutes": 50,
+        "assigned_staff_ref": "hk-01",
+        "state": "open"
+      },
+      {
+        "ref": "clean-turnover-2",
+        "room_ref": "room-002",
+        "kind": "departure",
+        "priority": "high",
+        "estimate_minutes": 50,
+        "assigned_staff_ref": "hk-02",
+        "state": "open"
+      },
+      {
+        "ref": "clean-turnover-3",
+        "room_ref": "room-003",
+        "kind": "departure",
+        "priority": "high",
+        "estimate_minutes": 50,
+        "assigned_staff_ref": "hk-03",
+        "state": "open"
+      },
+      {
+        "ref": "clean-turnover-4",
+        "room_ref": "room-004",
+        "kind": "departure",
+        "priority": "high",
+        "estimate_minutes": 50,
+        "assigned_staff_ref": "hk-01",
+        "state": "open"
+      },
+      {
+        "ref": "clean-turnover-5",
+        "room_ref": "room-005",
+        "kind": "departure",
+        "priority": "high",
+        "estimate_minutes": 50,
+        "assigned_staff_ref": "hk-02",
+        "state": "open"
+      },
+      {
+        "ref": "clean-stayover-1",
+        "room_ref": "room-101",
+        "kind": "stayover",
+        "priority": "normal",
+        "estimate_minutes": 30,
+        "assigned_staff_ref": "hk-01",
+        "state": "open"
+      },
+      {
+        "ref": "clean-stayover-2",
+        "room_ref": "room-102",
+        "kind": "stayover",
+        "priority": "normal",
+        "estimate_minutes": 30,
+        "assigned_staff_ref": "hk-02",
+        "state": "open"
+      },
+      {
+        "ref": "clean-stayover-3",
+        "room_ref": "room-103",
+        "kind": "stayover",
+        "priority": "normal",
+        "estimate_minutes": 30,
+        "assigned_staff_ref": "hk-03",
+        "state": "open"
+      },
+      {
+        "ref": "clean-stayover-4",
+        "room_ref": "room-104",
+        "kind": "stayover",
+        "priority": "normal",
+        "estimate_minutes": 30,
+        "assigned_staff_ref": "hk-01",
+        "state": "open"
+      }
+    ],
+    "shifts": [
+      {
+        "staff_ref": "owner-01",
+        "day_offset": 0,
+        "start_local": "08:00",
+        "end_local": "17:00",
+        "timezone": "Europe/Berlin"
+      },
+      {
+        "staff_ref": "desk-01",
+        "day_offset": 0,
+        "start_local": "06:00",
+        "end_local": "14:00",
+        "timezone": "Europe/Berlin"
+      },
+      {
+        "staff_ref": "desk-02",
+        "day_offset": 0,
+        "start_local": "14:00",
+        "end_local": "22:00",
+        "timezone": "Europe/Berlin"
+      },
+      {
+        "staff_ref": "kitchen-01",
+        "day_offset": 0,
+        "start_local": "05:00",
+        "end_local": "13:00",
+        "timezone": "Europe/Berlin"
+      },
+      {
+        "staff_ref": "kitchen-02",
+        "day_offset": 0,
+        "start_local": "06:00",
+        "end_local": "14:00",
+        "timezone": "Europe/Berlin"
+      },
+      {
+        "staff_ref": "hk-01",
+        "day_offset": 0,
+        "start_local": "08:00",
+        "end_local": "16:00",
+        "timezone": "Europe/Berlin"
+      },
+      {
+        "staff_ref": "hk-02",
+        "day_offset": 0,
+        "start_local": "08:00",
+        "end_local": "16:00",
+        "timezone": "Europe/Berlin"
+      },
+      {
+        "staff_ref": "hk-03",
+        "day_offset": 0,
+        "start_local": "08:00",
+        "end_local": "16:00",
+        "timezone": "Europe/Berlin"
+      }
+    ],
+    "inventory": [
+      {
+        "ref": "stock-bread",
+        "name": "Frühstücksbrot",
+        "unit": "g",
+        "quantity": 1000,
+        "minimum": 2000,
+        "location": "Küche",
+        "synthetic": true
+      },
+      {
+        "ref": "stock-eggs",
+        "name": "Eier",
+        "unit": "Stück",
+        "quantity": 12,
+        "minimum": 30,
+        "location": "Küche",
+        "synthetic": true
+      },
+      {
+        "ref": "stock-linen",
+        "name": "Bettwäsche-Sets",
+        "unit": "Set",
+        "quantity": 8,
+        "minimum": 12,
+        "location": "Wäscheraum",
+        "synthetic": true
+      }
+    ],
+    "vendor_tickets": [
+      {
+        "ref": "vendor-plumbing",
+        "kind": "plumbing",
+        "room_ref": "room-203",
+        "description": "SYNTHETISCH: Wasserleitung kontrollieren, Zimmer sperren",
+        "state": "awaiting_owner_approval",
+        "authorized_to_contact": false
+      },
+      {
+        "ref": "vendor-fire-safety",
+        "kind": "heritage_fire_safety",
+        "room_ref": null,
+        "description": "SYNTHETISCH: Fachprüfung im denkmalgeschützten Gebäude",
+        "state": "draft",
+        "authorized_to_contact": false
+      },
+      {
+        "ref": "vendor-laundry",
+        "kind": "laundry",
+        "room_ref": null,
+        "description": "SYNTHETISCH: Wäscheabholung für Engpass vorbereiten",
+        "state": "draft",
+        "authorized_to_contact": false
+      },
+      {
+        "ref": "vendor-garden",
+        "kind": "garden_maintenance",
+        "room_ref": null,
+        "description": "SYNTHETISCH: Garteneinsatz anbieten",
+        "state": "draft",
+        "authorized_to_contact": false
+      }
+    ],
+    "guest_requests": [
+      {
+        "ref": "request-stairs",
+        "room_ref": "room-002",
+        "kind": "accessibility",
+        "description": "SYNTHETISCH: Gast benötigt Unterstützung; kein Aufzug vorhanden",
+        "state": "open",
+        "assigned_role": "reception"
+      },
+      {
+        "ref": "request-towel",
+        "room_ref": "room-107",
+        "kind": "housekeeping",
+        "description": "SYNTHETISCH: Zusätzliche Handtücher",
+        "state": "open",
+        "assigned_role": "housekeeping"
+      },
+      {
+        "ref": "request-arrival",
+        "room_ref": "room-003",
+        "kind": "early_checkin",
+        "description": "SYNTHETISCH: Frühe Anreise erbeten, erst Zimmerstatus prüfen",
+        "state": "open",
+        "assigned_role": "reception"
+      }
+    ],
+    "stress_cases": [
+      {
+        "id": "baseline_turnover",
+        "absent_staff_refs": [],
+        "expected_min_departures": 5,
+        "expected_min_arrivals": 5,
+        "expected_cleaning_tasks": 9,
+        "external_contact_allowed": false
+      },
+      {
+        "id": "housekeeper_absent",
+        "absent_staff_refs": [
+          "hk-03"
+        ],
+        "expected_remaining_housekeepers": 2,
+        "force_manual_redistribution": true,
+        "no_automatic_overtime": true,
+        "external_contact_allowed": false
+      },
+      {
+        "id": "blocked_plumbing",
+        "blocked_room_refs": [
+          "room-203"
+        ],
+        "availability_must_exclude_blocked": true,
+        "external_contact_allowed": false
+      },
+      {
+        "id": "breakfast_stock_shortage",
+        "items_below_minimum": [
+          "stock-bread",
+          "stock-eggs",
+          "stock-linen"
+        ],
+        "no_automatic_purchasing": true
+      }
+    ],
+    "capability_policy": {
+      "front_desk_unstaffed_after": "22:00",
+      "front_desk_resumes": "06:00",
+      "night_contact": "operator_defined_not_autogenerated",
+      "no_elevator": true,
+      "no_staff_impersonation": true,
+      "external_vendor_calls": "OPERATOR_APPROVAL_REQUIRED",
+      "hotel_records_to_cloud": "DENY_BY_DEFAULT"
+    }
+  },
+  "deferred_scenario": {
+    "id": "conrad-hamburg-283",
+    "name": "Conrad Hamburg",
+    "reference_address": "Bugenhagenstraße 8, 20095 Hamburg",
+    "reference_room_count": 283,
+    "reference_staff_current": 120,
+    "reference_staff_capacity_range": [
+      250,
+      270
+    ],
+    "status": "NOT_IMPORTED_SECOND_PHASE"
+  }
+}
