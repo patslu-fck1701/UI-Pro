@@ -9,6 +9,11 @@ import os
 import sys
 from urllib.parse import urlsplit
 
+# WERKZ-BRIDGE-1 currently authorizes this specific preview origin and route.
+# A generic user-supplied HTTPS endpoint is NOT sufficient protection from SSRF.
+APPROVED_BRIDGE_HOST = "project--9081192e-6239-40a6-8f20-02296cff5c91-dev.lovable.app"
+APPROVED_BRIDGE_PATH = "/api/public/local-ai/ask"
+
 
 def _positive_int(raw: str | None) -> bool:
     try:
@@ -25,16 +30,14 @@ def _https_endpoint(raw: str) -> bool:
         host = parsed.hostname
         return (
             parsed.scheme == "https"
-            and bool(host)
+            and host == APPROVED_BRIDGE_HOST
+            and parsed.netloc == APPROVED_BRIDGE_HOST
             and parsed.username is None
             and parsed.password is None
-            and parsed.port in (None, 443)
+            and parsed.port is None
+            and parsed.path == APPROVED_BRIDGE_PATH
             and not parsed.query
             and not parsed.fragment
-            and host not in {"localhost", "127.0.0.1", "::1"}
-            and not (host.startswith("127.") or host.endswith(".localhost"))
-            and parsed.path.startswith("/")
-            and not parsed.path.startswith("//")
         )
     except ValueError:
         return False
