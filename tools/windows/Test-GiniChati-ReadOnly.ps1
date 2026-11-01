@@ -20,8 +20,10 @@ if ($LASTEXITCODE -ne 0) { Write-Output 'GIT_STATUS=ERROR'; exit 2 }
 Write-Output ('WORKTREE=' + $(if ($modified.Count -eq 0) { 'CLEAN' } else { 'HAS_LOCAL_CHANGES_PRESERVED' }))
 $analyzer = Join-Path $repo 'apps\local-ai\scripts\bridge-analyze.py'
 if (Test-Path -LiteralPath $analyzer -PathType Leaf) {
-  $has20 = [bool](Select-String -LiteralPath $analyzer -SimpleMatch 'asyncio.timeout(20)' -Quiet)
-  Write-Output ('BRIDGE_SOURCE_TIMEOUT20=' + $(if ($has20) { 'PRESENT' } else { 'NOT_PRESENT' }))
+  $hasDedicatedPort = [bool](Select-String -LiteralPath $analyzer -SimpleMatch "BRIDGE_MODEL_BASE = 'http://127.0.0.1:8081'" -Quiet)
+  $hasBoundedBudget = [bool](Select-String -LiteralPath $analyzer -SimpleMatch 'MAX_ANALYSIS_SECONDS = 30' -Quiet)
+  Write-Output ('BRIDGE_SOURCE_DEDICATED_8081=' + $(if ($hasDedicatedPort) { 'PRESENT' } else { 'NOT_PRESENT' }))
+  Write-Output ('BRIDGE_SOURCE_BOUNDED_30S=' + $(if ($hasBoundedBudget) { 'PRESENT' } else { 'NOT_PRESENT' }))
 } else {
   Write-Output 'BRIDGE_SOURCE=NOT_IN_CHECKOUT'
 }

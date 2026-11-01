@@ -7,6 +7,12 @@ import pytest
 module=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/bridge-analyze.py'))
 analyze=module['analyze'];engine=module['engine']
 
+def test_bridge_uses_dedicated_loopback_model():
+    assert module['BRIDGE_MODEL_BASE']=='http://127.0.0.1:8081'
+    assert engine.BASE==module['BRIDGE_MODEL_BASE']
+    assert module['MAX_ANALYSIS_SECONDS']==30
+    assert module['COMPLETION_RESERVE_SECONDS']==4
+
 def job(**changes):
     return {'request_id':str(uuid.uuid4()),'lease_id':str(uuid.uuid4()),'prompt':'SYNTHETISCH: Testfrage','expires_at':(datetime.now(timezone.utc)+timedelta(seconds=90)).isoformat(),**changes}
 
@@ -39,3 +45,16 @@ def test_missing_model_and_oversized_output_fail(inference,monkeypatch):
     async def large(*args):yield 'x'*8001
     monkeypatch.setattr(engine,'models',models);monkeypatch.setattr(engine,'tokens',large)
     with pytest.raises(ValueError):asyncio.run(analyze(job()))
+
+def test_analysis_timeout_is_bounded_by_job_budget(inference,monkeypatch):
+    async def slow(*args):
+        await asyncio.sleep(.05)
+        yield 'too late'
+    monkeypatch.setattr(engine,'tokens',slow)
+    near_expiry=(datetime.now(timezone.utc)+timedelta(seconds=4.01)).isoformat()
+    with pytest.raises(TimeoutError):asyncio.run(analyze(job(expires_at=near_expiry)))
+
+def test_job_without_completion_reserve_never_reaches_inference(inference):
+    near_expiry=(datetime.now(timezone.utc)+timedelta(seconds=3)).isoformat()
+    with pytest.raises(ValueError,match='EXPIRED'):asyncio.run(analyze(job(expires_at=near_expiry)))
+    assert inference==[]

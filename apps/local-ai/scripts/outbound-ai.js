@@ -82,7 +82,9 @@ class OutboundAI {
 }
 function analyzer(root){return async job=>{
   const python=path.join(root,'.venv','Scripts','python.exe');
-  const result=spawnSync(python,[path.join(root,'scripts','bridge-analyze.py')],{cwd:root,input:JSON.stringify(job),encoding:'utf8',windowsHide:true,timeout:25000,maxBuffer:32768});
+  // Python caps inference at 30 s and reserves lease time for completion.
+  // This outer guard only contains interpreter/process failures.
+  const result=spawnSync(python,[path.join(root,'scripts','bridge-analyze.py')],{cwd:root,input:JSON.stringify(job),encoding:'utf8',windowsHide:true,timeout:32000,maxBuffer:32768});
   if(result.error?.code==='ETIMEDOUT')throw new Error('MODEL_TIMEOUT');
   if(result.error||result.status!==0)throw new Error('MODEL_UNAVAILABLE');
   let output;try{output=JSON.parse(result.stdout);}catch{throw new Error('MODEL_UNAVAILABLE');}
