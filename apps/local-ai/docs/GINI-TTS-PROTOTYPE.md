@@ -1,6 +1,6 @@
 # GINI-Sprachausgabe (TTS), Stand 2026-11-02
 
-Status: Lokaler TTS-Kern und Browser-Ersatzstimme geprüft (22 Tests). Gini V10 (ElevenLabs) ist NICHT in diesem Branch. Keine echte Anfrage an einen externen Anbieter ist ausgeführt.
+Status: Lokaler TTS-Kern und Browser-Ersatzstimme geprüft (22 Tests). Gini V10 (ElevenLabs) ist NICHT in diesem Branch. Es wurde keine Sprachausgabe von ElevenLabs erzeugt.
 
 ## Zuständigkeiten (verbindlich)
 - **WerkZ (Node, `src/integrations/gini*.js`)**: Einziger Ort für kostenpflichtige Anbieter. ElevenLabs für Gini V10 (TTS und STT), KundenZ-Entscheidung, `consent_ref`, Scope-Prüfung. Die Voice-ID steht in `integrations/gini/voice-profile.json`.
@@ -24,8 +24,13 @@ Status: Lokaler TTS-Kern und Browser-Ersatzstimme geprüft (22 Tests). Gini V10 
 4. **Geräte- und Browsertest fehlt.** Mikrofon, Lautsprecher, Chrome und Firefox. Das geht nur in einer Umgebung mit Gerät.
 5. **Vollständiger Build nicht möglich.** Der npm-Registry-Host wird vom Gateway gesperrt (403), und der Offline-Cache enthält die Pakete nicht. `GiniSpeak.tsx` ist nur eingeschränkt typgeprüft (React-Typen fehlen).
 
-## Livetest (vorbereitet, NICHT ausgeführt)
-Ein einziger Aufruf mit einem festen Testsatz (41 Zeichen). Er braucht die ausdrückliche Kostenfreigabe von Pat. Das Skript liegt außerhalb des Repos, im Scratchpad. Es hat einen Trockenlauf als Standard und verlangt ein Freigabe-Token. Nach dem ersten Lauf ist es durch eine Marker-Datei gesperrt. Es umgeht bewusst die KundenZ-Entscheidung, nur für diesen einen freigegebenen Lauf.
+## Livetest und Stand (2026-11-02)
+- Transport: Der Node-Client scheiterte an DNS (ENOTFOUND), weil Node den Session-Proxy nicht automatisch nutzt. Behoben ohne Installation mit `NODE_USE_ENV_PROXY=1` und `NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`. Das gilt für Entwicklungs- und Testläufe, nicht als Produktionseinstellung.
+- Schlüssel: Der ElevenLabs-Schlüssel aus dem Betreiber-Speicher ist gültig (Konto aktiv, Creator, 5.449 von 131.000 Zeichen verbraucht). Er wurde nicht ausgegeben.
+- Voice-ID: `8pVdES9f9x71wHWeQsgz` ist im Konto als „Nicole - Young & Friendly“ (Kategorie professional, Sprache de) geführt. Im Konto gibt es keine Stimme mit dem Namen Gini, V10 oder WerkZ. Die V10-Zuordnung ist daher NICHT bestätigt.
+- Kein TTS-Aufruf ist erfolgt, weder erfolgreich noch fehlgeschlagen mit Anbieterkontakt. Der erste Versuch scheiterte vor dem Verbindungsaufbau.
+- Einmal-Marker: verbraucht, nicht zurückgesetzt. Er wird erst zurückgesetzt, wenn die Voice-Zuordnung bestätigt ist.
+- Vorgehen: Erst die korrekte V10-Voice-ID bestätigen, dann genau ein Aufruf mit Freigabe.
 
 ## Tests
 - `cd apps/local-ai && python3 -m pytest tests/test_tts_core.py -q`: 22 Tests, grün.
