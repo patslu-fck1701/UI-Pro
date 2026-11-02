@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import io
 import math
-import os
 import struct
 import threading
 import time
@@ -13,7 +12,6 @@ import wave
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from dataclasses import dataclass, field
 
-from .elevenlabs import ElevenLabsProvider
 from .sanitize import segments
 
 MAX_INPUT_CHARS = 3000
@@ -22,19 +20,10 @@ SEGMENT_CHARS = 600
 TIMEOUT_S = 20.0
 GLOBAL_CONCURRENCY = 2
 DAILY_CHAR_BUDGET = 30000  # je Mandant und Tag, im Prozess gehalten (nicht persistiert)
-ALLOWED_PROVIDERS = {"synthetic-test"}  # Basis; kostenpflichtige Anbieter nur über allowed_providers()
 
-
-def allowed_providers() -> set[str]:
-    """Kostenpflichtige Anbieter erst mit ausdrücklicher Freigabe TTS_ALLOW_PAID_PROVIDER=1."""
-    allowed = set(ALLOWED_PROVIDERS)
-    if os.environ.get("TTS_ALLOW_PAID_PROVIDER", "").strip() == "1":
-        allowed.add("elevenlabs")
-    return allowed
-
-
-def _paid_ready() -> bool:
-    return bool(os.environ.get("ELEVENLABS_API_KEY", "").strip())
+# Dieser Dienst ist ausschließlich lokal und offline. Externe, kostenpflichtige Anbieter
+# (ElevenLabs für Gini V10) laufen NUR über WerkZ (KundenZ, Consent, Kostenlimits).
+ALLOWED_PROVIDERS = {"synthetic-test"}
 
 
 class TtsError(Exception):
@@ -102,20 +91,13 @@ class Config:
 
     @property
     def configured(self) -> bool:
-        if self.provider not in allowed_providers():
-            return False
-        if self.provider == "synthetic-test":
-            return True
-        if self.provider == "elevenlabs":
-            return bool(self.voice_id) and _paid_ready()
-        return False
+        return self.provider == "synthetic-test"  # nur Testanbieter; externe Anbieter nicht hier
 
 
 @dataclass
 class TtsService:
     config: Config
-    provider_factory: dict = field(default_factory=lambda: {"synthetic-test": SyntheticProvider,
-                                                              "elevenlabs": ElevenLabsProvider})
+    provider_factory: dict = field(default_factory=lambda: {"synthetic-test": SyntheticProvider})
     clock: object = time.time
     audit: list = field(default_factory=list)  # nur Metadaten, nie Text oder Audio
 
@@ -127,11 +109,9 @@ class TtsService:
         self._pool = ThreadPoolExecutor(max_workers=GLOBAL_CONCURRENCY)
 
     def status(self) -> dict:
-        # Nie Schlüssel, nie Voice-ID im Status: nur Zustand für die Oberfläche.
         return {"configured": self.config.configured, "provider": self.config.provider or None,
                 "test_only": self.config.provider == "synthetic-test",
-                "paid_provider": self.config.provider == "elevenlabs",
-                "localOnly": self.config.provider != "elevenlabs"}
+                "localOnly": True}
 
     def _log(self, request_id, user_id, tenant, status, started, chars, segs, provider):
         self.audit.append({"request_id": request_id, "user": user_id, "tenant": tenant, "status": status,

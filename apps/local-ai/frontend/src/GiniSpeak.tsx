@@ -3,6 +3,10 @@ import {useEffect,useRef,useState} from 'react';
 // Vorlesen nur auf ausdrücklichen Klick, ausschließlich für tatsächliche Antworten.
 // kind:'answer' erzwingt am Aufrufer, dass nur echte Antworttexte übergeben werden
 // (keine Statusmeldungen, Fehler oder Platzhalter).
+//
+// Verantwortung: Gini V10 kommt vom Server (WerkZ/KundenZ). Die Browser-Stimme ist nur
+// ein technischer Ersatz, wenn der Server nicht eingerichtet oder nicht erreichbar ist,
+// und wird immer als "nicht Gini V10" gekennzeichnet.
 type Phase='ready'|'generating'|'playing'|'stopped'|'failed'|'not-configured';
 const LABEL:Record<Phase,string>={
   ready:'Vorlesen',
@@ -23,14 +27,16 @@ function webSpeechAvailable():boolean{
   return typeof window!=='undefined'&&'speechSynthesis' in window;
 }
 
+// Chrome kann eine Utterance ohne Referenz vorzeitig freigeben; deshalb hier halten.
+let liveUtterance:SpeechSynthesisUtterance|null=null;
+
 function speakWithWebSpeech(text:string,onEnd:()=>void,onError:(e:string)=>void):()=>void{
   const synth=window.speechSynthesis;
-  synth.cancel(); // evtl. laufende Ausgabe stoppen
+  synth.cancel(); // evtl. laufende Ausgabe anderer Instanzen stoppen
 
-  const plainText=stripMarkdown(text);
-  const utter=new SpeechSynthesisUtterance(plainText);
+  const utter=new SpeechSynthesisUtterance(stripMarkdown(text));
 
-  // Gini-Stimme: Bevorzuge deutschsprachige weibliche Stimme
+  // Bevorzuge deutschsprachige weibliche Stimme, sonst eine deutsche, sonst Standard
   const voices=synth.getVoices();
   const giniVoice=
     voices.find(v=>v.lang.startsWith('de')&&v.name.toLowerCase().includes('female'))
@@ -41,15 +47,21 @@ function speakWithWebSpeech(text:string,onEnd:()=>void,onError:(e:string)=>void)
   if(giniVoice)utter.voice=giniVoice;
 
   utter.lang='de-DE';
-  utter.rate=0.95;    // leicht langsamer, angenehmer
-  utter.pitch=1.05;   // etwas heller, weiblicher Charakter
+  utter.rate=0.95;
+  utter.pitch=1.05;
   utter.volume=0.95;
 
-  utter.onend=onEnd;
-  utter.onerror=(ev)=>onError(ev.error||'Sprachausgabe fehlgeschlagen.');
+  utter.onend=()=>{if(liveUtterance===utter)liveUtterance=null;onEnd();};
+  utter.onerror=(ev)=>{
+    if(liveUtterance===utter)liveUtterance=null;
+    // "canceled"/"interrupted" entsteht durch Stopp oder durch eine neue Ausgabe, kein Fehler
+    if(ev.error==='canceled'||ev.error==='interrupted'){onEnd();return;}
+    onError(ev.error||'Sprachausgabe fehlgeschlagen.');
+  };
+  liveUtterance=utter;
   synth.speak(utter);
 
-  return ()=>synth.cancel();
+  return ()=>{if(liveUtterance===utter)liveUtterance=null;synth.cancel();};
 }
 
 /** Markdown-Zeichen für Web Speech entfernen (keine HTML-Tags, keine Sternchen usw.) */
@@ -75,29 +87,36 @@ function stripMarkdown(text:string):string{
 export function GiniSpeakButton({text,kind}:{text:string;kind:'answer'}){
   const [phase,setPhase]=useState<Phase>('ready');
   const [detail,setDetail]=useState('');
+  // null = unbekannt, true/false = Serverstatus (Gini V10 eingerichtet?)
+  const [serverReady,setServerReady]=useState<boolean|null>(null);
   const busy=useRef(false);
   const controller=useRef<AbortController|null>(null);
   const player=useRef<HTMLAudioElement|null>(null);
   const objectUrl=useRef('');
   const mounted=useRef(true);
-  const webSpeechStop=useRef<(()=>void)|null>(null);
+  // Lokale Ausgabe: Sitzungs-ID. Jeder Stopp/Neustart macht alte Callbacks wirkungslos.
+  const localSession=useRef(0);
+  const localStop=useRef<(()=>void)|null>(null);
+  const cancelVoiceWait=useRef<(()=>void)|null>(null);
+
+  /** Lokale Web-Speech-Ausgabe vollständig beenden, auch wartende Starts */
+  function releaseLocal(){
+    localSession.current++;
+    if(cancelVoiceWait.current){cancelVoiceWait.current();cancelVoiceWait.current=null;}
+    if(localStop.current){localStop.current();localStop.current=null;}
+  }
 
   /** Alle Ressourcen freigeben: Anfrage, Audio, Web Speech */
   function release(){
     controller.current?.abort();
     controller.current=null;
-    // WAV-Player
     const a=player.current;
     if(a){a.pause();a.removeAttribute('src');a.load();}
     player.current=null;
     if(objectUrl.current){URL.revokeObjectURL(objectUrl.current);objectUrl.current='';}
-    // Web Speech
-    if(webSpeechStop.current){webSpeechStop.current();webSpeechStop.current=null;}
+    releaseLocal();
     busy.current=false;
   }
-
-  // null = noch unbekannt, true/false = Serverstatus (Gini V10 eingerichtet?)
-  const [serverReady,setServerReady]=useState<boolean|null>(null);
 
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;release();};},[]);
   useEffect(()=>{
@@ -116,35 +135,54 @@ export function GiniSpeakButton({text,kind}:{text:string;kind:'answer'}){
     setPhase('stopped');
   }
 
-  // ── Web Speech ─────────────────────────────────────────────────────────────
-  // Ersatzstimme des Browsers. Ist NICHT Gini V10 und wird entsprechend gekennzeichnet.
+  // ── Browser-Ersatzstimme ───────────────────────────────────────────────────
   function speakLocal(note:string){
     if(busy.current||!text.trim())return;
     busy.current=true;
+    const session=++localSession.current;
     setDetail(note);
     setPhase('generating');
 
-    // Voices werden ggf. asynchron geladen – kurze Wartezeit
-    const doSpeak=()=>{
+    const current=()=>mounted.current&&busy.current&&localSession.current===session;
+    let started=false;
+    const finish=()=>{
+      if(!current())return;
+      releaseLocal();
+      busy.current=false;
+      setPhase('ready');
+    };
+    // Genau ein Start, egal ob onvoiceschanged oder der Timer zuerst feuert.
+    const start=()=>{
+      if(started||!current())return;
+      started=true;
+      if(cancelVoiceWait.current){cancelVoiceWait.current();cancelVoiceWait.current=null;}
       setPhase('playing');
-      const cancel=speakWithWebSpeech(
+      localStop.current=speakWithWebSpeech(
         text,
-        ()=>{if(mounted.current&&busy.current){release();setPhase('ready');}},
-        (err)=>{if(mounted.current){release();setPhase('failed');setDetail(err);}},
+        finish,
+        (err)=>{
+          if(!current())return;
+          releaseLocal();
+          busy.current=false;
+          setPhase('failed');
+          setDetail(err);
+        },
       );
-      webSpeechStop.current=cancel;
     };
 
-    if(window.speechSynthesis.getVoices().length===0){
-      window.speechSynthesis.onvoiceschanged=()=>{window.speechSynthesis.onvoiceschanged=null;doSpeak();};
-      // Fallback: nach 300 ms sowieso starten
-      setTimeout(doSpeak,300);
+    const synth=window.speechSynthesis;
+    if(synth.getVoices().length===0){
+      // Stimmen laden asynchron: auf Ereignis oder kurzen Timer warten, nicht beides starten.
+      const timer=window.setTimeout(()=>{cancelWait();start();},300);
+      const cancelWait=()=>{synth.onvoiceschanged=null;window.clearTimeout(timer);cancelVoiceWait.current=null;};
+      synth.onvoiceschanged=()=>{cancelWait();start();};
+      cancelVoiceWait.current=cancelWait;
     }else{
-      doSpeak();
+      start();
     }
   }
 
-  // ── Server-TTS (WAV vom Backend) ───────────────────────────────────────────
+  // ── Server-TTS (Gini V10 als WAV vom Backend) ──────────────────────────────
   // Ergebnis: 'played' | 'stopped' | 'error' (Anzeige gesetzt) | 'unavailable' (Ersatz erlaubt)
   async function speakServer():Promise<'played'|'stopped'|'error'|'unavailable'>{
     if(busy.current||!text.trim())return 'error';
@@ -192,7 +230,7 @@ export function GiniSpeakButton({text,kind}:{text:string;kind:'answer'}){
     }
   }
 
-  // ── Routing: Gini V10 (Server) zuerst, Browser-Ersatzstimme nur als technischer Fallback
+  // ── Routing: Gini V10 (Server) zuerst, Browser-Ersatz nur als technischer Fallback
   async function speak(){
     if(serverReady!==false){
       const result=await speakServer();
@@ -215,8 +253,8 @@ export function GiniSpeakButton({text,kind}:{text:string;kind:'answer'}){
         type="button"
         className="ghost gini-speak-btn"
         disabled={!text.trim()}
-        title={active?'Vorlesen stoppen':(webSpeechAvailable()?'Lokal vorlesen (Web Speech)':'Per Server vorlesen')}
-        onClick={()=>active?stop():speak()}
+        title={active?'Vorlesen stoppen':'Antwort vorlesen'}
+        onClick={()=>active?stop():void speak()}
         aria-label={active?'Vorlesen stoppen':'Antwort vorlesen'}
       >
         {active
