@@ -28,6 +28,9 @@ def configuration(tenant):
         if PACKAGE=='schrotties-demo':result.update(hotel_ai=False,handwerk_ai=False,business_ai=False)
         return result
 def check_module(user,name):
+    from ..kundenz import enabled
+    if enabled() and name.removesuffix('_ai') not in getattr(user, 'kundenz_modules', []):
+        raise HTTPException(403,'Modul nicht freigegeben.')
     value=configuration(user.tenant).get(name)
     if value is not True and not (name in MODULES and MODULES[name]['status'] in {'simulation','preview'} and value==MODULES[name]['status']):
         raise HTTPException(403,'Dieses Modul ist deaktiviert oder die Freigabe ist abgelaufen.')

@@ -30,6 +30,12 @@ def current_user(request: Request) -> User:
         user=db.get(User,session.user_id)
         if not user:
             raise HTTPException(401,'Bitte anmelden.')
+        from .kundenz import enabled, recheck
+        if enabled():
+            grant = recheck(db, user, session, session_hash(token))
+            import json
+            user.kundenz_role = grant.role
+            user.kundenz_modules = json.loads(grant.modules)
         expected_actor=request.headers.get('x-werkz-actor')
         expected_tenant=request.headers.get('x-werkz-tenant')
         if (expected_actor and expected_actor!=user.id) or (expected_tenant and expected_tenant!=user.tenant):
