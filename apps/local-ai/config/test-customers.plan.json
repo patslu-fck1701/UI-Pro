@@ -1,0 +1,8 @@
+{
+  "status": "OFFLINE_ONLY_NOT_PROVISIONED_AT_IDP",
+  "activation_requires_owner_approved_release": true,
+  "accounts": [
+    {"label": "TEST_CUSTOMER_01", "synthetic_tenant": "synthetic-TEST_CUSTOMER_01", "role": "TEST_CUSTOMER", "modules": ["hotel"], "planned_duration_hours": 24, "verified_identity": null, "activated_at": null, "expires_at": null},
+    {"label": "TEST_CUSTOMER_02", "synthetic_tenant": "synthetic-TEST_CUSTOMER_02", "role": "TEST_CUSTOMER", "modules": ["hotel"], "planned_duration_hours": 24, "verified_identity": null, "activated_at": null, "expires_at": null}
+  ]
+}

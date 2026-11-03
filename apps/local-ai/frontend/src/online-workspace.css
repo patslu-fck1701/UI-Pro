@@ -1,0 +1,7 @@
+.online-workspace{max-width:1440px;margin:auto;padding:24px;min-width:0;overflow-wrap:anywhere}
+.online-workspace>header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.online-workspace>header .brand{font-size:22px;flex:1}
+.online-workspace>nav{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}
+.online-workspace button{white-space:normal;max-width:100%}
+.online-workspace nav button[aria-pressed=true]{outline:2px solid #39ff14}
+@media(max-width:600px){.online-workspace{padding:16px}.online-workspace>header p{width:100%;order:3}.online-workspace>nav>button{flex:1;min-height:48px}}

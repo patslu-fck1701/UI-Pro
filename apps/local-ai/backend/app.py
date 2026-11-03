@@ -594,3 +594,5 @@ if dist.exists():
     app.mount('/assets',StaticFiles(directory=dist/'assets'),name='assets')
     @app.get('/')
     def index():return FileResponse(dist/'index.html')
+    from .web_routes import install_web_fallback
+    install_web_fallback(app)

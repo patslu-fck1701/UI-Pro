@@ -7,10 +7,10 @@ async function api(path:string,body?:unknown){
  const r=await fetch('/api/gini/v1'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  const data=await r.json();if(!r.ok)throw Error(data.error?.message||data.detail||'Vorgang nicht möglich.');return data;
 }
-export function GiniCloudPanel(){
+export function GiniCloudPanel({initialQuestion=''}:{initialQuestion?:string}){
  const [caps,setCaps]=useState<Caps|null>(null),[docs,setDocs]=useState<Doc[]>([]),[doc,setDoc]=useState<Doc|null>(null);
  const [draft,setDraft]=useState<Draft|null>(null),[diff,setDiff]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
- const [question,setQuestion]=useState(''),[answer,setAnswer]=useState(''),[instruction,setInstruction]=useState('');
+ const [question,setQuestion]=useState(initialQuestion),[answer,setAnswer]=useState(''),[instruction,setInstruction]=useState('');
  const [history,setHistory]=useState<{version:number;sha256:string;created:string}[]>([]),[approved,setApproved]=useState(false);
  const refresh=()=>api('/documents').then(setDocs);
  useEffect(()=>{let active=true;void api('/capabilities').then(v=>{if(active)setCaps(v);}).catch(e=>{if(active)setError(e.message);});void refresh().catch(()=>{});return()=>{active=false;};},[]);

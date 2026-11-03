@@ -3,6 +3,7 @@ import os
 import re
 import time
 import sys
+import json
 from pathlib import Path
 if os.environ.get('WERKZ_SYNTHETIC_BROWSER')!='1' or 'werkz-cloud-browser-' not in os.environ.get('WERKZ_AI_DATA',''):
     raise SystemExit('REFUSED: isolated synthetic browser fixture required')
@@ -16,8 +17,9 @@ from backend.security import session_hash
 
 os.environ['WERKZ_OWNER_ISSUER']='https://identity.example.invalid'
 os.environ['WERKZ_OWNER_SUBJECT']='owner'
+plan=json.loads((Path(__file__).resolve().parents[1]/'config'/'test-customers.plan.json').read_text())
 with Session() as db:
-    for name in ('owner','customer-a','customer-b'):
+    for name in ('owner',*(row['label'] for row in plan['accounts'])):
         db.add(User(id=name,username=name,password_hash='disabled',tenant='synthetic-'+name,
                     role='admin' if name=='owner' else 'hotel_reception'))
         db.flush()

@@ -15,9 +15,12 @@ try{
  browser=await chromium.launch({headless:true,...(process.platform==='win32'?{channel:'msedge'}:{})});
  const context=await browser.newContext({viewport:{width:1440,height:1000}});
  // Pre-provisioned synthetic OIDC sessions: no real identity-provider claim.
- await context.addCookies([{name:'werkz_hotel_program',value:'customer-a',url:base,httpOnly:true,sameSite:'Strict'}]);
+ await context.addCookies([{name:'werkz_hotel_program',value:'TEST_CUSTOMER_01',url:base,httpOnly:true,sameSite:'Strict'}]);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base);
+ await page.getByRole('button',{name:'GINI und Dateien',exact:true}).click();
+ assert.equal(await page.getByRole('navigation',{name:'Werkzeuge'}).count(),0);
+ assert.equal(await page.getByText('Qwen3 verbunden',{exact:true}).count(),0);
  await page.locator('summary').filter({hasText:'GINI Cloud · Chat und sichere Textdateien'}).click();
  await page.getByText('Cloud-Sprachausgabe nicht verfügbar.',{exact:false}).waitFor();
  await page.getByLabel('Nachricht an GINI').fill('SYNTHETIC question');
@@ -33,7 +36,7 @@ try{
  await page.getByRole('heading',{name:'synthetic.txt · Version 2',exact:true}).waitFor();
  page.on('dialog',d=>d.accept());await page.getByRole('button',{name:'Wiederherstellen',exact:true}).click();
  await page.getByRole('heading',{name:'synthetic.txt · Version 3',exact:true}).waitFor();
- await page.reload();await page.locator('summary').filter({hasText:'GINI Cloud · Chat und sichere Textdateien'}).click();
+ await page.reload();await page.getByRole('button',{name:'GINI und Dateien',exact:true}).click();await page.locator('summary').filter({hasText:'GINI Cloud · Chat und sichere Textdateien'}).click();
  await page.getByRole('button',{name:'synthetic.txt · v3',exact:true}).click();
  await page.getByRole('heading',{name:'synthetic.txt · Version 3',exact:true}).waitFor();
  for(const width of [390,768,1440]){
@@ -44,10 +47,18 @@ try{
     .slice(0,8).map(el=>({tag:el.tagName,cls:el.className,text:el.textContent?.slice(0,80),right:el.getBoundingClientRect().right}))}));
   assert.ok(geometry.scroll<=geometry.width,'horizontal overflow '+width+' '+JSON.stringify(geometry));
  }
- const other=await browser.newContext();await other.addCookies([{name:'werkz_hotel_program',value:'customer-b',url:base,httpOnly:true,sameSite:'Strict'}]);
+ const other=await browser.newContext();await other.addCookies([{name:'werkz_hotel_program',value:'TEST_CUSTOMER_02',url:base,httpOnly:true,sameSite:'Strict'}]);
  assert.deepEqual(await (await other.request.get(base+'/api/gini/v1/documents')).json(),[]);
  const docs=await (await context.request.get(base+'/api/gini/v1/documents')).json();
  assert.equal((await other.request.get(base+'/api/gini/v1/documents/'+docs[0].document_id)).status(),404);
+ const otherPage=await other.newPage();await otherPage.goto(base);
+ await otherPage.getByRole('button',{name:'GINI und Dateien',exact:true}).click();
+ assert.equal(await otherPage.getByRole('button',{name:'Testkunden',exact:true}).count(),0);
+ for(const old of ['/berater/','/hub/','/demo/','/pilot/'])assert.equal((await other.request.get(base+old)).status(),410);
+ const owner=await browser.newContext();await owner.addCookies([{name:'werkz_hotel_program',value:'owner',url:base,httpOnly:true,sameSite:'Strict'}]);
+ const ownerPage=await owner.newPage();await ownerPage.goto(base);await ownerPage.getByRole('button',{name:'Testkunden',exact:true}).click();
+ await ownerPage.locator('summary').filter({hasText:'Owner · Testkunden verwalten'}).click();
+ await ownerPage.getByRole('button',{name:'Einmaligen Einladungscode erstellen',exact:true}).waitFor();
  await page.getByRole('button',{name:'Abmelden',exact:true}).click();await page.getByRole('heading',{name:'WerkZ Digital',exact:true}).waitFor();
  assert.equal((await context.request.get(base+'/api/gini/v1/documents')).status(),401);
  assert.deepEqual(errors,[]);

@@ -58,7 +58,6 @@ const businessRepositories=businessStore?repositories(businessStore,dataDir):nul
 const tenantCredentialStore=applicationPool?new PostgresTenantCredentialStore({query:(sql,args)=>applicationPool.query(sql,args)}):new FileTenantCredentialStore({file:path.join(dataDir,'tenant-credentials.json')});
 const durableCustomerSecretStore=Boolean(applicationPool||(storageReadiness.declaredPersistent&&storageReadiness.writeProbePassed)||process.env.WERKZ_ALLOW_EPHEMERAL_TEST_SECRETS==='1');
 const pwaDir=path.resolve(__dirname,'../apps/time-pwa');
-const hubDir=path.resolve(__dirname,'../demos/demo-hub');
 const pilotDir=path.resolve(__dirname,'../apps/simple-pilot');
 const pilotSiteDir=path.resolve(__dirname,'../apps/simple-site');
 const {HandwerkAccounts}=require('../src/security/handwerk-accounts');
@@ -267,31 +266,10 @@ function hubSecurityHeaders(response){
 }
 
 function serveDemoHub(url,response){
-  if(url.pathname==='/hub'){
-    response.writeHead(308,{location:'/hub/'});response.end();return true;
-  }
-  if(!url.pathname.startsWith('/hub/'))return false;
-  let relative;
-  try{relative=decodeURIComponent(url.pathname.slice('/hub/'.length));}
-  catch{response.writeHead(400,{'content-type':'text/plain; charset=utf-8'});response.end('Bad request');return true;}
-  if(!relative)relative='index.html';
-  if(relative==='data/config.json'){
-    const config=JSON.parse(fs.readFileSync(path.join(hubDir,'data/config.json'),'utf8'));
-    config.time_app_url='/test-profiles?return=/';
-    config.time_profile_url='/test-profiles?return=/hub/';
-    config.time_api_base='/api';
-    hubSecurityHeaders(response);
-    response.writeHead(200,{'content-type':'application/json; charset=utf-8'});
-    response.end(JSON.stringify(config));return true;
-  }
-  const candidate=path.resolve(hubDir,relative);
-  if(candidate!==hubDir&&!candidate.startsWith(hubDir+path.sep)){
-    response.writeHead(403,{'content-type':'text/plain; charset=utf-8'});response.end('Forbidden');return true;
-  }
-  if(!fs.existsSync(candidate)||!fs.statSync(candidate).isFile())return false;
+  if(url.pathname!=='/hub'&&!url.pathname.startsWith('/hub/'))return false;
   hubSecurityHeaders(response);
-  response.writeHead(200,{'content-type':contentTypes[path.extname(candidate)]||'application/octet-stream'});
-  response.end(fs.readFileSync(candidate));return true;
+  response.writeHead(410,{'content-type':'text/plain; charset=utf-8'});
+  response.end('Die alte WerkZ-Testübersicht wurde entfernt. Aktueller Einstieg: /');return true;
 }
 
 function servePilotReference(url,response){
