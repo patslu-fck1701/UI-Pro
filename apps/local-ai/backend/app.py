@@ -31,6 +31,13 @@ from .oidc import router as oidc_router
 app.include_router(oidc_router)
 from .test_customers import router as test_customers_router
 app.include_router(test_customers_router)
+from .cloud_api import router as cloud_router
+from .gini_cloud import GiniCloudError
+app.include_router(cloud_router)
+
+@app.exception_handler(GiniCloudError)
+async def cloud_error(request, exc):
+    return JSONResponse(exc.body(), status_code=exc.status, headers={'Cache-Control':'no-store'})
 app.include_router(business_router)
 app.include_router(voice_router)
 app.include_router(admin_router)
@@ -255,7 +262,7 @@ def ready():
         database='unavailable'
         revision=None
     from .kundenz import enabled
-    migration='current' if revision=='hotel_005' else 'required'
+    migration='current' if revision=='hotel_006' else 'required'
     ready=database=='ready' and migration=='current'
     payload={'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
              'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,

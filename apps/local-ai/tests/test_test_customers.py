@@ -66,3 +66,25 @@ def test_invitation_requires_confirmed_recipient(store, claims):
         with pytest.raises(ValueError):
             customers.accept(db, session_hash(result['token']), claims, 'https://id.example.invalid')
         assert db.scalar(select(User)) is None
+
+
+def test_role_module_expiry_updates_and_stale_update_denied(store):
+    owner=SimpleNamespace(id='owner',tenant='owner')
+    invite=customers.invite(customers.InviteInput(recipient='one@example.invalid',
+        recipient_confirmed=True,duration_hours=1,modules=['hotel']),owner)
+    with store() as db:
+        user=customers.accept(db,session_hash(invite['token']),{'sub':'test-sub',
+            'email':'one@example.invalid','email_verified':True},'https://id.example.invalid')
+        db.commit()
+        uid=user.id
+        expires=db.get(customers.Invitation,invite['id']).access_expires
+    data=customers.UpdateAccess(expected_expires=expires,duration_hours=24,
+                                role='CUSTOMER_ADMIN',modules=['hotel'])
+    assert customers.update_access(invite['id'],data,owner)['relogin_required']
+    with store() as db:
+        assert db.get(User,uid).role=='hotel_administrator'
+        assert db.get(IdentityGrant,uid).role=='CUSTOMER_ADMIN'
+        assert db.get(IdentityGrant,uid).expires>expires
+    with pytest.raises(HTTPException) as exc:
+        customers.update_access(invite['id'],data,owner)
+    assert exc.value.status_code==409

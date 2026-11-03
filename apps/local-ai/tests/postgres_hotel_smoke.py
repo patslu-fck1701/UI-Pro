@@ -197,7 +197,7 @@ with engine.begin() as connection:
     cfg.attributes["connection"] = connection
     assert connection.exec_driver_sql(
         "SELECT version_num FROM hotel_alembic_version"
-    ).scalar() == "hotel_005"
+    ).scalar() == "hotel_006"
     command.downgrade(cfg, "platform_003")
     assert not inspect(connection).has_table("hotel_ai_usage")
     assert connection.exec_driver_sql(
@@ -207,7 +207,7 @@ with engine.begin() as connection:
     assert inspect(connection).has_table("hotel_ai_usage")
     assert connection.exec_driver_sql(
         "SELECT version_num FROM hotel_alembic_version"
-    ).scalar() == "hotel_005"
+    ).scalar() == "hotel_006"
     assert connection.scalar(select(func.count()).select_from(Reservation)) == 2
     assert connection.scalar(select(func.count()).select_from(Guest)) == 2
 

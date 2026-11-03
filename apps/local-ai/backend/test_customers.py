@@ -3,6 +3,7 @@ import json
 import secrets
 import time
 import uuid
+from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import String, Float, Integer, select, delete
@@ -27,6 +28,7 @@ class Invitation(Base):
     modules: Mapped[str] = mapped_column(String)
     revoked: Mapped[int] = mapped_column(Integer, default=0)
     consumed: Mapped[int] = mapped_column(Integer, default=0)
+    role: Mapped[str] = mapped_column(String, default='TEST_CUSTOMER')
 
 
 def owner(user=Depends(current_user)):
@@ -41,6 +43,7 @@ class InviteInput(BaseModel):
     recipient_confirmed: bool
     duration_hours: int = Field(ge=1, le=168)
     modules: list[str] = Field(min_length=1, max_length=1)
+    role: Literal['CUSTOMER_ADMIN','CUSTOMER_USER','TEST_CUSTOMER'] = 'TEST_CUSTOMER'
 
 
 @router.get('/customers')
@@ -48,7 +51,7 @@ def customers(user=Depends(owner)):
     with Session() as db:
         return [{'id': r.id, 'recipient': r.recipient, 'expires': r.access_expires,
                  'modules': json.loads(r.modules), 'revoked': bool(r.revoked),
-                 'accepted': bool(r.consumed)} for r in db.scalars(select(Invitation))]
+                 'accepted': bool(r.consumed), 'role':r.role} for r in db.scalars(select(Invitation))]
 
 
 @router.post('/customers', status_code=201)
@@ -60,7 +63,7 @@ def invite(data: InviteInput, user=Depends(owner)):
     row = Invitation(id=str(uuid.uuid4()), token_hash=session_hash(token), recipient=data.recipient.lower(),
                      tenant='synthetic-'+str(uuid.uuid4()), expires=stamp+3600,
                      access_expires=stamp+data.duration_hours*3600,
-                     modules=json.dumps(data.modules), revoked=0, consumed=0)
+                     modules=json.dumps(data.modules), revoked=0, consumed=0, role=data.role)
     with Session() as db:
         begin_write(db)
         db.add(row)
@@ -87,6 +90,39 @@ def revoke(identifier: str, user=Depends(owner)):
     return {'revoked': True}
 
 
+class UpdateAccess(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    expected_expires: float
+    duration_hours: int = Field(ge=1, le=168)
+    role: Literal['CUSTOMER_ADMIN','CUSTOMER_USER','TEST_CUSTOMER']
+    modules: list[str] = Field(max_length=1)
+
+
+@router.post('/customers/{identifier}/access')
+def update_access(identifier: str, data: UpdateAccess, user=Depends(owner)):
+    if data.modules not in ([], ['hotel']):
+        raise HTTPException(400, 'Nur Hotel ist derzeit verfügbar.')
+    with Session() as db:
+        begin_write(db)
+        row = db.get(Invitation, identifier)
+        if not row or row.revoked:
+            raise HTTPException(404, 'Testzugang nicht verfügbar.')
+        if row.access_expires != data.expected_expires:
+            raise HTTPException(409, 'Testzugang wurde geändert. Neu laden.')
+        row.access_expires = time.time()+data.duration_hours*3600
+        row.role, row.modules = data.role, json.dumps(data.modules)
+        for grant in db.scalars(select(IdentityGrant).where(IdentityGrant.tenant == row.tenant)):
+            grant.expires, grant.role, grant.modules = row.access_expires, row.role, row.modules
+            target = db.get(User, grant.user_id)
+            target.role = 'hotel_administrator' if data.role == 'CUSTOMER_ADMIN' else 'hotel_reception'
+            tokens = select(LoginSession.token_hash).where(LoginSession.user_id == grant.user_id)
+            db.execute(delete(OIDCSession).where(OIDCSession.token_hash.in_(tokens)))
+            db.execute(delete(LoginSession).where(LoginSession.user_id == grant.user_id))
+        audit(db,user,'kundenz.access.changed',row.id)
+        db.commit()
+    return {'updated':True,'relogin_required':True}
+
+
 def accept(db, token_hash, claims, issuer):
     """Called only after cryptographic OIDC verification, within login transaction."""
     begin_write(db)
@@ -100,11 +136,11 @@ def accept(db, token_hash, claims, issuer):
         raise ValueError('identity already bound')
     identifier = str(uuid.uuid4())
     user = User(id=identifier, username='oidc-'+identifier, password_hash='disabled',
-                role='hotel_reception', tenant=row.tenant)
+                role='hotel_administrator' if row.role=='CUSTOMER_ADMIN' else 'hotel_reception', tenant=row.tenant)
     db.add(user)
     db.flush()
     db.add(IdentityGrant(user_id=user.id, issuer=issuer, subject=claims['sub'], tenant=row.tenant,
-                         role='TEST_CUSTOMER', modules=row.modules, expires=row.access_expires, revoked=0))
+                         role=row.role, modules=row.modules, expires=row.access_expires, revoked=0))
     db.add(ModuleConfig(tenant=row.tenant, modules=json.dumps({'hotel_ai': True})))
     from .modules.hotel.models import Hotel, RoomType, Room
     db.add(Hotel(tenant=row.tenant, name='SYNTHETISCH · Testhotel', seeded=1, settings='{}'))
