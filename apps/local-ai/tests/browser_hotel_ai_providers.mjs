@@ -106,10 +106,11 @@ try{
   await assistant.waitFor();
   const provider=assistant.locator('select').first();
   assert.equal(await provider.inputValue(),'local');
-  await provider.selectOption('openai');
   await page.getByText(/Persistenter OpenAI-Zähler: 2\/20 Aufrufe/).waitFor();
   await page.getByText(/Status der ausgehenden Geräte-Bridge: NOT_VERIFIED · Cloud-Freigabe: CONFIGURED/).waitFor();
   await page.getByText(/Bridge-Hinweis: LIVE_CHECK_REQUIRED/).waitFor();
+  await provider.selectOption('openai');
+  assert.equal(await provider.inputValue(),'openai');
 
   const question=assistant.locator('textarea').first();
   await question.fill('Synthetische Übergabe erklären');
