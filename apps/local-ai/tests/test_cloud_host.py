@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
-from backend import app as host, security, cloud_api, cloud_store
+from backend import app as host, security, cloud_api, cloud_store, cloud_voice
 from backend.db import Base, User, LoginSession, ModuleConfig
 from backend.kundenz import IdentityGrant, OIDCSession
 from backend.cloud_store import CloudPermission, SQLDocumentStore, CloudBudget
@@ -20,7 +20,7 @@ def system(monkeypatch):
     engine = create_engine('sqlite://', poolclass=StaticPool, connect_args={'check_same_thread':False})
     Base.metadata.create_all(engine)
     factory = sessionmaker(engine, expire_on_commit=False)
-    for module in (host, security, cloud_api, cloud_store):
+    for module in (host, security, cloud_api, cloud_store, cloud_voice):
         monkeypatch.setattr(module, 'Session', factory)
     monkeypatch.setenv('WERKZ_AUTH_MODE', 'oidc')
     monkeypatch.setenv('WERKZ_OWNER_ISSUER', 'https://identity.example.invalid')

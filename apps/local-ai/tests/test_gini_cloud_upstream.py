@@ -12,9 +12,11 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 
 PKG = Path(__file__).resolve().parents[1] / 'backend' / 'gini_cloud'
-
-from backend.gini_cloud import (GiniCloud, GiniCloudError, Identity, InMemoryDocumentStore, OpenAIPort, TokenBudget,  # noqa: E402
-                        reject_client_identity, sha256_text)
+sys.path.insert(0, str(PKG.parent))
+from backend.gini_cloud import (AUDIO_RESPONSE_HEADERS, ElevenLabsVoicePort, GiniCloud, GiniCloudError, Identity,  # noqa: E402
+                        InMemoryDocumentStore, OpenAIPort, TokenBudget, VoiceCache, is_mp3, reject_client_identity,
+                        sha256_text)
+from backend.gini_cloud.voice import ELEVENLABS_TTS_URL, GINI_VOICE  # noqa: E402
 
 NOW = datetime(2026, 11, 2, 21, 0, tzinfo=timezone.utc)
 OWNER_BINDING = ('https://login.example.test', 'owner-sub-001')
@@ -336,20 +338,179 @@ class CloudIsolationTests(unittest.TestCase):
 
     def test_capabilities_state_honestly(self):
         caps = Env().gini.capabilities()
-        self.assertEqual(caps['contract_version'], 'gini-cloud/1.0.0')
+        self.assertEqual(caps['contract_version'], 'gini-cloud/1.1.0')
+        self.assertFalse(caps['features']['voice'], 'no voice port -> voice must be off')
+        self.assertEqual(caps['providers']['elevenlabs']['state'], 'NOT_CONNECTED')
         self.assertFalse(caps['features']['owner_pictures'])
         self.assertFalse(caps['features']['local_files'])
         self.assertIn('.pdf', caps['gated_formats'])
 
     def test_schema_examples_validate_shape(self):
-        schema = json.loads((PKG / 'schema' / 'gini-cloud-1.0.0.schema.json').read_text(encoding='utf-8'))
-        self.assertEqual(schema['$id'].rsplit('/', 1)[-1], 'gini-cloud-1.0.0.schema.json')
-        for name in ('ChatRequest', 'EditProposalRequest', 'ApproveSaveRequest', 'Draft', 'Error'):
-            self.assertIn(name, schema['$defs'])
-        for req in ('ChatRequest', 'EditProposalRequest', 'ApproveSaveRequest'):
+        for version in ('1.0.0', '1.1.0'):
+            schema = json.loads((PKG / 'schema' / f'gini-cloud-{version}.schema.json').read_text(encoding='utf-8'))
+            self.assertEqual(schema['$id'].rsplit('/', 1)[-1], f'gini-cloud-{version}.schema.json')
+            for name in ('ChatRequest', 'EditProposalRequest', 'ApproveSaveRequest', 'Draft', 'Error'):
+                self.assertIn(name, schema['$defs'])
+        self.assertIn('VoiceTtsRequest', schema['$defs'])
+        codes = set(schema['$defs']['Error']['properties']['error']['properties']['code']['enum'])
+        self.assertTrue({'TTS_TEXT_INVALID', 'PROVIDER_INVALID_AUDIO', 'PROVIDER_EMPTY'} <= codes)
+        for req in ('ChatRequest', 'EditProposalRequest', 'ApproveSaveRequest', 'VoiceTtsRequest'):
             props = set(schema['$defs'][req]['properties'])
             self.assertFalse(props & {'tenant_id', 'principal_id', 'roles', 'role', 'is_owner'},
                              f'{req} must not accept identity from the client')
+
+
+MP3 = b'ID3\x04\x00' + b'\x00' * 64
+
+
+class FakeEleven:
+    """ElevenLabs transport stub: records requests, never touches the network."""
+
+    def __init__(self, audio=MP3, error=None):
+        self.audio = audio
+        self.error = error
+        self.requests = []
+
+    def open(self, request, timeout=None):
+        self.requests.append(request)
+        if self.error:
+            raise self.error
+        return FakeResponse(self.audio)
+
+
+def voice_grant(identity_kwargs):
+    return {(identity_kwargs['tenant_id'], identity_kwargs['principal_id'], 'elevenlabs:tts', 'tts:synthesize')}
+
+
+class VoiceEnv(Env):
+    def __init__(self, *, grants=(), chars=10_000, audio=MP3, error=None, enabled=True, key='el-test-not-real',
+                 with_voice=True, **kw):
+        super().__init__(grants=grants, **kw)
+        self.eleven = FakeEleven(audio, error)
+        self.char_budget = TokenBudget(chars)
+        self.voice = ElevenLabsVoicePort(api_key=key, budget=self.char_budget, transport=self.eleven,
+                                         enabled=enabled, voice_id='SyntheticV10Voice00000') if with_voice else None
+        self.cache = VoiceCache()
+        self.gini = GiniCloud(kundenz=self.kz, openai=self.port, documents=self.store, policy_version='p-1',
+                              owner_binding=OWNER_BINDING, clock=lambda: NOW, voice=self.voice, voice_cache=self.cache)
+
+    def say(self, identity, text='Guten Tag, hier ist GINI.', data_class='internal'):
+        return self.gini.tts(identity, text=text, purpose='assistant_voice', consent_ref='c-1', data_class=data_class)
+
+
+class VoiceTests(unittest.TestCase):
+    def test_owner_tts_uses_pinned_v10_voice_and_validates_mp3(self):
+        env = VoiceEnv(grants=voice_grant(OWNER))
+        out = env.say(session(**OWNER))
+        self.assertEqual((out['audio'], out['content_type'], out['source']), (MP3, 'audio/mpeg', 'provider'))
+        self.assertEqual(out['contract_version'], 'gini-cloud/1.1.0')
+        req = env.eleven.requests[0]
+        self.assertEqual(req.full_url, ELEVENLABS_TTS_URL.format(voice_id='SyntheticV10Voice00000'))
+        body = json.loads(req.data)
+        self.assertEqual((body['model_id'], body['text']), ('eleven_multilingual_v2', 'Guten Tag, hier ist GINI.'))
+        self.assertEqual(env.char_budget.used, len('Guten Tag, hier ist GINI.'))
+        self.assertEqual(AUDIO_RESPONSE_HEADERS['Cache-Control'], 'private, no-store')
+
+    def test_private_voice_identifier_is_host_injected(self):
+        self.assertEqual(GINI_VOICE['voice_id'], '')
+        self.assertEqual(GINI_VOICE['model_id'], 'eleven_multilingual_v2')
+        self.assertEqual(GINI_VOICE['voice_reference'], 'V10 take 2')
+
+    def test_replay_comes_from_cache_without_second_paid_call(self):
+        env = VoiceEnv(grants=voice_grant(OWNER))
+        env.say(session(**OWNER))
+        again = env.say(session(**OWNER))
+        self.assertEqual(again['source'], 'cache')
+        self.assertEqual(len(env.eleven.requests), 1)
+        self.assertEqual(env.char_budget.used, len('Guten Tag, hier ist GINI.'))
+
+    def test_cache_is_per_tenant_and_principal_and_cleared_on_logout(self):
+        customer = dict(tenant_id='tenant-hotel-a', principal_id='user-a', session_id='sess-a',
+                        subject='sub-a', roles=['CUSTOMER_USER'])
+        env = VoiceEnv(grants=voice_grant(OWNER) | voice_grant(customer))
+        env.say(session(**OWNER))
+        self.assertEqual(env.say(session(**customer))['source'], 'provider', 'no cross-tenant cache hit')
+        self.assertEqual(env.gini.voice_logout(session(**OWNER)), 1)
+        self.assertEqual(env.say(session(**OWNER))['source'], 'provider')
+        self.assertEqual(env.say(session(**customer))['source'], 'cache')
+
+    def test_kundenz_checked_before_cache_and_provider(self):
+        env = VoiceEnv(grants=voice_grant(OWNER))
+        env.say(session(**OWNER))
+        env.kz.grants.clear()   # permission revoked
+        with self.assertRaisesRegex(GiniCloudError, 'KUNDENZ_DENY'):
+            env.say(session(**OWNER))
+        for mode, code in (('down', 'KUNDENZ_UNAVAILABLE'), ('approval', 'KUNDENZ_REQUIRE_APPROVAL')):
+            env2 = VoiceEnv(grants=voice_grant(OWNER), mode=mode)
+            with self.assertRaisesRegex(GiniCloudError, code):
+                env2.say(session(**OWNER))
+            self.assertEqual(env2.eleven.requests, [])
+
+    def test_data_classes_and_test_customers(self):
+        env = VoiceEnv(grants=voice_grant(TEST_CUSTOMER) | voice_grant(OWNER))
+        with self.assertRaisesRegex(GiniCloudError, 'TEST_CUSTOMER_SYNTHETIC_ONLY'):
+            env.say(session(**TEST_CUSTOMER), data_class='internal')
+        self.assertEqual(env.say(session(**TEST_CUSTOMER), data_class='synthetic')['source'], 'provider')
+        with self.assertRaisesRegex(GiniCloudError, 'OWNER_PRIVATE_DENIED'):
+            env.say(session(**TEST_CUSTOMER), data_class='OWNER_PRIVATE')
+        self.assertEqual(env.say(session(**OWNER), data_class='OWNER_PRIVATE')['source'], 'provider')
+
+    def test_input_rules(self):
+        env = VoiceEnv(grants=voice_grant(OWNER))
+        for bad in ('', '   ', 'x' * 1201, None):
+            with self.assertRaisesRegex(GiniCloudError, 'TTS_TEXT_INVALID'):
+                env.say(session(**OWNER), text=bad)
+        with self.assertRaisesRegex(GiniCloudError, 'SECRET_IN_INPUT'):
+            env.say(session(**OWNER), text='api_key=sk-proj-ABCDEFGHIJKLMNOPQRSTUV')
+        self.assertEqual(env.eleven.requests, [])
+
+    def test_provider_failures_are_clear_codes(self):
+        cases = [
+            (dict(audio=b''), 'PROVIDER_EMPTY'),
+            (dict(audio=b'<html>error</html>'), 'PROVIDER_INVALID_AUDIO'),
+            (dict(error=HTTPError('u', 401, 'x', {}, None)), 'PROVIDER_REJECTED'),
+            (dict(error=HTTPError('u', 429, 'x', {}, None)), 'PROVIDER_RATE_LIMITED'),
+            (dict(error=URLError('down')), 'PROVIDER_UNAVAILABLE'),
+            (dict(enabled=False), 'PROVIDER_DISABLED'),
+            (dict(key=''), 'PROVIDER_NOT_CONFIGURED'),
+            (dict(chars=0), 'COST_LIMIT_NOT_APPROVED'),
+            (dict(chars=5), 'COST_LIMIT_REACHED'),
+            (dict(with_voice=False), 'PROVIDER_NOT_CONFIGURED'),
+        ]
+        for kwargs, code in cases:
+            with self.subTest(code=code, kwargs=list(kwargs)):
+                env = VoiceEnv(grants=voice_grant(OWNER), **kwargs)
+                with self.assertRaisesRegex(GiniCloudError, code):
+                    env.say(session(**OWNER))
+                self.assertIsNone(env.cache.get(VoiceCache.key('tenant-owner', 'owner', 'Guten Tag, hier ist GINI.')))
+                if env.voice is not None:
+                    self.assertEqual(env.char_budget.used, 0, 'failed calls are not counted as used')
+
+    def test_capabilities_voice_only_when_configured(self):
+        caps = VoiceEnv().gini.capabilities()
+        self.assertTrue(caps['features']['voice'])
+        self.assertEqual((caps['voice']['state'], caps['voice']['voice_reference'], caps['voice']['stt']),
+                         ('online', 'V10 take 2', False))
+        for kwargs, state in ((dict(key=''), 'NOT_CONNECTED'), (dict(enabled=False), 'offline'),
+                              (dict(chars=0), 'offline')):
+            caps = VoiceEnv(**kwargs).gini.capabilities()
+            self.assertFalse(caps['features']['voice'])
+            self.assertEqual(caps['providers']['elevenlabs']['state'], state)
+
+    def test_expired_or_revoked_session(self):
+        class Sessions:
+            def is_active(self, sid): return False
+        env = VoiceEnv(grants=voice_grant(OWNER))
+        env.gini.sessions = Sessions()
+        with self.assertRaisesRegex(GiniCloudError, 'SESSION_REVOKED'):
+            env.say(session(**OWNER))
+        self.assertEqual(env.eleven.requests, [])
+
+    def test_is_mp3(self):
+        self.assertTrue(is_mp3(b'ID3\x03\x00\x00'))
+        self.assertTrue(is_mp3(b'\xff\xfb\x90\x64'))
+        self.assertFalse(is_mp3(b'{"detail":"x"}'))
+        self.assertFalse(is_mp3(b''))
 
 
 if __name__ == '__main__':

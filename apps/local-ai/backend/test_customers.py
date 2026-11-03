@@ -82,6 +82,8 @@ def revoke(identifier: str, user=Depends(owner)):
         row.revoked = 1
         for grant in db.scalars(select(IdentityGrant).where(IdentityGrant.tenant == row.tenant)):
             grant.revoked = 1
+            from .cloud_voice import replies
+            replies.clear_principal(grant.user_id)
             tokens = select(LoginSession.token_hash).where(LoginSession.user_id == grant.user_id)
             db.execute(delete(OIDCSession).where(OIDCSession.token_hash.in_(tokens)))
             db.execute(delete(LoginSession).where(LoginSession.user_id == grant.user_id))
@@ -113,6 +115,8 @@ def update_access(identifier: str, data: UpdateAccess, user=Depends(owner)):
         row.role, row.modules = data.role, json.dumps(data.modules)
         for grant in db.scalars(select(IdentityGrant).where(IdentityGrant.tenant == row.tenant)):
             grant.expires, grant.role, grant.modules = row.access_expires, row.role, row.modules
+            from .cloud_voice import replies
+            replies.clear_principal(grant.user_id)
             target = db.get(User, grant.user_id)
             target.role = 'hotel_administrator' if data.role == 'CUSTOMER_ADMIN' else 'hotel_reception'
             tokens = select(LoginSession.token_hash).where(LoginSession.user_id == grant.user_id)

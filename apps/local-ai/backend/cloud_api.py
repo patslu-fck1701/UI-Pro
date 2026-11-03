@@ -61,7 +61,7 @@ class Context:
             if (not grant or grant.revoked or grant.expires <= time.time()
                     or req['principal_id'] != identity.principal_id or req['tenant_id'] != identity.tenant_id
                     or req['policy_version'] != POLICY or req['source'] != 'gini-cloud'
-                    or req['project_scope'] != 'gini' or req['purpose'] != 'hotel_assistant'
+                    or req['project_scope'] != 'gini' or req['purpose'] != ('assistant_voice' if req['action']=='tts:synthesize' else 'hotel_assistant')
                     or req['consent_ref'] != grant.consent_ref
                     or req['action'] not in actions
                     or req['data_class'] not in classes):
@@ -69,11 +69,12 @@ class Context:
             if 'TEST_CUSTOMER' in identity.roles and req['data_class'] not in {'synthetic', 'public'}:
                 return {'decision': 'DENY', 'reason_code': 'SYNTHETIC_ONLY', 'decision_id': uuid.uuid4().hex}
             if req['data_class'] == 'OWNER_PRIVATE':
-                if not identity.is_owner(owner_binding()) or req['resource'] == 'openai:chat':
+                if not identity.is_owner(owner_binding()) or req['resource'] in {'openai:chat','elevenlabs:tts'}:
                     return {'decision': 'DENY', 'reason_code': 'OWNER_PRIVATE', 'decision_id': uuid.uuid4().hex}
             action, resource = req['action'], req['resource']
             valid = ((resource == 'gini:chat' and action == 'ask') or
                      (resource == 'openai:chat' and action == 'openai:chat') or
+                     (resource == 'elevenlabs:tts' and action == 'tts:synthesize') or
                      (resource.startswith('document:') and action in
                       {'file:read', 'file:upload', 'file:propose_edit', 'file:save', 'file:restore'}))
             if not valid:
@@ -140,8 +141,10 @@ def service(ctx):
     provider = OpenAIPort(api_key=os.environ.get('WERKZ_GINI_CLOUD_OPENAI_KEY', ''),
                          model='gpt-6-luna', budget=budget, enabled=approved,
                          transport=build_opener(ProxyHandler({}),NoRedirect()))
+    from .cloud_voice import make_voice
+    from .gini_cloud import VoiceCache
     return GiniCloud(kundenz=ctx, openai=provider, documents=store, sessions=ctx,
-                     policy_version=POLICY, owner_binding=owner_binding())
+                     policy_version=POLICY, owner_binding=owner_binding(),voice=make_voice(ctx),voice_cache=VoiceCache())
 
 
 def authorize(ctx, action, document):
@@ -188,6 +191,14 @@ def capabilities(ctx=Depends(context)):
     result = service(ctx).capabilities()
     if result['providers']['openai']['state'] == 'online':
         result['providers']['openai']['state'] = 'CONFIGURED_NOT_VERIFIED'
+    from .cloud_voice import authorize_voice
+    try:authorize_voice(service(ctx),ctx)
+    except GiniCloudError:
+        result['features']['voice']=False
+        result['voice']['state']='NOT_AUTHORIZED_OR_CONFIGURED'
+    if result['features']['voice']:
+        result['voice']['state']='CONFIGURED_NOT_VERIFIED'
+        result['providers']['elevenlabs']['state']='CONFIGURED_NOT_VERIFIED'
     return result
 
 
@@ -199,6 +210,8 @@ def chat(data: Chat, ctx=Depends(context)):
     svc._active(ctx.identity)
     svc.gate.require(ctx.identity,resource='gini:chat',action='ask',purpose='hotel_assistant',
                      data_class='synthetic',consent_ref=ctx.consent())
+    from .cloud_voice import replies
+    result['reply_id']=replies.remember(ctx.identity,result['reply'])
     return result
 
 
@@ -261,7 +274,7 @@ def approve(identifier: str, data: Approval, ctx=Depends(context)):
     replay = store.replay(ctx.identity.tenant_id, ctx.identity.principal_id,
                           data.idempotency_key, identifier, data.proposed_sha256)
     if replay:
-        return {'contract_version':'gini-cloud/1.0.0', 'status':'SAVED',
+        return {'contract_version':'gini-cloud/1.1.0', 'status':'SAVED',
                 'new_version':replay['version'], 'idempotent_replay':True}
     return service(ctx).approve_save(ctx.identity, draft=draft,
         approval={'explicit_approval':True, 'approved_by':ctx.identity.principal_id,

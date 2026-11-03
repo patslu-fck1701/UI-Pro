@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import hashlib
 import re
 
-CONTRACT_VERSION = 'gini-cloud/1.0.0'
+CONTRACT_VERSION = 'gini-cloud/1.1.0'
 ROLES = frozenset({'OWNER', 'CUSTOMER_ADMIN', 'CUSTOMER_USER', 'TEST_CUSTOMER'})
 DATA_CLASSES = frozenset({'public', 'synthetic', 'internal', 'customer_confidential', 'OWNER_PRIVATE'})
 # First gate: safe text formats only. Office/PDF are separate follow-up gates.

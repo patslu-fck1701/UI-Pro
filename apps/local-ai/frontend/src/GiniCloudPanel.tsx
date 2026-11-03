@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import './gini-cloud.css';
+import {CloudVoice} from './CloudVoice';
 type Doc={document_id:string;name:string;version:number;content?:string;sha256:string};
 type Draft={draft_id:string;proposed_sha256:string;proposed_content:string};
 type Caps={features:{voice:boolean};providers:{openai:{state:string;reason?:string}}};
@@ -11,6 +12,7 @@ export function GiniCloudPanel({initialQuestion=''}:{initialQuestion?:string}){
  const [caps,setCaps]=useState<Caps|null>(null),[docs,setDocs]=useState<Doc[]>([]),[doc,setDoc]=useState<Doc|null>(null);
  const [draft,setDraft]=useState<Draft|null>(null),[diff,setDiff]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [question,setQuestion]=useState(initialQuestion),[answer,setAnswer]=useState(''),[instruction,setInstruction]=useState('');
+ const [replyId,setReplyId]=useState('');
  const [history,setHistory]=useState<{version:number;sha256:string;created:string}[]>([]),[approved,setApproved]=useState(false);
  const refresh=()=>api('/documents').then(setDocs);
  useEffect(()=>{let active=true;void api('/capabilities').then(v=>{if(active)setCaps(v);}).catch(e=>{if(active)setError(e.message);});void refresh().catch(()=>{});return()=>{active=false;};},[]);
@@ -18,10 +20,11 @@ export function GiniCloudPanel({initialQuestion=''}:{initialQuestion?:string}){
  async function open(id:string){const value=await api('/documents/'+id);setDoc(value);setDraft(null);setDiff('');setApproved(false);setHistory(await api('/documents/'+id+'/versions'));}
  return <details className="panel gini-cloud-panel"><summary>GINI Cloud · Chat und sichere Textdateien</summary>
  <p>Cloud-Anbieter: {caps?.providers.openai.state||'Status wird geprüft'} · {caps?.providers.openai.reason}</p>
- <p role="status">Cloud-Sprachausgabe nicht verfügbar. Der aktuelle GINI-Cloud-Vertrag bietet keine Audiofunktion.</p>
- <form onSubmit={e=>{e.preventDefault();void action(async()=>{const r=await api('/chat',{messages:[{role:'user',content:question}]});setAnswer(r.reply);});}}>
+ {!caps?.features.voice&&<p role="status">Cloud-Sprachausgabe nicht verfügbar. Anbieter, Budget und Berechtigung sind noch nicht freigegeben.</p>}
+ <form onSubmit={e=>{e.preventDefault();setReplyId('');void action(async()=>{const r=await api('/chat',{messages:[{role:'user',content:question}]});setAnswer(r.reply);setReplyId(r.reply_id);});}}>
  <label>Nachricht an GINI<textarea value={question} onChange={e=>setQuestion(e.target.value)} required maxLength={8000}/></label><button disabled={busy}>GINI fragen</button></form>
  {answer&&<article><h3>KI-Vorschlag · OpenAI</h3><pre style={{whiteSpace:'pre-wrap'}}>{answer}</pre><p>Keine automatische Fachaktion. Nicht als Trainingsmaterial verwenden.</p></article>}
+ {replyId&&<CloudVoice key={replyId} replyId={replyId} enabled={caps?.features.voice===true}/>}
  <h3>Synthetische Textdatei hochladen</h3><input aria-label="Synthetische Textdatei" type="file" accept=".txt,.md,.csv,.json,.yaml,.yml,.xml,.html,.css,.js,.ts,.py,.ini,.toml,.sql" disabled={busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;void action(async()=>{if(file.size>240000)throw Error('Datei zu groß.');const r=await api('/documents',{name:file.name,content:await file.text(),data_class:'synthetic'});await refresh();await open(r.document_id);});}}/>
  <p>Nur ausgewählte synthetische Textdaten. Bilder, lokale Wissensbestände und Schlüssel bleiben ausgeschlossen.</p>
  <button disabled={busy} onClick={()=>void action(refresh)}>Dateiliste aktualisieren</button>

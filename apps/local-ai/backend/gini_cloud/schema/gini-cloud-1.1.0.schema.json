@@ -1,0 +1,499 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/patslu-fck1701/WerkZ/apps/gini/gini_cloud/schema/gini-cloud-1.1.0.schema.json",
+  "title": "GINI Cloud contract 1.1.0",
+  "description": "Browser -> WerkZ-Digital-Server (Codex) request bodies and GINI responses. Identity (tenant, principal, roles) is NEVER part of a client request; the server takes it from its authenticated OIDC session. 1.1.0 (additiv): Sprachausgabe POST /voice/tts mit der GINI-V10-Stimme.",
+  "$defs": {
+    "ChatRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "messages",
+        "purpose",
+        "consent_ref"
+      ],
+      "properties": {
+        "messages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "content"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "user",
+                  "assistant"
+                ]
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8000
+              }
+            }
+          }
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "consent_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "data_class": {
+          "enum": [
+            "public",
+            "synthetic",
+            "internal",
+            "customer_confidential",
+            "OWNER_PRIVATE"
+          ],
+          "default": "internal"
+        }
+      }
+    },
+    "EditProposalRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_id",
+        "instruction",
+        "purpose",
+        "consent_ref"
+      ],
+      "properties": {
+        "document_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "instruction": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 2000
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "consent_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      }
+    },
+    "ApproveSaveRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draft_id",
+        "explicit_approval",
+        "proposed_sha256",
+        "idempotency_key",
+        "purpose",
+        "consent_ref"
+      ],
+      "description": "The draft itself stays on the server (never round-tripped through the browser). approved_by is set by the server from the session.",
+      "properties": {
+        "draft_id": {
+          "type": "string",
+          "pattern": "^draft-[0-9a-f]{24}$"
+        },
+        "explicit_approval": {
+          "const": true
+        },
+        "proposed_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 128
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "consent_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      }
+    },
+    "Draft": {
+      "type": "object",
+      "required": [
+        "draft_id",
+        "document_id",
+        "tenant_id",
+        "name",
+        "data_class",
+        "base_version",
+        "base_sha256",
+        "proposed_content",
+        "proposed_sha256",
+        "requested_by",
+        "instruction",
+        "created_at"
+      ],
+      "properties": {
+        "draft_id": {
+          "type": "string"
+        },
+        "document_id": {
+          "type": "string"
+        },
+        "tenant_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "data_class": {
+          "type": "string"
+        },
+        "base_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "base_sha256": {
+          "type": "string"
+        },
+        "proposed_content": {
+          "type": "string"
+        },
+        "proposed_sha256": {
+          "type": "string"
+        },
+        "requested_by": {
+          "type": "string"
+        },
+        "instruction": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "EditProposalResponse": {
+      "type": "object",
+      "required": [
+        "contract_version",
+        "status",
+        "draft",
+        "unified_diff",
+        "changed",
+        "saved",
+        "training_use",
+        "decisions"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "gini-cloud/1.1.0"
+        },
+        "status": {
+          "const": "DRAFT_READY"
+        },
+        "draft": {
+          "$ref": "#/$defs/Draft"
+        },
+        "unified_diff": {
+          "type": "string"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "saved": {
+          "const": false
+        },
+        "model": {
+          "type": "string"
+        },
+        "training_use": {
+          "const": "prohibited"
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Decision"
+          }
+        }
+      }
+    },
+    "SaveResponse": {
+      "type": "object",
+      "required": [
+        "contract_version",
+        "status",
+        "document_id",
+        "previous_version",
+        "new_version",
+        "sha256",
+        "previous_version_restorable"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "gini-cloud/1.1.0"
+        },
+        "status": {
+          "const": "SAVED"
+        },
+        "document_id": {
+          "type": "string"
+        },
+        "previous_version": {
+          "type": "integer"
+        },
+        "new_version": {
+          "type": "integer"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "previous_version_restorable": {
+          "const": true
+        },
+        "idempotent_replay": {
+          "type": "boolean"
+        },
+        "decision": {
+          "$ref": "#/$defs/Decision"
+        }
+      }
+    },
+    "ChatResponse": {
+      "type": "object",
+      "required": [
+        "contract_version",
+        "reply",
+        "provider",
+        "model",
+        "training_use",
+        "decisions"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "gini-cloud/1.1.0"
+        },
+        "reply": {
+          "type": "string"
+        },
+        "provider": {
+          "const": "openai"
+        },
+        "model": {
+          "type": "string"
+        },
+        "training_use": {
+          "const": "prohibited"
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Decision"
+          }
+        }
+      }
+    },
+    "Decision": {
+      "type": "object",
+      "required": [
+        "decision",
+        "reason_code",
+        "decision_id",
+        "resource",
+        "action"
+      ],
+      "properties": {
+        "decision": {
+          "enum": [
+            "ALLOW",
+            "DENY",
+            "REQUIRE_APPROVAL"
+          ]
+        },
+        "reason_code": {
+          "type": "string"
+        },
+        "decision_id": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "binding": {
+          "type": "string"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": [
+        "contract_version",
+        "error"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "gini-cloud/1.1.0"
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "enum": [
+                "IDENTITY_INVALID",
+                "IDENTITY_NOT_OIDC",
+                "IDENTITY_ROLES_INVALID",
+                "SESSION_EXPIRED",
+                "SESSION_REVOKED",
+                "CLIENT_IDENTITY_REJECTED",
+                "KUNDENZ_DENY",
+                "KUNDENZ_REQUIRE_APPROVAL",
+                "KUNDENZ_UNAVAILABLE",
+                "OWNER_PRIVATE_DENIED",
+                "TEST_CUSTOMER_SYNTHETIC_ONLY",
+                "MESSAGES_INVALID",
+                "INSTRUCTION_INVALID",
+                "SECRET_IN_INPUT",
+                "SECRET_IN_DOCUMENT",
+                "DOCUMENT_STORE_MISSING",
+                "DOCUMENT_NOT_FOUND",
+                "DOCUMENT_INVALID",
+                "DOCUMENT_NAME_INVALID",
+                "DOCUMENT_NOT_TEXT",
+                "DOCUMENT_TOO_LARGE",
+                "DOCUMENT_INTEGRITY",
+                "DATA_CLASS_UNKNOWN",
+                "FORMAT_UNSUPPORTED",
+                "FORMAT_GATED",
+                "PROVIDER_DISABLED",
+                "PROVIDER_NOT_CONFIGURED",
+                "PROVIDER_UNAVAILABLE",
+                "PROVIDER_RATE_LIMITED",
+                "PROVIDER_REJECTED",
+                "PROVIDER_INVALID_RESPONSE",
+                "COST_LIMIT_NOT_APPROVED",
+                "COST_LIMIT_REACHED",
+                "INCOMPLETE_MODEL_OUTPUT",
+                "INVALID_MODEL_OUTPUT",
+                "DRAFT_NOT_FOUND",
+                "DRAFT_TAMPERED",
+                "APPROVAL_REQUIRED",
+                "VERSION_CONFLICT",
+                "IDEMPOTENCY_KEY_INVALID",
+                "IDEMPOTENCY_CONFLICT",
+                "SAVE_FAILED",
+                "TTS_TEXT_INVALID",
+                "PROVIDER_EMPTY",
+                "PROVIDER_INVALID_AUDIO"
+              ]
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        },
+        "decision": {
+          "$ref": "#/$defs/Decision"
+        }
+      }
+    },
+    "VoiceTtsRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "purpose",
+        "consent_ref"
+      ],
+      "description": "Antwort: 200 audio/mpeg (MP3 geprüft), Header Cache-Control: private, no-store; Vary: Cookie; X-GINI-Voice: provider|cache. Identität nur aus der Serversitzung.",
+      "properties": {
+        "reply_id": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "optional, nur für Host-Protokoll"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "consent_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "data_class": {
+          "enum": [
+            "public",
+            "synthetic",
+            "internal",
+            "customer_confidential",
+            "OWNER_PRIVATE"
+          ],
+          "default": "internal"
+        }
+      }
+    },
+    "VoiceStatus": {
+      "type": "object",
+      "required": [
+        "provider",
+        "voice_reference",
+        "state"
+      ],
+      "properties": {
+        "provider": {
+          "const": "elevenlabs"
+        },
+        "voice_reference": {
+          "const": "V10 take 2"
+        },
+        "state": {
+          "enum": [
+            "online",
+            "offline",
+            "NOT_CONNECTED",
+            "CONFIGURED_NOT_VERIFIED"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "max_chars": {
+          "const": 1200
+        },
+        "stt": {
+          "const": false
+        }
+      }
+    }
+  }
+}

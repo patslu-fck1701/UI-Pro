@@ -34,6 +34,8 @@ app.include_router(test_customers_router)
 from .cloud_api import router as cloud_router
 from .gini_cloud import GiniCloudError
 app.include_router(cloud_router)
+from .cloud_voice import router as cloud_voice_router
+app.include_router(cloud_voice_router)
 
 @app.exception_handler(GiniCloudError)
 async def cloud_error(request, exc):
@@ -117,7 +119,7 @@ async def local_boundary(request,call_next):
         response.headers['Strict-Transport-Security']='max-age=31536000'
     response.headers['X-Content-Type-Options']='nosniff'
     response.headers['Referrer-Policy']='no-referrer'
-    response.headers['Cache-Control']='no-store'
+    response.headers['Cache-Control']='private, no-store' if request.url.path=='/api/gini/v1/voice/tts' else 'no-store'
     response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
     return response
 
@@ -229,6 +231,8 @@ def login(input:Credentials,request:Request,response:Response):
 def me(user=Depends(current_user)): return safe_user(user)
 @app.post('/api/logout')
 def logout(request:Request,response:Response,user=Depends(current_user)):
+    from .cloud_voice import replies
+    replies.clear_principal(user.id)
     with Session() as db:
         from .kundenz import OIDCSession, enabled
         if enabled():
@@ -262,7 +266,7 @@ def ready():
         database='unavailable'
         revision=None
     from .kundenz import enabled
-    migration='current' if revision=='hotel_006' else 'required'
+    migration='current' if revision=='hotel_007' else 'required'
     ready=database=='ready' and migration=='current'
     payload={'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
              'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,

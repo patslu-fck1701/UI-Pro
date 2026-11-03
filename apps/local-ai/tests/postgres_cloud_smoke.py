@@ -76,7 +76,7 @@ with tempfile.TemporaryDirectory(prefix='werkz-cloud-ci-restore-') as folder:
     checksum=hashlib.sha256(archive.read_bytes()).hexdigest()
     with psycopg.connect(url.set(database=target).render_as_string(hide_password=False)) as connection:
         connection.execute('SET search_path=werkz_hotel_test')
-        assert connection.execute('SELECT version_num FROM hotel_alembic_version').fetchone()[0]=='hotel_006'
+        assert connection.execute('SELECT version_num FROM hotel_alembic_version').fetchone()[0]=='hotel_007'
         assert connection.execute('SELECT version FROM cloud_documents WHERE tenant=%s AND id=%s',
                                   ('cloud-synthetic-a',identifier)).fetchone()[0]==2
         assert connection.execute('SELECT count(*) FROM cloud_versions WHERE tenant=%s AND document_id=%s',

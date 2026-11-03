@@ -6,6 +6,8 @@ The host (Codex' WerkZ Digital backend on Render) injects:
   documents  – storage port: get(tenant_id, document_id) -> dict | None and
                commit_version(...) -> dict (keeps every previous version, optimistic locking)
   sessions   – optional: is_active(session_id) -> bool (logout/revocation)
+  voice      – optional (1.1): ElevenLabsVoicePort (key from the host's secret store)
+  voice_cache – optional (1.1): shared VoiceCache; default is one per process
 
 GINI never sees local Windows paths, D:\\keys, D:\\GINI-Daten, owner pictures or the local
 knowledge base, and never contacts a local Qwen or localhost:8091.
@@ -21,6 +23,7 @@ from .contract import (CONTRACT_VERSION, MAX_INSTRUCTION_CHARS, MAX_MESSAGE_CHAR
                        Identity, contains_secret, sha256_text)
 from .kundenz import KundenZGate
 from .providers import TRAINING_USE
+from .voice import DEFAULT_VOICE_CACHE, GINI_VOICE, MAX_TTS_CHARS, VoiceCache
 
 CHAT_SYSTEM = ('Du bist GINI, die KI-Assistentin von WerkZ Digital. Antworte auf Deutsch, knapp und sachlich. '
                'Erfinde keine Fakten. Du hast keinen Zugriff auf Dateien, Bilder oder Systeme außer dem, '
@@ -33,13 +36,16 @@ EDIT_SYSTEM = ('Du bearbeitest genau ein Textdokument nach der Anweisung des ber
 
 class GiniCloud:
     def __init__(self, *, kundenz, openai, documents=None, sessions=None, policy_version: str,
-                 owner_binding: tuple[str, str] | None = None, clock=None):
+                 owner_binding: tuple[str, str] | None = None, clock=None, voice=None,
+                 voice_cache: VoiceCache | None = None):
         self.gate = KundenZGate(kundenz, policy_version=policy_version, clock=clock)
         self.openai = openai
         self.documents = documents
         self.sessions = sessions
         self.owner_binding = owner_binding
         self.clock = clock or (lambda: datetime.now(timezone.utc))
+        self.voice = voice
+        self.voice_cache = voice_cache if voice_cache is not None else DEFAULT_VOICE_CACHE
         self._saves: dict[str, dict] = {}
         self._lock = threading.Lock()
 
@@ -78,17 +84,56 @@ class GiniCloud:
 
     # ---------------------------------------------------------------- API
     def capabilities(self) -> dict:
+        voice = self.voice.status() if self.voice is not None else {
+            'provider': 'elevenlabs', 'voice_reference': GINI_VOICE['voice_reference'],
+            'state': 'NOT_CONNECTED', 'reason': 'Kein Sprachanbieter im Host angebunden'}
         return {'contract_version': CONTRACT_VERSION,
-                'providers': {'openai': self.openai.status(),
+                'providers': {'openai': self.openai.status(), 'elevenlabs': voice,
                               'local_qwen': {'state': 'NOT_AVAILABLE_IN_CLOUD',
                                              'reason': 'Cloud braucht keinen Owner-PC'}},
                 'features': {'chat': True, 'edit_proposal': self.documents is not None,
-                             'approved_save': self.documents is not None, 'voice': False,
+                             'approved_save': self.documents is not None,
+                             # true only when configured; audible playback is proven separately (browser E2E)
+                             'voice': voice['state'] == 'online',
                              'owner_pictures': False, 'local_files': False},
                 'file_types': ['.txt', '.md', '.csv', '.json', '.yaml', '.yml', '.xml', '.html', '.css',
                                '.js', '.ts', '.py', '.ini', '.toml', '.sql'],
                 'gated_formats': ['.docx', '.xlsx', '.pptx', '.pdf'],
+                'voice': {**voice, 'max_chars': MAX_TTS_CHARS, 'stt': False},
                 'training_use': TRAINING_USE}
+
+    def tts(self, identity: Identity, *, text: str, purpose: str, consent_ref: str,
+            data_class: str = 'internal') -> dict:
+        """Speak one finished GINI reply with the V10 voice. Returns MP3 bytes for the host to send.
+
+        Order: session -> input -> data class -> KundenZ -> cache -> provider. The KundenZ check runs
+        before the cache too, so revoked permissions never get cached audio.
+        """
+        self._active(identity)
+        if not isinstance(text, str) or not 1 <= len(text.strip()) <= MAX_TTS_CHARS:
+            raise GiniCloudError('TTS_TEXT_INVALID', 400, f'Text leer oder zu lang (max. {MAX_TTS_CHARS} Zeichen)')
+        text = text.strip()
+        if contains_secret(text):
+            raise GiniCloudError('SECRET_IN_INPUT', 422, 'Text enthält Zugangsdaten – nicht an ElevenLabs gesendet')
+        self._data_class_guard(identity, data_class)
+        decision = self.gate.require(identity, resource='elevenlabs:tts', action='tts:synthesize', purpose=purpose,
+                                     data_class=data_class, consent_ref=consent_ref)
+        key = VoiceCache.key(identity.tenant_id, identity.principal_id, text)
+        audio = self.voice_cache.get(key)
+        source = 'cache'
+        if audio is None:
+            if self.voice is None:
+                raise GiniCloudError('PROVIDER_NOT_CONFIGURED', 503, 'Sprachausgabe nicht konfiguriert')
+            audio = self.voice.synthesize(text)
+            self.voice_cache.put(key, audio)
+            source = 'provider'
+        return {'contract_version': CONTRACT_VERSION, 'audio': audio, 'content_type': 'audio/mpeg',
+                'source': source, 'chars': len(text), 'voice_reference': GINI_VOICE['voice_reference'],
+                'training_use': TRAINING_USE, 'decisions': [decision]}
+
+    def voice_logout(self, identity: Identity) -> int:
+        """Drop this principal's cached audio (call on logout/revocation). Returns the number removed."""
+        return self.voice_cache.clear_principal(identity.tenant_id, identity.principal_id)
 
     def chat(self, identity: Identity, *, messages: list, purpose: str, consent_ref: str,
              data_class: str = 'internal') -> dict:
