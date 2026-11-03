@@ -39,9 +39,13 @@ unless explicitly entered; the form never changes provider settings.
 - Codex plan usage: https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan
 - Claude plan limits: https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work
 
-No existing authorized billing key or officially permitted plan-usage read interface
-is available through this runtime's connectors. No key created/copied, no local
-auth.json/cookie scraping. Actual OpenAI RESTBALANCE and ElevenLabs plan/credits
+No existing authorized API billing key is available through this runtime's billing
+connectors. The Codex desktop host DOES offer an official read-only get_usage_limits
+tool, discovered and read during this task: a private dated snapshot was captured
+without redeeming a reset or buying credits. The Render app has no automatic feed
+from this desktop tool; importing/transcribing such an export remains MANUELL,
+never automatically LIVE_PROVIDER. A PC-off snapshot must age normally. No key
+created/copied, no local auth.json/cookie scraping. OpenAI RESTBALANCE and ElevenLabs plan/credits
 remain BLOCKED_PROVIDER_BILLING_ACCESS. Admin usage/costs are not treated as prepaid
 balance. Existing ElevenLabs /v1/user/subscription may be added with explicit
 existing read authorization; no provider call is made by this MVP.

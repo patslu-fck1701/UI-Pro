@@ -11,8 +11,7 @@ export function OnlineWorkspace({user,onLogout,onProfile}:{user:User;onLogout:()
  const hotel=user.modules.hotel_ai===true;
  return <main className="online-workspace"><header><a href="/" className="brand">WerkZ Digital</a><p>{user.username} · {user.kundenz_role}</p><button onClick={()=>void onLogout().catch(e=>setError(e.message))}>Abmelden</button></header>
  <h1>Dein WerkZ-Arbeitsbereich</h1><p>Freigegebene Funktionen und Dateien deines Kontos.</p>
- <nav aria-label="WerkZ Digital">{hotel&&<><button aria-pressed={view==='hotel'} onClick={()=>setView('hotel')}>Hotelbetrieb</button><button aria-pressed={view==='gini'} onClick={()=>setView('gini')}>GINI und Dateien</button></>}{user.kundenz_role==='OWNER'&&<button aria-pressed={view==='customers'} onClick={()=>setView('customers')}>Testkunden</button>}</nav>
- {user.kundenz_role==='OWNER'&&<button aria-pressed={view==='quotas'} onClick={()=>setView('quotas')}>Kosten und Kontingente</button>}
+ <nav aria-label="WerkZ Digital">{hotel&&<><button aria-pressed={view==='hotel'} onClick={()=>setView('hotel')}>Hotelbetrieb</button><button aria-pressed={view==='gini'} onClick={()=>setView('gini')}>GINI und Dateien</button></>}{user.kundenz_role==='OWNER'&&<button aria-pressed={view==='customers'} onClick={()=>setView('customers')}>Testkunden</button>}{user.kundenz_role==='OWNER'&&<button aria-pressed={view==='quotas'} onClick={()=>setView('quotas')}>Kosten und Kontingente</button>}</nav>
  {view==='quotas'&&user.kundenz_role==='OWNER'&&<OwnerQuotas/>}
  {error&&<p role="alert">{error}</p>}
  {view==='customers'&&user.kundenz_role==='OWNER'&&<OwnerCustomers/>}
