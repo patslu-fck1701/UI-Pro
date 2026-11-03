@@ -35,7 +35,7 @@ const sbom={spdxVersion:'SPDX-2.3',dataLicense:'CC0-1.0',SPDXID:'SPDXRef-DOCUMEN
 const json=JSON.stringify(sbom,null,2)+'\n';
 if(process.argv.includes('--check')){
   const stored=fs.readFileSync(path.join(root,'sbom.spdx.json'),'utf8');
-  if(stored!==json)throw new Error('SBOM is stale: run npm run sbom and review the result');
+  if(stored.replace(/\r\n/g,'\n')!==json)throw new Error('SBOM is stale: run npm run sbom and review the result');
   process.stdout.write('oss-audit: '+packages.length+' locked dependencies; SBOM matches\n');
 }else if(process.argv.includes('--write')){
   fs.writeFileSync(path.join(root,'sbom.spdx.json'),json);process.stdout.write('sbom.spdx.json updated\n');

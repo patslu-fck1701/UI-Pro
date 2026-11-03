@@ -27,6 +27,19 @@ from .modules.admin import router as admin_router
 from .operator import router as operator_router
 
 app=FastAPI(title='WERKZ AI',version='0.1.0',docs_url=None,redoc_url=None,openapi_url=None)
+from .oidc import router as oidc_router
+app.include_router(oidc_router)
+from .test_customers import router as test_customers_router
+app.include_router(test_customers_router)
+from .cloud_api import router as cloud_router
+from .gini_cloud import GiniCloudError
+app.include_router(cloud_router)
+from .cloud_voice import router as cloud_voice_router
+app.include_router(cloud_voice_router)
+
+@app.exception_handler(GiniCloudError)
+async def cloud_error(request, exc):
+    return JSONResponse(exc.body(), status_code=exc.status, headers={'Cache-Control':'no-store'})
 app.include_router(business_router)
 app.include_router(voice_router)
 app.include_router(admin_router)
@@ -67,6 +80,19 @@ ADAPTERS=adapter_registry.names()
 
 @app.middleware('http')
 async def local_boundary(request,call_next):
+    from .kundenz import enabled as oidc_enabled
+    if oidc_enabled():
+        path = request.url.path
+        if path in {'/api/login', '/api/setup', '/api/local-pin/login', '/api/local-pin/setup',
+                    '/api/hotel/demo/start', '/api/work/demo/start'} and request.method != 'GET':
+            return JSONResponse({'detail':'Bitte die Online-Anmeldung verwenden.'}, status_code=403)
+        public = {'/api/health', '/api/ready', '/api/setup', '/api/auth/providers',
+                  '/api/auth/login', '/api/auth/callback', '/api/auth/accept'}
+        if path.startswith('/api/') and path not in public:
+            try:
+                current_user(request)
+            except HTTPException as exc:
+                return JSONResponse({'detail':exc.detail}, status_code=exc.status_code)
     if ONLINE_TEST and request.url.path=='/api/hotel/demo/start' and request.method=='POST':
         peer=request.client.host if request.client else 'unknown'
         stamp,count=online_starts.get(peer,(time.time(),0))
@@ -92,8 +118,8 @@ async def local_boundary(request,call_next):
         response.raw_headers=[(key,value+b'; Secure' if key.lower()==b'set-cookie' and b'; secure' not in value.lower() else value) for key,value in response.raw_headers]
         response.headers['Strict-Transport-Security']='max-age=31536000'
     response.headers['X-Content-Type-Options']='nosniff'
-    response.headers['Referrer-Policy']='same-origin'
-    response.headers['Cache-Control']='no-store'
+    response.headers['Referrer-Policy']='no-referrer'
+    response.headers['Cache-Control']='private, no-store' if request.url.path=='/api/gini/v1/voice/tts' else 'no-store'
     response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
     return response
 
@@ -118,7 +144,11 @@ def local_pin_operator(db):
     return operators[0]
 
 def safe_user(user):
-    return {'id':user.id,'username':user.username,'role':user.role,'tenant':user.tenant,'modules':configuration(user.tenant)}
+    modules=configuration(user.tenant)
+    if hasattr(user,'kundenz_modules'):
+        modules={key:value if key.removesuffix('_ai') in user.kundenz_modules else False for key,value in modules.items()}
+    return {'id':user.id,'username':user.username,'role':user.role,'tenant':user.tenant,'modules':modules,
+            'kundenz_role':getattr(user,'kundenz_role',None)}
 
 @app.get('/api/modules')
 def current_modules(user=Depends(current_user)):
@@ -201,7 +231,12 @@ def login(input:Credentials,request:Request,response:Response):
 def me(user=Depends(current_user)): return safe_user(user)
 @app.post('/api/logout')
 def logout(request:Request,response:Response,user=Depends(current_user)):
+    from .cloud_voice import replies
+    replies.clear_principal(user.id)
     with Session() as db:
+        from .kundenz import OIDCSession, enabled
+        if enabled():
+            db.execute(delete(OIDCSession).where(OIDCSession.token_hash==session_hash(request.cookies.get(COOKIE_NAME,''))))
         db.execute(delete(LoginSession).where(LoginSession.token_hash==session_hash(request.cookies.get(COOKIE_NAME,''))));db.commit()
     response.delete_cookie(COOKIE_NAME)
     return {'ok':True}
@@ -230,7 +265,8 @@ def ready():
     except Exception:
         database='unavailable'
         revision=None
-    migration='current' if revision=='hotel_004' else 'required'
+    from .kundenz import enabled
+    migration='current' if revision=='hotel_007' else 'required'
     ready=database=='ready' and migration=='current'
     payload={'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
              'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,
@@ -562,3 +598,5 @@ if dist.exists():
     app.mount('/assets',StaticFiles(directory=dist/'assets'),name='assets')
     @app.get('/')
     def index():return FileResponse(dist/'index.html')
+    from .web_routes import install_web_fallback
+    install_web_fallback(app)

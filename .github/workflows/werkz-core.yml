@@ -81,7 +81,7 @@ jobs:
           cache: pip
           cache-dependency-path: apps/local-ai/requirements.txt
       - name: Install Hotel backend test dependencies
-        run: python -m pip install -e ".[test,hotel,business]"
+        run: python -m pip install -e ".[test,hotel,business,oidc]"
       - name: Hotel backend and security regression suite
         run: python -m pytest -q
       - name: Goethe Hotel synthetic scenario
@@ -108,6 +108,10 @@ jobs:
         env:
           WERKZ_TEST_PYTHON: python
         run: node tests/browser_hotel_ai_providers.mjs
+      - name: GINI Cloud tenant and file browser workflow (synthetic provider only)
+        env:
+          WERKZ_TEST_PYTHON: python
+        run: node tests/browser_gini_cloud.mjs
 
   hotel-postgres-verify:
     runs-on: ubuntu-latest
@@ -146,6 +150,10 @@ jobs:
           cache: pip
           cache-dependency-path: apps/local-ai/requirements.txt
       - name: Install isolated Hotel PostgreSQL test dependencies
-        run: python -m pip install -e ".[test,hotel]"
+        run: python -m pip install -e ".[test,hotel,oidc]"
       - name: Prove isolated schema, migrations, booking rollback and cross-process persistence
         run: python tests/postgres_hotel_smoke.py
+      - name: Prove cloud versions, fresh-process reads and isolated PostgreSQL backup restore
+        env:
+          WERKZ_CI_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: python tests/postgres_cloud_smoke.py

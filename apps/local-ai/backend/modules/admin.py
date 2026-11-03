@@ -12,6 +12,9 @@ from .. import engine
 
 router=APIRouter(prefix='/api/admin',tags=['administration'])
 def admin(user=Depends(current_user)):
+    from ..kundenz import enabled
+    if enabled() and getattr(user,'kundenz_role',None) != 'OWNER':
+        raise HTTPException(403,'Owner erforderlich.')
     if user.role!='admin':raise HTTPException(403,'Administrator erforderlich.')
     return user
 @router.get('/modules')
