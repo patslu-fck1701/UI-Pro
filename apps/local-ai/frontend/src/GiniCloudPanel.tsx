@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react';
+import './gini-cloud.css';
 type Doc={document_id:string;name:string;version:number;content?:string;sha256:string};
 type Draft={draft_id:string;proposed_sha256:string;proposed_content:string};
 type Caps={features:{voice:boolean};providers:{openai:{state:string;reason?:string}}};
@@ -15,7 +16,7 @@ export function GiniCloudPanel(){
  useEffect(()=>{let active=true;void api('/capabilities').then(v=>{if(active)setCaps(v);}).catch(e=>{if(active)setError(e.message);});void refresh().catch(()=>{});return()=>{active=false;};},[]);
  async function action(fn:()=>Promise<void>){setError('');setBusy(true);try{await fn();}catch(e){setError(e instanceof Error?e.message:'Vorgang fehlgeschlagen.');}finally{setBusy(false);}}
  async function open(id:string){const value=await api('/documents/'+id);setDoc(value);setDraft(null);setDiff('');setApproved(false);setHistory(await api('/documents/'+id+'/versions'));}
- return <details className="panel"><summary>GINI Cloud · Chat und sichere Textdateien</summary>
+ return <details className="panel gini-cloud-panel"><summary>GINI Cloud · Chat und sichere Textdateien</summary>
  <p>Cloud-Anbieter: {caps?.providers.openai.state||'Status wird geprüft'} · {caps?.providers.openai.reason}</p>
  <p role="status">Cloud-Sprachausgabe nicht verfügbar. Der aktuelle GINI-Cloud-Vertrag bietet keine Audiofunktion.</p>
  <form onSubmit={e=>{e.preventDefault();void action(async()=>{const r=await api('/chat',{messages:[{role:'user',content:question}]});setAnswer(r.reply);});}}>

@@ -36,7 +36,14 @@ try{
  await page.reload();await page.locator('summary').filter({hasText:'GINI Cloud · Chat und sichere Textdateien'}).click();
  await page.getByRole('button',{name:'synthetic.txt · v3',exact:true}).click();
  await page.getByRole('heading',{name:'synthetic.txt · Version 3',exact:true}).waitFor();
- for(const width of [390,768,1440]){await page.setViewportSize({width,height:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal overflow '+width);}
+ for(const width of [390,768,1440]){
+  await page.setViewportSize({width,height:1000});
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  const geometry=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,
+   offenders:[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+1)
+    .slice(0,8).map(el=>({tag:el.tagName,cls:el.className,text:el.textContent?.slice(0,80),right:el.getBoundingClientRect().right}))}));
+  assert.ok(geometry.scroll<=geometry.width,'horizontal overflow '+width+' '+JSON.stringify(geometry));
+ }
  const other=await browser.newContext();await other.addCookies([{name:'werkz_hotel_program',value:'customer-b',url:base,httpOnly:true,sameSite:'Strict'}]);
  assert.deepEqual(await (await other.request.get(base+'/api/gini/v1/documents')).json(),[]);
  const docs=await (await context.request.get(base+'/api/gini/v1/documents')).json();

@@ -1,0 +1,5 @@
+.gini-cloud-panel{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.gini-cloud-panel section,.gini-cloud-panel article,.gini-cloud-panel form{min-width:0;max-width:100%}
+.gini-cloud-panel pre{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto}
+.gini-cloud-panel input,.gini-cloud-panel textarea,.gini-cloud-panel button{max-width:100%}
+.gini-cloud-panel button{white-space:normal;overflow-wrap:anywhere}
