@@ -145,3 +145,21 @@ def test_expired_session_denied_over_http(system):
         db.get(LoginSession,session_hash('customer-a')).expires=time.time()-1
         db.commit()
     assert client.get('/api/gini/v1/documents').status_code==401
+
+
+def test_cloud_revocation_during_provider_call_discards_answer(system,monkeypatch):
+    factory,user=system
+    original=cloud_api.service
+    class RevokingProvider:
+        def complete(self,*args,**kwargs):
+            with factory() as db:
+                db.get(CloudPermission,'customer-a').revoked=1
+                db.commit()
+            return {'text':'MUST_NOT_LEAK','model':'synthetic','finish_reason':'stop'}
+    def service(ctx):
+        svc=original(ctx)
+        svc.openai=RevokingProvider()
+        return svc
+    monkeypatch.setattr(cloud_api,'service',service)
+    response=post(user('customer-a'),'/chat',{'messages':[{'role':'user','content':'synthetic'}]})
+    assert response.status_code==403 and 'MUST_NOT_LEAK' not in response.text

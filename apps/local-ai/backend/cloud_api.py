@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Literal
+from urllib.request import build_opener, ProxyHandler, HTTPRedirectHandler
 from .db import Session, LoginSession, User
 from .kundenz import OIDCSession, recheck, enabled
 from .security import current_user, session_hash, COOKIE_NAME
@@ -100,7 +101,10 @@ class PersistentBudget:
     """
     def __init__(self, tenant):
         self.tenant = tenant
-        self.limit = max(0, int(os.environ.get('WERKZ_GINI_CLOUD_TOKEN_LIMIT', '0')))
+        try:
+            self.limit = max(0, int(os.environ.get('WERKZ_GINI_CLOUD_TOKEN_LIMIT', '0')))
+        except (TypeError, ValueError):
+            self.limit = 0
         self.reservation = 0
 
     def reserve(self, tokens):
@@ -130,8 +134,12 @@ def service(ctx):
     budget = PersistentBudget(ctx.identity.tenant_id)
     approved = (os.environ.get('WERKZ_GINI_CLOUD_ENABLED') == '1'
                 and os.environ.get('WERKZ_GINI_CLOUD_COST_APPROVED') == '1')
+    class NoRedirect(HTTPRedirectHandler):
+        def redirect_request(self, *args, **kwargs):
+            return None
     provider = OpenAIPort(api_key=os.environ.get('WERKZ_GINI_CLOUD_OPENAI_KEY', ''),
-                         model='gpt-6-luna', budget=budget, enabled=approved)
+                         model='gpt-6-luna', budget=budget, enabled=approved,
+                         transport=build_opener(ProxyHandler({}),NoRedirect()))
     return GiniCloud(kundenz=ctx, openai=provider, documents=store, sessions=ctx,
                      policy_version=POLICY, owner_binding=owner_binding())
 

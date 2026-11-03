@@ -1,87 +1,83 @@
-# Issue #123 – OIDC and isolated Hotel test customers (DRAFT)
+# Issues #123 / #126 — OIDC, customers and GINI Cloud (DRAFT)
 
-This is an undeployed implementation increment, not completion of issue #123.
-Existing Hotel app and local KundenZ policy are reused. No GINI source/assets
-are included. No invitations were created on a remote service or sent.
+Undeployed continuation of UI-Pro PR #15, reusing the existing Hotel application.
+No remote invitation, provider request, deployment or live migration was performed.
 
-## Behavior
+## Implemented
 
-Online mode now requires OIDC and refuses password/setup/demo authentication.
-Missing configuration fails closed; local non-online password behavior remains.
-OIDC code flow uses S256 PKCE, browser-bound state, nonce, atomic flow consumption,
-fixed HTTPS callback, same-origin trusted discovery endpoints and fresh JWKS.
-Authlib validates RS256/ES256 signatures and issuer/audience/expiry/nonce; subject,
-issued time and authorized-party binding are checked. Tokens are never returned
-to browser storage or persisted as provider credentials. Sessions are rotated and
-persisted server-side with Secure/HttpOnly/Strict cookies. Origin protects POSTs.
-Durable 15-minute login limits survive consumed flows and process restart.
+Online mode requires OIDC Authorization Code flow with S256 PKCE, browser-bound
+single-use state, nonce and signed token verification. Persistent sessions use
+Secure/HttpOnly/SameSite cookies. Every protected request rechecks session,
+identity, tenant, grant, expiry and module access. Callback query credentials are
+redacted from access logs. Owner requires pinned issuer + subject AND a persistent
+OWNER grant. An email or frontend role cannot promote a customer.
 
-Every protected API request rechecks persistent identity binding, session,
-tenant, grant, expiry/revocation and Hotel access. Additional module checks apply.
-Owner requires pinned issuer+subject AND a valid OWNER grant; email is insufficient.
-Legacy operator privilege cannot be inherited by customer grants. Hotel roles
-remain separate from KundenZ roles. TEST_CUSTOMER maps to hotel_reception.
+Owner UI prepares recipient-confirmed, single-use invitations, assigns
+CUSTOMER_ADMIN / CUSTOMER_USER / TEST_CUSTOMER, limits Hotel access to 1–168 hours,
+changes module access, renews access and revokes grants. Changes end existing
+sessions. No email transport. Accepted customers get separate synthetic Hotel
+tenants. No real invitation was sent.
 
-Owner UI prepares confirmed-recipient, single-use invitations with one-hour
-acceptance TTL and 1–168 hour access (counted from creation). No email transport.
-Codes are shown once, stored only as hashes. Acceptance requires signed verified
-email matching the recipient; identity binding then uses issuer+subject.
-Two test customers get separate tenants and two synthetic rooms each. Revocation
-disables the grant and removes its active app sessions. Re-login cannot revive it.
-Only Hotel is enabled in this increment. Roles CUSTOMER_ADMIN/CUSTOMER_USER are
-recognized by policy but have no self-service provisioning interface yet.
+The unchanged GINI Cloud 1.0 library from WerkZ PR #125, source commit
+b54347e40771f9e19c8531e2a61cb296cacbe644, is integrated through a host adapter.
+See backend/gini_cloud/UPSTREAM.md for provenance and proprietary boundaries.
+Server sessions supply identity; persistent cloud grants supply permission.
+Documents, versions, approval drafts and idempotency records are stored in SQL.
+Customers cannot list/read foreign documents or OWNER_PRIVATE records.
+Owner-private content is never forwarded to the model. Upload accepts text only.
+No owner image assets, local GINI source or local filesystem access is added.
 
-## Configuration that must be confirmed by Owner/operator
+UI supports chat, text upload, explicit edit approval, version history and restore
+as a new version. Stale writes fail closed. Drafts expire and bind to tenant and
+principal. Revocation during a model call discards the answer. Provider redirects
+are refused; Authorization is never forwarded to a redirect destination.
 
-- WERKZ_OIDC_ISSUER
-- WERKZ_OIDC_CLIENT_ID
-- WERKZ_OIDC_REDIRECT_URI (registered HTTPS /api/auth/callback)
-- WERKZ_OIDC_CLIENT_SECRET if the registered client requires it
-- WERKZ_OWNER_ISSUER and WERKZ_OWNER_SUBJECT
-- Explicitly provisioned OWNER grant bound to an existing verified operator user
+## Configuration and release gates
 
-No automatic Owner bootstrap or email-based promotion is implemented.
-Existing Supabase Auth is a candidate trust anchor, not automatically trusted.
-The existing Google identity-link function requires Supabase operator login;
-it is not an independent customer login. Do not reuse its bearer flow blindly.
-Discovery currently restricts all endpoints to the issuer origin; a provider
-requiring other origins needs reviewed explicit endpoint policy before use.
+Operator must confirm WERKZ_OIDC_ISSUER, WERKZ_OIDC_CLIENT_ID,
+WERKZ_OIDC_REDIRECT_URI (registered HTTPS /api/auth/callback), optional client
+secret, WERKZ_OWNER_ISSUER / WERKZ_OWNER_SUBJECT, and explicitly provision the
+verified operator's OWNER grant. Existing Supabase/Google building blocks were
+reviewed; identity linking does not establish this trust automatically.
+Discovery endpoints currently must use the issuer origin.
 
-## Schema/release
+Cloud calls default to disabled. Enabling requires WERKZ_GINI_CLOUD_ENABLED=1,
+WERKZ_GINI_CLOUD_COST_APPROVED=1, dedicated WERKZ_GINI_CLOUD_OPENAI_KEY and positive
+WERKZ_GINI_CLOUD_TOKEN_LIMIT. There is no local key fallback. Conservative durable
+token reservations are not a monetary spending guarantee. Provider/model and
+monetary limit require separate Owner approval. CloudPermission must explicitly
+grant actions, data classes, consent and expiry; enabling Hotel alone is insufficient.
+Contract 1.0 uses gpt-6-luna and features.voice=false. Voice is clearly unavailable;
+no audible playback or real TTS is claimed.
 
-hotel_005 adds grants, session bindings, login flows/rate buckets and invitations.
-Migration is prepared, not executed against Render. Readiness requires hotel_005.
-Review existing rows, backup, isolated PostgreSQL restore and migration parity
-before any release. Existing sessions without OIDC binding are refused online.
-DB roles/RLS and cross-process concurrency need PostgreSQL validation.
+hotel_005 adds OIDC/grants; hotel_006 adds cloud tables and invitation roles.
+Readiness requires hotel_006. Neither migration was applied to Render here.
+Before release: review rows, actual Render backup and isolated internal restore,
+migration review, approved deployment, then real IdP/Owner/two-customer acceptance.
 
-## Actual verification
+## Actual evidence and limits
 
-- 29 focused local tests pass: policy, signed RSA tokens, invalid claims,
-  browser binding/PKCE/state replay, persistent grants/revocation/rate limit,
-  recipient matching, invitation reuse denial and two synthetic tenants.
-- Extended focused run with Hotel program/management/entitlements: 34 passed
-  before the final online-default change; rerun required for release.
-- TypeScript/Vite build passed (known ~895 kB chunk warning).
-- Existing Headless Edge Hotel program smoke passed (local password mode).
-- No real provider login or authenticated Render E2E, mobile hardware, PostgreSQL
-  restart/persistence or backup/restore has been tested for this revision.
-- Authlib JOSE and Starlette httpx deprecation warnings remain.
+- Authlib CI dependency fixed by installing the existing `oidc` extra.
+- Focused tests cover signed tokens, rotation, invalid signatures/claims,
+  PKCE/state binding, expiry, revocation, roles, tenants, approvals and restore.
+- Windows full Python suite at 9ee6d8d: 207 passed, 2 opt-in tests skipped.
+  Later changes receive focused tests and CI; exact head results are in PR checks.
+- Synthetic browser flow uses test sessions and fake model: chat, save/restore,
+  reload, two separate customer contexts, logout, 390/768/1440px layouts.
+  This is not real OAuth, real hardware or paid provider E2E.
+- PostgreSQL 16 CI verifies migration head, optimistic writes, a fresh Python
+  process reading records, pg_dump and strict pg_restore into a NEW isolated
+  database. Matching tools use the existing CI service container. This proves
+  the synthetic CI database, not Render data or a Render backend restart.
+- Historical Windows DLL blocks remain historical. The current complete local
+  Python run passed without weakening Windows security settings.
 
-## Incomplete gates
+Open: real IdP/Owner binding, authenticated Render business tests and restart,
+hardware/mobile test, actual Render backup/restore, deployed direct image URL /
+logout / cache proof from Claude, provider approval and real voice delivery.
+No online acceptance is claimed. Read final CI state against the exact PR SHA.
 
-JWKS rotation/invalid-signature HTTP E2E, callback error UX, invitation acceptance
-browser tests, expired sessions and concurrent Postgres acceptance need expanded
-tests. Full role administration, module editing and grant renewal are incomplete.
-The previous Windows DLL-blocked whole-suite result remains historical, not a
-pass. The focused signature tests now run; no security setting was changed.
-
-Cloud-file storage/edit approval/version history and cloud GINI adapter are NOT
-implemented. GINI API v1 currently documents loopback-only transport and cannot
-provide PC-independent cloud service. Partner issue #124 must deliver the cloud
-contract; no guessed endpoints or local port exposure is introduced here.
-OWNER_PRIVATE policy tests are not actual image-URL/cache E2E proof. Owner assets
-must remain outside the customer deploy and Claude's protection must be reviewed.
-
-Browser remains BLOCKED_BROWSER_PERMISSION. No bypass, deploy, migration on a
-remote DB, additional cost, paid provider call, invitation or customer release.
+Dashboard remains BLOCKED_BROWSER_PERMISSION, not Owner rejection. No bypass,
+allowlist opening, policy change, merge, deploy, live migration, invitation or
+additional cost is authorized. Separately expiring werkz-pilot-db (2026-11-06)
+still needs an authorized internal backup path; no pilot backup is claimed.
