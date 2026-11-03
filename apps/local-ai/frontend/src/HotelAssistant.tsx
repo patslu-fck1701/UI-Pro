@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 type Provider = 'local' | 'openai';
 type Usage = {calls:number;reservedMicroUsd:number;actualMicroUsd:number;callLimit:number;budgetMicroUsd:number};
@@ -9,6 +9,7 @@ type Answer = {answer:string;model:string;provider:Provider;verifiedHotelData:bo
 export function HotelAssistant(){
   const [status,setStatus]=useState<Status|null>(null);
   const [provider,setProvider]=useState<Provider>('local');
+  const providerChosen=useRef(false);
   const [question,setQuestion]=useState('');
   const [answer,setAnswer]=useState<Answer|null>(null);
   const [error,setError]=useState('');
@@ -18,7 +19,7 @@ export function HotelAssistant(){
     const controller=new AbortController();
     void fetch('/api/hotel/ai/providers',{signal:controller.signal})
       .then(async r=>{if(!r.ok)throw Error('KI-Status konnte nicht gelesen werden.');return r.json();})
-      .then((v:Status)=>{setStatus(v);setProvider(v.local.state==='NOT_CONNECTED'?'openai':'local');})
+      .then((v:Status)=>{if(controller.signal.aborted)return;setStatus(v);if(!providerChosen.current)setProvider(v.local.state==='NOT_CONNECTED'?'openai':'local');})
       .catch(e=>{if(!controller.signal.aborted)setError(e instanceof Error?e.message:'KI-Status nicht erreichbar.');});
     return ()=>controller.abort();
   },[]);
@@ -44,7 +45,7 @@ export function HotelAssistant(){
     <p className="muted">Du verwendest das bestehende Hotelprogramm. Diese erste KI-Verbindung beantwortet nur deine eigene Frage – ohne Buchungen, Gästedaten, Personalakten oder automatische Hotelaktionen.</p>
     <form onSubmit={ask}>
       <label>KI-Anbieter
-        <select value={provider} onChange={e=>{setProvider(e.target.value as Provider);setAnswer(null);}}>
+        <select value={provider} onChange={e=>{providerChosen.current=true;setProvider(e.target.value as Provider);setAnswer(null);}}>
           <option value="local" disabled={!available('local')}>Lokales Qwen{!available('local')?' – nicht verbunden':''}</option>
           <option value="openai" disabled={!available('openai')}>OpenAI API{!available('openai')?' – nicht freigeschaltet':''}</option>
         </select>

@@ -36,6 +36,10 @@ from .gini_cloud import GiniCloudError
 app.include_router(cloud_router)
 from .cloud_voice import router as cloud_voice_router
 app.include_router(cloud_voice_router)
+from .owner_quotas import router as owner_quotas_router
+app.include_router(owner_quotas_router)
+from .cost_preview import router as cost_preview_router
+app.include_router(cost_preview_router)
 
 @app.exception_handler(GiniCloudError)
 async def cloud_error(request, exc):
@@ -266,7 +270,7 @@ def ready():
         database='unavailable'
         revision=None
     from .kundenz import enabled
-    migration='current' if revision=='hotel_007' else 'required'
+    migration='current' if revision=='hotel_008' else 'required'
     ready=database=='ready' and migration=='current'
     payload={'state':'READY' if ready else 'NOT_READY','app':'ready','database':database,
              'package':PACKAGE,'mode':MODE,'postgres_enabled':POSTGRES_ENABLED,
