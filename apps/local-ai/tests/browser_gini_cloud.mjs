@@ -54,11 +54,24 @@ try{
  const otherPage=await other.newPage();await otherPage.goto(base);
  await otherPage.getByRole('button',{name:'GINI und Dateien',exact:true}).click();
  assert.equal(await otherPage.getByRole('button',{name:'Testkunden',exact:true}).count(),0);
+ assert.equal(await otherPage.getByRole('button',{name:'Kosten und Kontingente',exact:true}).count(),0);
+ assert.equal((await other.request.get(base+'/api/auth/owner/quotas')).status(),403);
  for(const old of ['/berater/','/hub/','/demo/','/pilot/'])assert.equal((await other.request.get(base+old)).status(),410);
  const owner=await browser.newContext();await owner.addCookies([{name:'werkz_hotel_program',value:'owner',url:base,httpOnly:true,sameSite:'Strict'}]);
  const ownerPage=await owner.newPage();await ownerPage.goto(base);await ownerPage.getByRole('button',{name:'Testkunden',exact:true}).click();
  await ownerPage.locator('summary').filter({hasText:'Owner · Testkunden verwalten'}).click();
  await ownerPage.getByRole('button',{name:'Einmaligen Einladungscode erstellen',exact:true}).waitFor();
+ await ownerPage.getByRole('button',{name:'Kosten und Kontingente',exact:true}).click();
+ for(const title of ['OpenAI API','ElevenLabs V10','Codex','Claude und Claude Code'])await ownerPage.getByRole('heading',{name:title,exact:true}).waitFor();
+ await ownerPage.getByRole('button',{name:'600 Ausgabetokens simulieren',exact:true}).click();
+ await ownerPage.getByText('SCHÄTZUNG: 0.000400 USD Listenpreisäquivalent. Kein Geld freigegeben oder ausgegeben.',{exact:true}).waitFor();
+ const codex=ownerPage.locator('article.panel').filter({has:ownerPage.getByRole('heading',{name:'Codex',exact:true})});
+ await codex.getByText('Datierten Stand manuell erfassen',{exact:true}).click();
+ await codex.getByLabel('Kennzahl',{exact:true}).selectOption('week');
+ await codex.getByLabel('Verfügbar',{exact:true}).fill('33');
+ await codex.getByRole('button',{name:'Manuellen Stand speichern',exact:true}).click();
+ await codex.getByText('33.0 % verbleibend',{exact:true}).waitFor();
+ for(const width of [390,768,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));assert.equal(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Owner dashboard overflow '+width);}
  await page.getByRole('button',{name:'Abmelden',exact:true}).click();await page.getByRole('heading',{name:'WerkZ Digital',exact:true}).waitFor();
  assert.equal((await context.request.get(base+'/api/gini/v1/documents')).status(),401);
  assert.deepEqual(errors,[]);

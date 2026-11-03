@@ -5,3 +5,6 @@
 .online-workspace button{white-space:normal;max-width:100%}
 .online-workspace nav button[aria-pressed=true]{outline:2px solid #39ff14}
 @media(max-width:600px){.online-workspace{padding:16px}.online-workspace>header p{width:100%;order:3}.online-workspace>nav>button{flex:1;min-height:48px}}
+.quota-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;margin-top:20px}
+.quota-metric{border-top:1px solid #36503c;padding:12px 0;min-width:0}
+.quota-metric h4{margin:0 0 8px}.quota-metric p{font-size:14px}.quota-metric progress{max-width:100%;accent-color:#7aff54}
