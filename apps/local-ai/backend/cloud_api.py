@@ -52,13 +52,18 @@ class Context:
         identity = self.verify()
         with Session() as db:
             grant = db.get(CloudPermission, identity.principal_id)
+            actions = json.loads(grant.actions) if grant else []
+            classes = json.loads(grant.data_classes) if grant else []
+            if (not isinstance(actions,list) or not isinstance(classes,list)
+                    or any(not isinstance(v,str) for v in actions+classes)):
+                return {'decision':'DENY','reason_code':'INVALID_CLOUD_GRANT','decision_id':uuid.uuid4().hex}
             if (not grant or grant.revoked or grant.expires <= time.time()
                     or req['principal_id'] != identity.principal_id or req['tenant_id'] != identity.tenant_id
                     or req['policy_version'] != POLICY or req['source'] != 'gini-cloud'
                     or req['project_scope'] != 'gini' or req['purpose'] != 'hotel_assistant'
                     or req['consent_ref'] != grant.consent_ref
-                    or req['action'] not in json.loads(grant.actions)
-                    or req['data_class'] not in json.loads(grant.data_classes)):
+                    or req['action'] not in actions
+                    or req['data_class'] not in classes):
                 return {'decision': 'DENY', 'reason_code': 'NO_BOUND_CLOUD_GRANT', 'decision_id': uuid.uuid4().hex}
             if 'TEST_CUSTOMER' in identity.roles and req['data_class'] not in {'synthetic', 'public'}:
                 return {'decision': 'DENY', 'reason_code': 'SYNTHETIC_ONLY', 'decision_id': uuid.uuid4().hex}
@@ -180,8 +185,13 @@ def capabilities(ctx=Depends(context)):
 
 @router.post('/chat')
 def chat(data: Chat, ctx=Depends(context)):
-    return service(ctx).chat(ctx.identity, messages=data.messages, purpose='hotel_assistant',
-                             consent_ref=ctx.consent(), data_class='synthetic')
+    svc = service(ctx)
+    result = svc.chat(ctx.identity, messages=data.messages, purpose='hotel_assistant',
+                      consent_ref=ctx.consent(), data_class='synthetic')
+    svc._active(ctx.identity)
+    svc.gate.require(ctx.identity,resource='gini:chat',action='ask',purpose='hotel_assistant',
+                     data_class='synthetic',consent_ref=ctx.consent())
+    return result
 
 
 @router.post('/documents', status_code=201)
@@ -228,6 +238,7 @@ def propose(identifier: str, data: Proposal, ctx=Depends(context)):
     result = service(ctx).propose_edit(ctx.identity, document_id=identifier,
         instruction=data.instruction, purpose='hotel_assistant', consent_ref=ctx.consent())
     ctx.verify()
+    authorize(ctx, 'file:propose_edit', read(identifier, ctx))
     store.save_draft(ctx.identity, result['draft'])
     return result
 

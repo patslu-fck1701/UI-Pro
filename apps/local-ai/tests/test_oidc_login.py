@@ -127,3 +127,45 @@ def test_real_signature_claim_validation():
                      {'exp': int(time.time())-120}, {'azp': 'wrong'}]:
         with pytest.raises(Exception):
             oidc.validate_token(token({**claims, **mutation}), key.as_dict(), cfg, 'expected')
+
+
+def test_jwks_rotation_bad_signature_unknown_key_and_missing_nonce():
+    from authlib.jose import JsonWebKey, JsonWebToken
+    old=JsonWebKey.generate_key('RSA',2048,is_private=True)
+    new=JsonWebKey.generate_key('RSA',2048,is_private=True)
+    cfg={'issuer':'https://id.example.invalid','client_id':'hotel'}
+    claims={'iss':cfg['issuer'],'aud':['hotel','secondary'],'azp':'hotel','sub':'synthetic',
+            'iat':int(time.time()),'exp':int(time.time())+60,'nonce':'bound'}
+    keys={'keys':[{**old.as_dict(),'kid':'old'},{**new.as_dict(),'kid':'new'}]}
+    jwt=JsonWebToken(['RS256'])
+    for key,kid in ((old,'old'),(new,'new')):
+        token=jwt.encode({'alg':'RS256','kid':kid},claims,key)
+        assert oidc.validate_token(token,keys,cfg,'bound')['sub']=='synthetic'
+    bad=jwt.encode({'alg':'RS256','kid':'old'},claims,new)
+    with pytest.raises(Exception):oidc.validate_token(bad,keys,cfg,'bound')
+    unknown=jwt.encode({'alg':'RS256','kid':'unknown'},claims,new)
+    with pytest.raises(Exception):oidc.validate_token(unknown,keys,cfg,'bound')
+    values={k:v for k,v in claims.items() if k!='nonce'}
+    with pytest.raises(Exception):oidc.validate_token(jwt.encode({'alg':'RS256'},values,new),new.as_dict(),cfg,'bound')
+
+
+def test_wrong_browser_cannot_consume_flow(setup):
+    factory,browser=setup
+    with factory() as db:
+        db.add(oidc.LoginFlow(state_hash=session_hash('synthetic-state'),binding_hash=session_hash('binding'),
+            nonce='n',verifier='v',expires=time.time()+60,client_hash='synthetic-client',invitation_hash=''))
+        db.commit()
+    browser.cookies.set(oidc.FLOW_COOKIE,'wrong-binding')
+    result=browser.get('/api/auth/callback',params={'state':'synthetic-state','code':'synthetic-code'})
+    assert result.status_code==403
+    with factory() as db:
+        assert db.get(oidc.LoginFlow,session_hash('synthetic-state')) is not None
+
+
+def test_callback_query_redacted_without_disabling_access_log():
+    import logging
+    record=logging.LogRecord('uvicorn.access',logging.INFO,'',0,'%s - "%s %s HTTP/%s" %s',
+        ('synthetic-client','GET','/api/auth/callback?code=SYNTHETIC_CODE&state=SYNTHETIC_STATE','1.1',303),None)
+    assert oidc.RedactCallbackQuery().filter(record)
+    assert '/api/auth/callback' in record.getMessage()
+    assert 'SYNTHETIC_CODE' not in record.getMessage() and 'SYNTHETIC_STATE' not in record.getMessage()

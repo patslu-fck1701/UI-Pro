@@ -41,10 +41,9 @@ def test_revoked_record_never_leaks_from_stale_index(knowledge):
 def test_tampered_index_cannot_replace_source_text(knowledge):
     root,port=knowledge
     with sqlite3.connect(root/'.aiz-local/index.sqlite3') as db:db.execute("UPDATE lessons SET summary='UNAPPROVED' WHERE id='werkz-test'")
-    result=port.search('Neustart')
-    assert result['results']
-    assert all(row['summary']!='UNAPPROVED' for row in result['results'])
-    assert all(row['summary']=='Synthetischer Wiederanlauf' for row in result['results'])
+    # A source/index mismatch must fail closed, never return stale index content.
+    with pytest.raises(KnowledgeUnavailable, match='AIZ_RECORD_REVOKED_OR_STALE'):
+        port.search('Neustart')
 
 def test_changed_source_code_is_not_executed(knowledge):
     root,port=knowledge;(root/'aiz/knowledge.py').write_text('raise RuntimeError("must not execute")',encoding='utf-8')
@@ -63,7 +62,8 @@ def test_context_both_protocols_and_revocation(knowledge):
     item={'case_id':'case-synthetic','idempotency_key':'case-synthetic','origin_project':'werkz','target_scope':'werkz','protocol_version':'2','status':'CANDIDATE','classification':'portable','title':'Neustart','summary':'Synthetische Kontextkarte','source_uri':'https://example.invalid/synthetic','source_revision':'synthetic-v2','observed_at':'2026-10-29T00:00:00Z','privacy':{'data_class':'abstract','contains_personal_data':False,'redaction_confirmed':True},'approval':{'required':True,'approved_by':'synthetic-reviewer','approved_at':'2026-10-29T00:00:00Z','approval_id':'synthetic-approval','policy_version':'2'},'provenance':{'source_project':'werkz','source_uri':'https://example.invalid/synthetic','source_revision':'synthetic-v2','verified_at':'2026-10-29T00:00:00Z','verified_by':'synthetic-reviewer'},'evidence':['synthetic regression']}
     h.submit(root,item)
     assert len(port.context('Neustart')['results'])==2
-    h.approve(root,item['case_id'],'synthetic-approval','synthetic-reviewer')
+    # Current AiZ contract requires an independent reviewer, not the evidence owner.
+    h.approve(root,item['case_id'],'synthetic-approval','synthetic-independent-reviewer')
     assert {c['protocol'] for c in port.context('Neustart')['results']}=={'approved-v1','exchange-v2'}
     assert port.context('Neustart',chars=1)['results']==[]
     with sqlite3.connect(root/'.aiz-local/exchange.sqlite3') as db:

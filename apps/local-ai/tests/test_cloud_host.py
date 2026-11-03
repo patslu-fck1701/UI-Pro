@@ -136,3 +136,12 @@ def test_conservative_budget_is_persistent(system,monkeypatch):
     with pytest.raises(GiniCloudError):
         cloud_api.PersistentBudget('synthetic-a').reserve(6)
     cloud_api.PersistentBudget('synthetic-b').reserve(6)
+
+
+def test_expired_session_denied_over_http(system):
+    factory,user=system
+    client=user('customer-a')
+    with factory() as db:
+        db.get(LoginSession,session_hash('customer-a')).expires=time.time()-1
+        db.commit()
+    assert client.get('/api/gini/v1/documents').status_code==401

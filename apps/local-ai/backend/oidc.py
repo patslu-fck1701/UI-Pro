@@ -5,6 +5,7 @@ import os
 import secrets
 import time
 import json
+import logging
 from urllib.parse import urlencode, urlsplit
 import httpx
 from fastapi import APIRouter, HTTPException, Request
@@ -17,6 +18,20 @@ from .security import COOKIE_NAME, session_hash
 
 router = APIRouter(prefix='/api/auth', tags=['identity'])
 FLOW_COOKIE = '__Host-werkz-oidc'
+
+
+class RedactCallbackQuery(logging.Filter):
+    """Keep access logging without retaining OAuth codes/state query values."""
+    def filter(self, record):
+        if isinstance(record.args, tuple) and len(record.args) == 5:
+            args = list(record.args)
+            if isinstance(args[2], str) and args[2].split('?',1)[0] == '/api/auth/callback':
+                args[2] = '/api/auth/callback'
+                record.args = tuple(args)
+        return True
+
+
+logging.getLogger('uvicorn.access').addFilter(RedactCallbackQuery())
 
 
 class LoginFlow(Base):
