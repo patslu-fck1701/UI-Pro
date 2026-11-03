@@ -108,6 +108,10 @@ jobs:
         env:
           WERKZ_TEST_PYTHON: python
         run: node tests/browser_hotel_ai_providers.mjs
+      - name: GINI Cloud tenant and file browser workflow (synthetic provider only)
+        env:
+          WERKZ_TEST_PYTHON: python
+        run: node tests/browser_gini_cloud.mjs
 
   hotel-postgres-verify:
     runs-on: ubuntu-latest
