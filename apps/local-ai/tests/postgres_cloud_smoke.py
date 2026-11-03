@@ -4,7 +4,7 @@ Refuses every non-loopback host, non-synthetic credential and database name.
 No Render access. Run after postgres_hotel_smoke.py provisioned hotel_ci.
 """
 import os
-import shutil
+import re
 import subprocess
 import sys
 import tempfile
@@ -58,16 +58,20 @@ with psycopg.connect(url.render_as_string(hide_password=False),autocommit=True) 
     connection.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(target)))
 pg_env={**os.environ,'PGHOST':url.host,'PGPORT':str(url.port or 5432),
         'PGUSER':url.username,'PGPASSWORD':url.password}
-dump=shutil.which('pg_dump')
-restore=shutil.which('pg_restore')
-assert dump and restore, 'PostgreSQL backup/restore client utilities required'
+container=os.environ.get('WERKZ_CI_POSTGRES_CONTAINER','')
+assert re.fullmatch(r'[a-f0-9]{12,64}',container), 'Existing PostgreSQL CI container ID required'
 with tempfile.TemporaryDirectory(prefix='werkz-cloud-ci-restore-') as folder:
     archive=Path(folder)/'synthetic.dump'
-    subprocess.run([dump,'--format=custom','--schema=werkz_hotel_test','--no-owner',
-                    '--file',str(archive),'--dbname','hotel_ci'],env=pg_env,check=True,timeout=90)
+    # Use the existing server container's matching tools, never a newer runner client.
+    with archive.open('wb') as output:
+        subprocess.run(['docker','exec','-e','PGPASSWORD',container,'pg_dump','-U','hotel_ci',
+                        '--format=custom','--schema=werkz_hotel_test','--no-owner',
+                        '--dbname','hotel_ci'],stdout=output,env=pg_env,check=True,timeout=90)
     assert archive.stat().st_size>0
-    subprocess.run([restore,'--no-owner','--exit-on-error','--dbname',target,str(archive)],
-                   env=pg_env,check=True,timeout=90)
+    with archive.open('rb') as source:
+        subprocess.run(['docker','exec','-i','-e','PGPASSWORD',container,'pg_restore','-U','hotel_ci',
+                        '--no-owner','--exit-on-error','--dbname',target],stdin=source,
+                       env=pg_env,check=True,timeout=90)
     import hashlib
     checksum=hashlib.sha256(archive.read_bytes()).hexdigest()
     with psycopg.connect(url.set(database=target).render_as_string(hide_password=False)) as connection:

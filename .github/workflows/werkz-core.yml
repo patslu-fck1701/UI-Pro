@@ -150,4 +150,6 @@ jobs:
       - name: Prove isolated schema, migrations, booking rollback and cross-process persistence
         run: python tests/postgres_hotel_smoke.py
       - name: Prove cloud versions, fresh-process reads and isolated PostgreSQL backup restore
+        env:
+          WERKZ_CI_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: python tests/postgres_cloud_smoke.py
